@@ -1,0 +1,283 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Exercise Detail - FitCoach Playful</title>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&amp;family=Quicksand:wght@400;500;600;700&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              "primary": "#FF8577", // Coral/Peach
+              "secondary": "#6EE7B7", // Mint Green
+              "accent": "#FCD34D", // Sunny Yellow
+              "background-light": "#FFF8F0", // Warm Cream
+              "background-soft": "#FFEFD5", // Soft Peach for cards/bg variation
+              "text-main": "#3D3D3D", // Warm Dark
+              "text-sub": "#78716C", // Warm Gray
+              "card-white": "#FFFFFF",
+            },
+            fontFamily: {
+              "sans": ["Nunito", "sans-serif"],
+              "display": ["Quicksand", "sans-serif"],
+              "body": ["Nunito", "sans-serif"]
+            },
+            borderRadius: {
+                "DEFAULT": "0.5rem", 
+                "lg": "1rem", 
+                "xl": "1.5rem", 
+                "2xl": "2rem", 
+                "3xl": "2.5rem", 
+                "4xl": "3rem",
+                "full": "9999px"
+            },
+            boxShadow: {
+                'soft': '0 4px 20px -2px rgba(255, 133, 119, 0.15)',
+                'card': '0 8px 16px -4px rgba(61, 61, 61, 0.08), 0 4px 6px -2px rgba(61, 61, 61, 0.04)',
+                'bubbly': '0 10px 25px -5px rgba(255, 133, 119, 0.4), 0 8px 10px -6px rgba(255, 133, 119, 0.1)',
+                'inner-soft': 'inset 0 2px 4px 0 rgba(0, 0, 0, 0.05)'
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+    </style>
+<style>
+        body {
+            min-height: max(884px, 100dvh);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-background-light font-body antialiased text-text-main selection:bg-primary selection:text-white">
+<div class="relative flex flex-col min-h-screen w-full max-w-md mx-auto bg-background-light shadow-2xl overflow-hidden pb-32">
+<div class="relative w-full shrink-0 group rounded-b-[3rem] overflow-hidden shadow-soft z-10 bg-white pb-8">
+<div class="absolute top-0 left-0 w-full p-6 pt-12 z-20 flex justify-between items-center">
+<button class="flex items-center justify-center size-12 rounded-full bg-white/80 backdrop-blur-md shadow-card text-text-main hover:bg-white transition-all transform hover:scale-105 active:scale-95">
+<span class="material-symbols-outlined rounded-full" style="font-size: 24px; font-variation-settings: 'wght' 600;">arrow_back</span>
+</button>
+<button class="flex items-center justify-center size-12 rounded-full bg-white/80 backdrop-blur-md shadow-card text-primary hover:text-red-500 hover:bg-white transition-all transform hover:scale-105 active:scale-95">
+<span class="material-symbols-outlined" style="font-size: 24px; font-variation-settings: 'FILL' 1, 'wght' 600;">favorite</span>
+</button>
+</div>
+<div class="relative h-[360px] w-full overflow-hidden">
+<div class="absolute inset-0 w-full h-full bg-cover bg-center rounded-b-[3rem]" data-alt="A fit person performing a barbell bench press" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCUyk_A0ZAvBPbzKmC9ddJh6KwAfF5fHPOsqWS_cA4AcKWybACPncj6MQUvSMjQA4pr25S3lu6hrnJkd8_821ir86JS3ej4BHqiyl9BW2vmcKA8Kr9g82zzH249sz6TkmVCHprArcj_IZnJGbRm_8pjlTDXCiXq59yUVJYeNQZA5syBhp1UxXS00G0xn_qEBz28RhyXuYp43EWvXgQPiYHNH0Z4dI-h3HkF8_YujVi1Zkd-9iS-WHgkw6GD7E2mzHxBrDAqDXBa5W0');">
+</div>
+<div class="absolute inset-0 bg-gradient-to-t from-white via-white/10 to-transparent"></div>
+</div>
+<div class="px-6 -mt-12 relative z-10 flex flex-col items-center">
+<div class="flex items-center justify-center gap-3 mb-5 flex-wrap">
+<span class="inline-flex items-center px-4 py-2 rounded-full text-sm font-bold bg-primary text-white shadow-sm transform -rotate-2">
+                    Strength
+                </span>
+<span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-accent text-sm font-bold text-text-main shadow-sm transform rotate-1">
+<span class="material-symbols-outlined" style="font-size: 18px;">local_fire_department</span>
+                    120 cal
+                </span>
+<span class="inline-flex items-center gap-1.5 px-4 py-2 rounded-full bg-secondary text-sm font-bold text-white shadow-sm transform -rotate-1">
+<span class="material-symbols-outlined" style="font-size: 18px;">timer</span>
+                    15 min
+                </span>
+</div>
+<h1 class="text-3xl font-display font-extrabold text-text-main text-center mb-3 tracking-tight leading-tight">
+                Barbell Bench Press
+            </h1>
+<p class="text-text-sub text-base font-medium text-center leading-relaxed px-4 max-w-xs">
+                Let's pump those pecs! A great move for a strong chest and arms. 💪
+            </p>
+</div>
+</div>
+<div class="flex flex-col gap-8 px-6 pt-8">
+<div class="grid grid-cols-4 gap-3">
+<div class="flex flex-col shrink-0 items-center justify-center aspect-square rounded-3xl bg-white shadow-card border-b-4 border-slate-100 hover:-translate-y-1 transition-transform cursor-pointer p-2">
+<div class="w-10 h-10 rounded-full bg-blue-100 text-blue-500 flex items-center justify-center mb-2">
+<span class="material-symbols-outlined" style="font-size: 22px;">fitness_center</span>
+</div>
+<p class="text-text-main text-xs font-bold font-display">Barbell</p>
+</div>
+<div class="flex flex-col shrink-0 items-center justify-center aspect-square rounded-3xl bg-white shadow-card border-b-4 border-slate-100 hover:-translate-y-1 transition-transform cursor-pointer p-2">
+<div class="w-10 h-10 rounded-full bg-purple-100 text-purple-500 flex items-center justify-center mb-2">
+<span class="material-symbols-outlined" style="font-size: 22px;">grid_view</span>
+</div>
+<p class="text-text-main text-xs font-bold font-display">Compound</p>
+</div>
+<div class="flex flex-col shrink-0 items-center justify-center aspect-square rounded-3xl bg-white shadow-card border-b-4 border-slate-100 hover:-translate-y-1 transition-transform cursor-pointer p-2">
+<div class="w-10 h-10 rounded-full bg-primary/20 text-primary flex items-center justify-center mb-2">
+<span class="material-symbols-outlined" style="font-size: 22px;">monitor_heart</span>
+</div>
+<p class="text-text-main text-xs font-bold font-display">Chest</p>
+</div>
+<div class="flex flex-col shrink-0 items-center justify-center aspect-square rounded-3xl bg-white shadow-card border-b-4 border-slate-100 hover:-translate-y-1 transition-transform cursor-pointer p-2">
+<div class="w-10 h-10 rounded-full bg-accent/20 text-orange-500 flex items-center justify-center mb-2">
+<span class="material-symbols-outlined" style="font-size: 22px;">accessibility_new</span>
+</div>
+<p class="text-text-main text-xs font-bold font-display">Push</p>
+</div>
+</div>
+<div class="flex flex-col gap-4">
+<h2 class="text-xl font-display font-bold text-text-main tracking-tight flex items-center gap-3">
+<span class="flex items-center justify-center w-8 h-8 rounded-2xl bg-primary text-white shadow-sm rotate-3">
+<span class="material-symbols-outlined text-[18px]">info</span>
+</span>
+                How to do it
+            </h2>
+<div class="bg-white rounded-[2rem] p-6 shadow-card border-2 border-slate-50 relative overflow-hidden">
+<div class="absolute -right-10 -top-10 w-32 h-32 bg-yellow-100 rounded-full opacity-50 z-0"></div>
+<ul class="flex flex-col gap-6 relative z-10">
+<div class="absolute left-[15px] top-3 bottom-6 w-0.5 border-l-2 border-dashed border-slate-200"></div>
+<li class="relative flex gap-5">
+<span class="flex items-center justify-center shrink-0 w-8 h-8 rounded-full bg-primary text-white text-sm font-bold z-10 shadow-sm ring-4 ring-white">1</span>
+<div class="flex flex-col gap-1 pt-0.5">
+<p class="text-base font-bold text-text-main font-display">Get Ready</p>
+<p class="text-sm text-text-sub font-medium leading-relaxed">Lie back on the bench. Grip the bar wide, lift it off the rack, and hold it steady above you.</p>
+</div>
+</li>
+<li class="relative flex gap-5">
+<span class="flex items-center justify-center shrink-0 w-8 h-8 rounded-full bg-secondary text-white text-sm font-bold z-10 shadow-sm ring-4 ring-white">2</span>
+<div class="flex flex-col gap-1 pt-0.5">
+<p class="text-base font-bold text-text-main font-display">Lower Slowly</p>
+<p class="text-sm text-text-sub font-medium leading-relaxed">Breathe in and lower the bar slowly until it gently touches the middle of your chest.</p>
+</div>
+</li>
+<li class="relative flex gap-5">
+<span class="flex items-center justify-center shrink-0 w-8 h-8 rounded-full bg-accent text-text-main text-sm font-bold z-10 shadow-sm ring-4 ring-white">3</span>
+<div class="flex flex-col gap-1 pt-0.5">
+<p class="text-base font-bold text-text-main font-display">Push it Up!</p>
+<p class="text-sm text-text-sub font-medium leading-relaxed">Pause briefly, then breathe out as you push the bar back up. Use those chest muscles!</p>
+</div>
+</li>
+</ul>
+</div>
+</div>
+<div class="flex flex-col gap-4">
+<h2 class="text-xl font-display font-bold text-text-main tracking-tight flex items-center gap-3">
+<span class="flex items-center justify-center w-8 h-8 rounded-2xl bg-secondary text-white shadow-sm -rotate-2">
+<span class="material-symbols-outlined text-[18px]">body_system</span>
+</span>
+                Muscles Working
+            </h2>
+<div class="bg-white rounded-[2rem] p-5 shadow-card border-2 border-slate-50 flex flex-col gap-3">
+<div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-2xl bg-white text-primary flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform duration-300">
+<span class="material-symbols-outlined" style="font-size: 24px;">body_system</span>
+</div>
+<div>
+<p class="text-sm font-bold text-text-main font-display">Chest Muscles</p>
+<p class="text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-full inline-block mt-1">Main Focus</p>
+</div>
+</div>
+<div class="h-2 w-16 bg-gray-200 rounded-full overflow-hidden">
+<div class="h-full w-[90%] bg-primary rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-2xl bg-white text-text-sub flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" style="font-size: 24px;">accessibility</span>
+</div>
+<div>
+<p class="text-sm font-bold text-text-main font-display">Shoulders</p>
+<p class="text-[11px] text-text-sub mt-0.5">Supporting</p>
+</div>
+</div>
+<div class="h-2 w-16 bg-gray-200 rounded-full overflow-hidden">
+<div class="h-full w-[60%] bg-secondary rounded-full"></div>
+</div>
+</div>
+<div class="flex items-center justify-between p-3 rounded-2xl bg-slate-50 hover:bg-slate-100 transition-colors cursor-pointer group">
+<div class="flex items-center gap-4">
+<div class="w-12 h-12 rounded-2xl bg-white text-text-sub flex items-center justify-center shadow-sm group-hover:scale-110 transition-transform">
+<span class="material-symbols-outlined" style="font-size: 24px;">do_not_touch</span>
+</div>
+<div>
+<p class="text-sm font-bold text-text-main font-display">Triceps</p>
+<p class="text-[11px] text-text-sub mt-0.5">Supporting</p>
+</div>
+</div>
+<div class="h-2 w-16 bg-gray-200 rounded-full overflow-hidden">
+<div class="h-full w-[45%] bg-accent rounded-full"></div>
+</div>
+</div>
+</div>
+</div>
+<div class="flex flex-col gap-4 mb-8">
+<div class="flex items-center justify-between px-1">
+<h2 class="text-xl font-display font-bold text-text-main tracking-tight">Try These Too!</h2>
+<a class="text-xs font-bold text-primary bg-primary/10 px-3 py-1 rounded-full hover:bg-primary hover:text-white transition-colors" href="#">View all</a>
+</div>
+<div class="flex overflow-x-auto gap-4 pb-6 -mx-6 px-6 no-scrollbar snap-x">
+<div class="w-44 shrink-0 snap-start flex flex-col gap-3 group cursor-pointer hover:scale-95 transition-transform duration-200">
+<div class="aspect-[4/3] w-full rounded-3xl bg-cover bg-center overflow-hidden relative shadow-md border-2 border-white" data-alt="Man performing incline dumbbell press" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBsqDRaMg7FTR_LGT_9JzcroYrQXb67PIV5t9yyEPbzu3q8nrKbiJ8dPR2HzUD6j_1junsxezQXD8719kxNEVMPE2hEOIpfpsAfIwrUZmO_iEGfXo1Pzdhq33CIU19yirzLs4qAgcU9vfoqYtRzbCNIAkd6mxl6_6JxtPKGEbCFZsduCCi18u7fKIQa-KGOuTdgZAyEpcHKEU-OVALjFs2-UoAUWvWiOPs6_oaQiNnfz8-n1L2q0pfjr2o6o-2wFxH89O6jWjLkxWY')">
+<div class="absolute bottom-2 right-2 bg-white/90 backdrop-blur px-2 py-1 rounded-lg text-[10px] font-bold text-text-main">Strength</div>
+</div>
+<div class="px-1">
+<p class="text-sm font-bold text-text-main font-display truncate">Incline Dumbbell</p>
+<p class="text-xs text-text-sub mt-0.5">Chest builder</p>
+</div>
+</div>
+<div class="w-44 shrink-0 snap-start flex flex-col gap-3 group cursor-pointer hover:scale-95 transition-transform duration-200">
+<div class="aspect-[4/3] w-full rounded-3xl bg-cover bg-center overflow-hidden relative shadow-md border-2 border-white" data-alt="Person doing pushups" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuBdVXhM9DdRQuJuW9ErzImxX1-yBNGMf-kWWN_d_tzPZAAxAC__EML_U3sgu30YwAtoPWWuf-Im8aH7gX2utpQnuVW4yoWRNhocMy8lbIzUMJoPxBkCRlDQZwllaETGNR6UzttNo5L1JxIIcu-ExxM1bSiolkPrraClDOAThn-wnEM_zILlFNUOI5lxRLRDyuW8gq_Mw83bx13FPWEeHHBTrWPiNv0mErnodLmxb6Uo0oeM0alRT18_NIFdnJQH25f6RzSycW5S8dw')">
+<div class="absolute bottom-2 right-2 bg-white/90 backdrop-blur px-2 py-1 rounded-lg text-[10px] font-bold text-text-main">Basics</div>
+</div>
+<div class="px-1">
+<p class="text-sm font-bold text-text-main font-display truncate">Classic Push Ups</p>
+<p class="text-xs text-text-sub mt-0.5">Bodyweight fun</p>
+</div>
+</div>
+<div class="w-44 shrink-0 snap-start flex flex-col gap-3 group cursor-pointer hover:scale-95 transition-transform duration-200">
+<div class="aspect-[4/3] w-full rounded-3xl bg-cover bg-center overflow-hidden relative shadow-md border-2 border-white" data-alt="Close up of cable crossover exercise" style="background-image: url('https://lh3.googleusercontent.com/aida-public/AB6AXuCIfYF7KYpMuFyeU7EkqVIxYBMV-ABJkWsvKzOrdupLVperM_qyktI3JMGcUA1SZoVNxLKa6zgUf8_VIsOCSIeGHCJUnVJxt8f3VgdjlyrqNRbYrJc6jAI4OmfRDW6jYK6fAMmQYsieI2GVqvzOFQI0hwQzO1PgCqNIjYHzN4TaIOu1eD2SRIBu0FItz1xYPnZNzFyUxQsm116q__m9WLYC3I8qhpGdjXLS2bXGIyWrUdDC6T1E7xGkBT4Dk4Q5zH2MOyMb-UIf9cI')">
+<div class="absolute bottom-2 right-2 bg-white/90 backdrop-blur px-2 py-1 rounded-lg text-[10px] font-bold text-text-main">Isolation</div>
+</div>
+<div class="px-1">
+<p class="text-sm font-bold text-text-main font-display truncate">Cable Crossover</p>
+<p class="text-xs text-text-sub mt-0.5">Sculpting</p>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="fixed bottom-6 left-6 right-6 z-50 max-w-sm mx-auto">
+<button class="w-full flex items-center justify-center gap-3 bg-text-main hover:bg-gray-800 text-white font-display font-bold text-lg py-5 px-6 rounded-3xl shadow-bubbly transition-all transform active:scale-95 border-b-4 border-gray-900">
+<span class="material-symbols-outlined filled">play_circle</span>
+            Start Workout!
+        </button>
+</div>
+<div class="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-100 py-3 pb-6 flex justify-around items-center z-40 max-w-md mx-auto rounded-t-3xl shadow-[0_-5px_20px_-5px_rgba(0,0,0,0.05)]">
+<button class="flex flex-col items-center gap-1 text-text-sub hover:text-primary transition-colors w-16">
+<span class="material-symbols-outlined" style="font-size: 26px;">home</span>
+<span class="text-[10px] font-bold">Home</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary w-16">
+<span class="material-symbols-outlined filled" style="font-size: 26px; font-variation-settings: 'FILL' 1;">fitness_center</span>
+<span class="text-[10px] font-bold">Workouts</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-text-sub hover:text-primary transition-colors w-16">
+<span class="material-symbols-outlined" style="font-size: 26px;">monitoring</span>
+<span class="text-[10px] font-bold">Progress</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-text-sub hover:text-primary transition-colors w-16">
+<span class="material-symbols-outlined" style="font-size: 26px;">sentiment_satisfied</span>
+<span class="text-[10px] font-bold">Coach</span>
+</button>
+</div>
+</div>
+
+</body></html>

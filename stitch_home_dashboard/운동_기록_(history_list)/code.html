@@ -1,0 +1,270 @@
+<html lang="en"><head><style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head><body class="bg-bg-cream font-sans text-text-main min-h-screen pb-32">```html
+
+
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FitCoach - Exercise History</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Rounded:opsz,wght,FILL,GRAD@20..48,100..700,0..1,-50..200" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "bg-cream": "#FFF8F0",
+                        "primary-coral": "#FF8577", 
+                        "primary-dark": "#E66A5C",
+                        "secondary-mint": "#6EE7B7", 
+                        "apple-green": "#74D680",
+                        "accent-yellow": "#FCD34D",
+                        "text-main": "#3D3D3D", 
+                        "text-sub": "#8B8B8B",
+                        "surface-white": "#FFFFFF",
+                        "border-soft": "#FFE4D6",
+                    },
+                    fontFamily: {
+                        "sans": ["Nunito", "sans-serif"]
+                    },
+                    borderRadius: { 
+                        "xl": "1rem", 
+                        "2xl": "1.5rem", 
+                        "3xl": "2rem", 
+                        "4xl": "2.5rem",
+                    },
+                    boxShadow: {
+                        "soft": "0 8px 24px -6px rgba(255, 133, 119, 0.15)",
+                        "card": "0 2px 10px -2px rgba(61, 61, 61, 0.03)",
+                        "bubbly": "0 4px 0 0 rgba(220, 220, 220, 0.5)",
+                        "bubbly-active": "0 0 0 0 rgba(0,0,0,0)",
+                        "nav": "0 -4px 20px rgba(0,0,0,0.05)"
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            -webkit-tap-highlight-color: transparent;
+        }
+        .material-symbols-rounded {
+            font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+        }
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .btn-bounce {
+            transition: transform 0.1s cubic-bezier(0.34, 1.56, 0.64, 1);
+        }
+        .btn-bounce:active {
+            transform: scale(0.92);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+
+
+<header class="sticky top-0 z-40 bg-bg-cream/95 backdrop-blur-md px-6 pt-12 pb-2 border-b border-primary-coral/10">
+<div class="flex items-center justify-between mb-6">
+<div>
+<h2 class="text-3xl font-black text-text-main tracking-tight">운동 기록</h2>
+<p class="text-sm font-bold text-text-sub mt-1 flex items-center gap-2">
+                    Logbook
+                </p>
+</div>
+<button class="btn-bounce flex items-center justify-center w-10 h-10 rounded-xl bg-white border border-border-soft text-text-sub hover:text-primary-coral hover:border-primary-coral transition-colors">
+<span class="material-symbols-rounded text-[24px]">filter_list</span>
+</button>
+</div>
+<div class="flex gap-3 overflow-x-auto no-scrollbar pb-2">
+<button class="btn-bounce flex h-9 shrink-0 items-center justify-center px-5 rounded-full bg-white border border-border-soft text-sm font-bold text-text-sub transition-all hover:border-primary-coral hover:text-primary-coral">
+                1주
+            </button>
+<button class="btn-bounce flex h-9 shrink-0 items-center justify-center px-5 rounded-full bg-primary-coral text-white text-sm font-bold shadow-soft shadow-primary-coral/30 border border-primary-coral">
+                1개월
+            </button>
+<button class="btn-bounce flex h-9 shrink-0 items-center justify-center px-5 rounded-full bg-white border border-border-soft text-sm font-bold text-text-sub transition-all hover:border-primary-coral hover:text-primary-coral">
+                3개월
+            </button>
+<button class="btn-bounce flex h-9 shrink-0 items-center justify-center px-5 rounded-full bg-white border border-border-soft text-sm font-bold text-text-sub transition-all hover:border-primary-coral hover:text-primary-coral">
+                전체
+            </button>
+</div>
+</header>
+<main class="flex flex-col px-5 mt-6">
+<div class="flex items-center justify-between mb-4 px-1">
+<span class="text-xs font-extrabold text-text-sub uppercase tracking-wider pl-1">October 2023</span>
+<span class="text-[10px] font-bold text-primary-coral bg-white px-2.5 py-1 rounded-full border border-border-soft shadow-sm">18 Workouts</span>
+</div>
+<div class="flex flex-col gap-6">
+<div class="group relative bg-white rounded-[1.5rem] p-5 shadow-card border border-white hover:border-primary-coral/20 transition-all cursor-pointer flex items-center gap-6">
+<div class="flex flex-col items-center justify-center w-14 shrink-0">
+<span class="text-[10px] font-extrabold uppercase text-text-sub tracking-widest opacity-80">Oct</span>
+<span class="text-xl font-black text-primary-coral leading-none mt-0.5">25</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between mb-2">
+<h4 class="text-base font-extrabold text-text-main truncate">가슴 &amp; 삼두</h4>
+</div>
+<p class="text-sm font-semibold text-text-sub flex items-center gap-1.5 truncate">
+<span class="text-text-main/80 font-bold">55m</span>
+<span class="text-xs text-text-sub/40">●</span>
+<span>8,400kg</span>
+<span class="text-xs text-text-sub/40">●</span>
+<span>18 sets</span>
+</p>
+</div>
+</div>
+<div class="group relative bg-white rounded-[1.5rem] p-5 shadow-card border border-white hover:border-primary-coral/20 transition-all cursor-pointer flex items-center gap-6">
+<div class="flex flex-col items-center justify-center w-14 shrink-0">
+<span class="text-[10px] font-extrabold uppercase text-text-sub tracking-widest opacity-80">Oct</span>
+<span class="text-xl font-black text-primary-coral leading-none mt-0.5">24</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between mb-2">
+<h4 class="text-base font-extrabold text-text-main truncate">등 &amp; 이두</h4>
+</div>
+<p class="text-sm font-semibold text-text-sub flex items-center gap-1.5 truncate">
+<span class="text-text-main/80 font-bold">60m</span>
+<span class="text-xs text-text-sub/40">●</span>
+<span>9,200kg</span>
+<span class="text-xs text-text-sub/40">●</span>
+<span>20 sets</span>
+</p>
+</div>
+</div>
+<div class="group relative bg-white rounded-[1.5rem] p-5 shadow-card border border-white hover:border-apple-green/30 transition-all cursor-pointer flex items-center gap-6 mt-1">
+<div class="absolute inset-0 bg-apple-green/[0.04] rounded-[1.5rem]"></div>
+<div class="flex flex-col items-center justify-center w-14 shrink-0 relative z-10">
+<span class="absolute -top-1.5 -right-1 text-apple-green">
+<span class="material-symbols-rounded text-[14px]">favorite</span>
+</span>
+<span class="text-[10px] font-extrabold uppercase text-text-sub tracking-widest opacity-80">Oct</span>
+<span class="text-xl font-black text-apple-green leading-none mt-0.5">22</span>
+</div>
+<div class="flex-1 min-w-0 z-10">
+<div class="flex items-center justify-between mb-2">
+<h4 class="text-base font-extrabold text-text-main truncate">실외 달리기</h4>
+</div>
+<p class="text-sm font-semibold text-text-sub flex items-center gap-1.5 truncate">
+<span class="text-text-main/80 font-bold">35m</span>
+<span class="text-xs text-text-sub/40">●</span>
+<span>320kcal</span>
+<span class="text-xs text-text-sub/40">●</span>
+<span>4.5km</span>
+</p>
+</div>
+</div>
+<div class="group relative bg-white rounded-[1.5rem] p-5 shadow-card border border-white hover:border-primary-coral/20 transition-all cursor-pointer flex items-center gap-6">
+<div class="flex flex-col items-center justify-center w-14 shrink-0">
+<span class="text-[10px] font-extrabold uppercase text-text-sub tracking-widest opacity-80">Oct</span>
+<span class="text-xl font-black text-primary-coral leading-none mt-0.5">20</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between mb-2">
+<h4 class="text-base font-extrabold text-text-main truncate">하체 (Legs)</h4>
+</div>
+<p class="text-sm font-semibold text-text-sub flex items-center gap-1.5 truncate">
+<span class="text-text-main/80 font-bold">70m</span>
+<span class="text-xs text-text-sub/40">●</span>
+<span>12.5t</span>
+<span class="text-xs text-text-sub/40">●</span>
+<span>24 sets</span>
+</p>
+</div>
+</div>
+<div class="group relative bg-white rounded-[1.5rem] p-5 shadow-card border border-white hover:border-apple-green/30 transition-all cursor-pointer flex items-center gap-6 mt-1">
+<div class="absolute inset-0 bg-apple-green/[0.04] rounded-[1.5rem]"></div>
+<div class="flex flex-col items-center justify-center w-14 shrink-0 relative z-10">
+<span class="absolute -top-1.5 -right-1 text-apple-green">
+<span class="material-symbols-rounded text-[14px]">spa</span>
+</span>
+<span class="text-[10px] font-extrabold uppercase text-text-sub tracking-widest opacity-80">Oct</span>
+<span class="text-xl font-black text-apple-green leading-none mt-0.5">18</span>
+</div>
+<div class="flex-1 min-w-0 z-10">
+<div class="flex items-center justify-between mb-2">
+<h4 class="text-base font-extrabold text-text-main truncate">모닝 요가</h4>
+</div>
+<p class="text-sm font-semibold text-text-sub flex items-center gap-1.5 truncate">
+<span class="text-text-main/80 font-bold">20m</span>
+<span class="text-xs text-text-sub/40">●</span>
+<span>85kcal</span>
+<span class="text-xs text-text-sub/40">●</span>
+<span>Mindful</span>
+</p>
+</div>
+</div>
+<div class="group relative bg-white rounded-[1.5rem] p-5 shadow-card border border-white hover:border-primary-coral/20 transition-all cursor-pointer flex items-center gap-6">
+<div class="flex flex-col items-center justify-center w-14 shrink-0">
+<span class="text-[10px] font-extrabold uppercase text-text-sub tracking-widest opacity-80">Oct</span>
+<span class="text-xl font-black text-primary-coral leading-none mt-0.5">15</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between mb-2">
+<h4 class="text-base font-extrabold text-text-main truncate">어깨 &amp; 복근</h4>
+</div>
+<p class="text-sm font-semibold text-text-sub flex items-center gap-1.5 truncate">
+<span class="text-text-main/80 font-bold">45m</span>
+<span class="text-xs text-text-sub/40">●</span>
+<span>5,600kg</span>
+<span class="text-xs text-text-sub/40">●</span>
+<span>15 sets</span>
+</p>
+</div>
+</div>
+<div class="group relative bg-white rounded-[1.5rem] p-5 shadow-card border border-white hover:border-primary-coral/20 transition-all cursor-pointer flex items-center gap-6">
+<div class="flex flex-col items-center justify-center w-14 shrink-0">
+<span class="text-[10px] font-extrabold uppercase text-text-sub tracking-widest opacity-80">Oct</span>
+<span class="text-xl font-black text-primary-coral leading-none mt-0.5">12</span>
+</div>
+<div class="flex-1 min-w-0">
+<div class="flex items-center justify-between mb-2">
+<h4 class="text-base font-extrabold text-text-main truncate">전신 서킷</h4>
+</div>
+<p class="text-sm font-semibold text-text-sub flex items-center gap-1.5 truncate">
+<span class="text-text-main/80 font-bold">40m</span>
+<span class="text-xs text-text-sub/40">●</span>
+<span>420kcal</span>
+<span class="text-xs text-text-sub/40">●</span>
+<span>HIIT</span>
+</p>
+</div>
+</div>
+</div>
+</main>
+<nav class="fixed bottom-6 left-1/2 -translate-x-1/2 w-[90%] max-w-md bg-white/90 backdrop-blur-xl rounded-[2.5rem] shadow-nav border border-white/40 px-6 py-4 z-50">
+<div class="flex justify-between items-center">
+<a class="flex flex-col items-center justify-center gap-1 text-text-sub hover:text-primary-coral transition-colors w-16 group" href="#">
+<span class="material-symbols-rounded text-[28px] group-hover:scale-110 transition-transform">home</span>
+<span class="text-[10px] font-bold">홈</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 text-text-sub hover:text-primary-coral transition-colors w-16 group" href="#">
+<span class="material-symbols-rounded text-[28px] group-hover:scale-110 transition-transform">fitness_center</span>
+<span class="text-[10px] font-bold">운동</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 text-primary-coral w-16 relative group" href="#">
+<div class="absolute -top-12 bg-primary-coral text-white p-3 rounded-full shadow-soft shadow-primary-coral/40 group-hover:-translate-y-1 transition-transform border-[6px] border-bg-cream">
+<span class="material-symbols-rounded text-[28px]">bar_chart</span>
+</div>
+<span class="text-[10px] font-bold mt-6">기록</span>
+</a>
+<a class="flex flex-col items-center justify-center gap-1 text-text-sub hover:text-primary-coral transition-colors w-16 group" href="#">
+<span class="material-symbols-rounded text-[28px] group-hover:scale-110 transition-transform">sentiment_satisfied</span>
+<span class="text-[10px] font-bold">코치</span>
+</a>
+</div>
+</nav>
+```</body></html>

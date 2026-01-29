@@ -1,0 +1,16 @@
+name: FitMeApp
+targets:
+  FitMeApp:
+    type: application
+    platform: iOS
+    sources:
+      - path: FitMeApp
+    resources:
+      - path: FitMeApp/Resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: com.fitme.app
+        GENERATE_INFOPLIST_FILE: NO
+        INFOPLIST_FILE: FitMeApp/Info.plist
+        IPHONEOS_DEPLOYMENT_TARGET: "17.0"
+        SWIFT_VERSION: "5.0"

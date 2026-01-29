@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>FitCoach - Exercise Library</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800&amp;family=Quicksand:wght@500;600;700&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "bg-main": "#FFF8F0", // Warm cream
+                        "bg-card": "#FFFFFF",
+                        "primary": "#FF8577", // Coral/Peach
+                        "primary-hover": "#FF6B5B",
+                        "secondary": "#6EE7B7", // Mint
+                        "accent": "#FCD34D", // Sunny yellow
+                        "text-main": "#3D3D3D", // Warm dark
+                        "text-muted": "#9CA3AF",
+                        "border-subtle": "#F3E8DE",
+                        "soft-purple": "#F5F3FF",
+                    },
+                    fontFamily: {
+                        "sans": ["Nunito", "sans-serif"],
+                        "display": ["Quicksand", "sans-serif"],
+                    },
+                    borderRadius: {
+                        "xl": "1rem",
+                        "2xl": "1.5rem",
+                        "3xl": "2rem",
+                        "bubbly": "28px",
+                    },
+                    boxShadow: {
+                        "bubbly": "0 4px 0 0 rgba(0,0,0,0.05)",
+                        "bubbly-hover": "0 6px 0 0 rgba(0,0,0,0.05)",
+                        "card": "0 8px 24px -6px rgba(255, 133, 119, 0.15)",
+                        "nav": "0 -4px 20px rgba(0,0,0,0.03)",
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        body {
+            background-color: #FFF8F0;
+            color: #3D3D3D;
+        }
+        .bubbly-text {
+             font-variation-settings: 'wght' 700;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-sans antialiased text-text-main bg-bg-main selection:bg-primary/30">
+<div class="relative flex h-full min-h-screen w-full flex-col overflow-x-hidden max-w-md mx-auto shadow-xl bg-bg-main">
+<header class="sticky top-0 z-40 bg-bg-main/95 backdrop-blur-sm px-6 pt-10 pb-4 flex items-center justify-between transition-all">
+<button class="flex items-center justify-center size-11 rounded-2xl bg-white border-2 border-border-subtle text-text-main shadow-bubbly hover:translate-y-0.5 hover:shadow-none transition-all active:scale-95 group">
+<span class="material-symbols-outlined text-text-main font-bold" style="font-size: 22px;">arrow_back_ios_new</span>
+</button>
+<h1 class="text-2xl font-display font-bold text-text-main text-center flex-1 pr-11 tracking-tight">운동 라이브러리</h1>
+</header>
+<div class="px-6 py-2 sticky top-[88px] z-30 bg-bg-main">
+<div class="relative group transform transition-all hover:scale-[1.01]">
+<div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+<span class="material-symbols-outlined text-primary font-bold" style="font-size: 24px;">search</span>
+</div>
+<input class="block w-full pl-12 pr-4 py-4 rounded-3xl bg-white border-2 border-border-subtle focus:border-primary focus:ring-4 focus:ring-primary/10 shadow-bubbly placeholder-gray-400 text-text-main text-lg font-bold transition-all" placeholder="어떤 운동을 찾으세요?" type="text" value=""/>
+</div>
+</div>
+<div class="flex gap-3 px-6 pt-4 pb-4 overflow-x-auto no-scrollbar touch-pan-x sticky top-[152px] z-20 bg-bg-main">
+<button class="flex shrink-0 items-center justify-center px-5 py-2.5 rounded-full bg-primary text-white text-[15px] font-bold shadow-md hover:bg-primary-hover transition-transform active:scale-95">
+                전체
+            </button>
+<button class="flex shrink-0 items-center justify-center px-5 py-2.5 rounded-full bg-white text-text-muted text-[15px] font-bold border-2 border-border-subtle hover:text-primary hover:border-primary hover:bg-primary/5 transition-all active:scale-95">
+                가슴
+            </button>
+<button class="flex shrink-0 items-center justify-center px-5 py-2.5 rounded-full bg-white text-text-muted text-[15px] font-bold border-2 border-border-subtle hover:text-primary hover:border-primary hover:bg-primary/5 transition-all active:scale-95">
+                등
+            </button>
+<button class="flex shrink-0 items-center justify-center px-5 py-2.5 rounded-full bg-white text-text-muted text-[15px] font-bold border-2 border-border-subtle hover:text-primary hover:border-primary hover:bg-primary/5 transition-all active:scale-95">
+                하체
+            </button>
+<button class="flex shrink-0 items-center justify-center px-5 py-2.5 rounded-full bg-white text-text-muted text-[15px] font-bold border-2 border-border-subtle hover:text-primary hover:border-primary hover:bg-primary/5 transition-all active:scale-95">
+                어깨
+            </button>
+<button class="flex shrink-0 items-center justify-center px-5 py-2.5 rounded-full bg-white text-text-muted text-[15px] font-bold border-2 border-border-subtle hover:text-primary hover:border-primary hover:bg-primary/5 transition-all active:scale-95">
+                팔
+            </button>
+<button class="flex shrink-0 items-center justify-center px-5 py-2.5 rounded-full bg-white text-text-muted text-[15px] font-bold border-2 border-border-subtle hover:text-primary hover:border-primary hover:bg-primary/5 transition-all active:scale-95">
+                코어
+            </button>
+</div>
+<div class="px-7 pt-2 pb-2 flex justify-between items-center">
+<p class="text-text-muted text-sm font-bold tracking-wide flex items-center gap-2">
+<span class="flex items-center justify-center w-6 h-6 rounded-full bg-secondary/20 text-secondary text-xs">
+<span class="material-symbols-outlined" style="font-size: 14px;">fitness_center</span>
+</span>
+                724개의 운동
+            </p>
+<button class="text-primary text-sm font-extrabold flex items-center gap-1 hover:bg-primary/10 px-3 py-1.5 rounded-xl transition-colors">
+<span class="material-symbols-outlined" style="font-size: 18px;">sort</span> 최근순
+            </button>
+</div>
+<div class="flex-1 flex flex-col gap-4 px-6 pb-32 pt-2">
+<div class="group relative flex items-center gap-4 px-4 py-4 bg-white rounded-[24px] border-2 border-transparent hover:border-primary/20 transition-all duration-300 cursor-pointer active:scale-[0.98] shadow-card hover:-translate-y-1">
+<div class="relative shrink-0 size-[5rem] rounded-2xl overflow-hidden bg-soft-purple border-2 border-white shadow-sm">
+<img alt="Bench Press" class="w-full h-full object-cover" data-alt="Man lying on bench pressing barbell weights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCQttwyEWF6qXJa4GlsWMkmUdU50FAKOOvJsbb29QdPbTjuKa6JM9KUHC8VXJmH3Z-qYpUjy02hX1TNGkUvM_a-26iyv0gLVRBmpFfw1s76dlndFD7QkmJ84pezsisXP9fknFMNZ91Toj9hNKyqu0PjsvHBYT5ak3ZjtSBovtZqK56i9viOSEw6vAxQOGMHxbNG1_TPg5QOVlWAeHgJtqGhHGfqCMYXvIdTEESZdGMamX_0NotvWS4BAuYL0s10rUHmCGErVbnmGXE"/>
+</div>
+<div class="flex flex-col flex-1 min-w-0 justify-center gap-1.5">
+<div class="flex items-start justify-between">
+<h3 class="text-[17px] font-display font-bold text-text-main truncate leading-tight group-hover:text-primary transition-colors">벤치 프레스</h3>
+</div>
+<div class="flex items-center gap-2 flex-wrap">
+<span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-primary/10 text-primary">
+                            가슴 (CHEST)
+                        </span>
+<span class="text-text-muted text-[12px] font-semibold truncate flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Barbell
+                        </span>
+</div>
+</div>
+<div class="shrink-0 flex items-center justify-center size-10 rounded-full bg-bg-main text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+<span class="material-symbols-outlined font-bold" style="font-size: 20px;">arrow_forward_ios</span>
+</div>
+</div>
+<div class="group relative flex items-center gap-4 px-4 py-4 bg-white rounded-[24px] border-2 border-transparent hover:border-primary/20 transition-all duration-300 cursor-pointer active:scale-[0.98] shadow-card hover:-translate-y-1">
+<div class="relative shrink-0 size-[5rem] rounded-2xl overflow-hidden bg-soft-purple border-2 border-white shadow-sm">
+<img alt="Deadlift" class="w-full h-full object-cover" data-alt="Athlete preparing to lift heavy barbell from floor" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD31Hj9MkRMg5lQK90LgpZ0qcUvwuVmY2kOFc3Iedtzi-oPWhGlDNUuMM_HJmMaLDyWp7A4KAs1Cdq7LaMpIo4VY5ubIgojMQCxfvdO48x-F0AjRZmEtgLByV7NEHPCV-rH75MxiAVr23z9dqs_6K-Q7T5Cf-rViJ3Kcmga-CQ81tHMpIEn5iliPn2vW0r7zi9Mr-G3igHVqjs4YawPSI2bOoi_v7hn2ZuVKHFbynw4BCsyHCeNHeWmHJ1SYXCnY8srwSptRFdsDKQ"/>
+</div>
+<div class="flex flex-col flex-1 min-w-0 justify-center gap-1.5">
+<div class="flex items-start justify-between">
+<h3 class="text-[17px] font-display font-bold text-text-main truncate leading-tight group-hover:text-primary transition-colors">데드리프트</h3>
+</div>
+<div class="flex items-center gap-2 flex-wrap">
+<span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-purple-100 text-purple-500">
+                            등 (BACK)
+                        </span>
+<span class="text-text-muted text-[12px] font-semibold truncate flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Compound
+                        </span>
+</div>
+</div>
+<div class="shrink-0 flex items-center justify-center size-10 rounded-full bg-bg-main text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+<span class="material-symbols-outlined font-bold" style="font-size: 20px;">arrow_forward_ios</span>
+</div>
+</div>
+<div class="group relative flex items-center gap-4 px-4 py-4 bg-white rounded-[24px] border-2 border-transparent hover:border-primary/20 transition-all duration-300 cursor-pointer active:scale-[0.98] shadow-card hover:-translate-y-1">
+<div class="relative shrink-0 size-[5rem] rounded-2xl overflow-hidden bg-soft-purple border-2 border-white shadow-sm">
+<img alt="Squat" class="w-full h-full object-cover" data-alt="Man performing back squat with barbell" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBQyevYQZ24XFLj1flzQIa5emfveuOlTqfJaX8RY14uJF61yBmIt1_MIvFcaf5_vM0GSwtfEUi6P5RG_c-Ig4Y5LPvptMYxzFYmHJjRGnZ9sC3WwTTR890k_O_-rUsmD9eP92A4HdwKgXA8iEUmX9PieaY6IB0pVmwWow45awWSf5Jagmllm6eGuus3xeJXfwE17BvAXlO-fwsPOnI78_TkUKauqDwGoeIpusP0fAD_83Jzl-94REVEZKp8fvSIKA3rdMwUQfGlRs0"/>
+</div>
+<div class="flex flex-col flex-1 min-w-0 justify-center gap-1.5">
+<div class="flex items-start justify-between">
+<h3 class="text-[17px] font-display font-bold text-text-main truncate leading-tight group-hover:text-primary transition-colors">스쿼트</h3>
+</div>
+<div class="flex items-center gap-2 flex-wrap">
+<span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-secondary/20 text-teal-600">
+                            하체 (LEGS)
+                        </span>
+<span class="text-text-muted text-[12px] font-semibold truncate flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Barbell
+                        </span>
+</div>
+</div>
+<div class="shrink-0 flex items-center justify-center size-10 rounded-full bg-bg-main text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+<span class="material-symbols-outlined font-bold" style="font-size: 20px;">arrow_forward_ios</span>
+</div>
+</div>
+<div class="group relative flex items-center gap-4 px-4 py-4 bg-white rounded-[24px] border-2 border-transparent hover:border-primary/20 transition-all duration-300 cursor-pointer active:scale-[0.98] shadow-card hover:-translate-y-1">
+<div class="relative shrink-0 size-[5rem] rounded-2xl overflow-hidden bg-soft-purple border-2 border-white shadow-sm">
+<img alt="Dumbbell Curl" class="w-full h-full object-cover" data-alt="Close up of arm lifting dumbbell" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA_qSvGR1CyWJCnn6JO68FnTNCpD7np5GK24topr3tv5cbtiIRu_SWVdpVClo3SGVT3UROde34qOhu4SWptJs-LLu1i2fltddCIDmFUt2IpOAd-Xqp5RlSROwRBjEFi8CZCIUZEY1-58qEo9T_fN7_cVcIMCgZzgz_eJ746WClbdpPRareBQX8zl9ctwZ2xK39C2RZWs91GC2fHVuqpH8GfyJxfRoF-l7hXdwDkFy8Rmy4YPA5ZtdHLWSm4ZW4n7hlVY-hcGxfiXSs"/>
+</div>
+<div class="flex flex-col flex-1 min-w-0 justify-center gap-1.5">
+<div class="flex items-start justify-between">
+<h3 class="text-[17px] font-display font-bold text-text-main truncate leading-tight group-hover:text-primary transition-colors">덤벨 컬</h3>
+</div>
+<div class="flex items-center gap-2 flex-wrap">
+<span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-blue-100 text-blue-500">
+                            팔 (ARMS)
+                        </span>
+<span class="text-text-muted text-[12px] font-semibold truncate flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Isolation
+                        </span>
+</div>
+</div>
+<div class="shrink-0 flex items-center justify-center size-10 rounded-full bg-bg-main text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+<span class="material-symbols-outlined font-bold" style="font-size: 20px;">arrow_forward_ios</span>
+</div>
+</div>
+<div class="group relative flex items-center gap-4 px-4 py-4 bg-white rounded-[24px] border-2 border-transparent hover:border-primary/20 transition-all duration-300 cursor-pointer active:scale-[0.98] shadow-card hover:-translate-y-1">
+<div class="relative shrink-0 size-[5rem] rounded-2xl overflow-hidden bg-soft-purple border-2 border-white shadow-sm">
+<img alt="Overhead Press" class="w-full h-full object-cover" data-alt="Woman performing overhead press exercise" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCeqcihPQEHUWa35KM1Mg1l5n82hRsFWK7RNGgaKuhFdl0rgnftWPtmTFJO_uaGwpCaGT5oBy_wbHFu4pJ8seIhGGjQp1U1xWu8GkgmRO8iPEZiTRSvz4T06jnL1vpYZdjZEebl6okTv5DGjJLJBUZPeq8UheEjBVO3FYaFacl-VkibefIJZAjJPEQWGnLBc-gTFxlpr56Y8QaDEQkAU-hWaSs9GRVv92YX-UdQAkhKKrUAeP4R4DeAvjnTZOaF3ouQVGxcVwKyHUg"/>
+</div>
+<div class="flex flex-col flex-1 min-w-0 justify-center gap-1.5">
+<div class="flex items-start justify-between">
+<h3 class="text-[17px] font-display font-bold text-text-main truncate leading-tight group-hover:text-primary transition-colors">오버헤드 프레스</h3>
+</div>
+<div class="flex items-center gap-2 flex-wrap">
+<span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-accent/20 text-orange-600">
+                            어깨 (SHOULDERS)
+                        </span>
+<span class="text-text-muted text-[12px] font-semibold truncate flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Dumbbell
+                        </span>
+</div>
+</div>
+<div class="shrink-0 flex items-center justify-center size-10 rounded-full bg-bg-main text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+<span class="material-symbols-outlined font-bold" style="font-size: 20px;">arrow_forward_ios</span>
+</div>
+</div>
+<div class="group relative flex items-center gap-4 px-4 py-4 bg-white rounded-[24px] border-2 border-transparent hover:border-primary/20 transition-all duration-300 cursor-pointer active:scale-[0.98] shadow-card hover:-translate-y-1">
+<div class="relative shrink-0 size-[5rem] rounded-2xl overflow-hidden bg-soft-purple border-2 border-white shadow-sm">
+<img alt="Lunge" class="w-full h-full object-cover" data-alt="Person performing forward lunge in gym" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD4G9Pjv4AHugIRlwvD1ZO8pZeumRARLknPTYA5mHXcThuKwVs52vuz-8WrmzATr55Y9SYsBYnYiA0OjxfQSlheaLMMP7XjbljXa_jjZNUG8itbul_IP_0kSCObUBXsknx5AnEVN1SVVijnykXiCaOE2yYvJ5OvN6x3yTiWyBUJ6r7ABP-FfY5AZIIQVAB0WYx15LQoGaAoSYoK4YQY5C8xCaRLkAZ4P3i8PArhYMupoKId1qZLap5Cym2fv__-ngLUodJox1anXN8"/>
+</div>
+<div class="flex flex-col flex-1 min-w-0 justify-center gap-1.5">
+<div class="flex items-start justify-between">
+<h3 class="text-[17px] font-display font-bold text-text-main truncate leading-tight group-hover:text-primary transition-colors">런지</h3>
+</div>
+<div class="flex items-center gap-2 flex-wrap">
+<span class="inline-flex items-center px-2.5 py-1 rounded-lg text-[11px] font-bold bg-secondary/20 text-teal-600">
+                            하체 (LEGS)
+                        </span>
+<span class="text-text-muted text-[12px] font-semibold truncate flex items-center gap-1">
+<span class="w-1.5 h-1.5 rounded-full bg-accent"></span> Bodyweight
+                        </span>
+</div>
+</div>
+<div class="shrink-0 flex items-center justify-center size-10 rounded-full bg-bg-main text-primary group-hover:bg-primary group-hover:text-white transition-all shadow-sm">
+<span class="material-symbols-outlined font-bold" style="font-size: 20px;">arrow_forward_ios</span>
+</div>
+</div>
+</div>
+<div class="fixed bottom-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-xl border-t border-border-subtle rounded-t-[32px] px-8 pt-4 pb-8 flex justify-between items-center max-w-md mx-auto shadow-nav">
+<button class="flex flex-col items-center gap-1 text-text-muted hover:text-primary transition-colors flex-1 group">
+<span class="material-symbols-outlined group-hover:-translate-y-1 transition-transform duration-300" style="font-size: 28px;">home</span>
+<span class="text-[11px] font-extrabold tracking-tight">홈</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-text-muted hover:text-primary transition-colors flex-1 group">
+<span class="material-symbols-outlined group-hover:-translate-y-1 transition-transform duration-300" style="font-size: 28px;">exercise</span>
+<span class="text-[11px] font-extrabold tracking-tight">워크아웃</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-primary flex-1 group relative">
+<div class="absolute -top-12 bg-primary rounded-full p-3.5 shadow-lg shadow-primary/30 border-4 border-bg-main hover:scale-110 transition-transform">
+<span class="material-symbols-outlined text-white" style="font-size: 30px;">fitness_center</span>
+</div>
+<span class="h-6"></span>
+<span class="text-[11px] font-extrabold tracking-tight mt-1">라이브러리</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-text-muted hover:text-primary transition-colors flex-1 group">
+<span class="material-symbols-outlined group-hover:-translate-y-1 transition-transform duration-300" style="font-size: 28px;">bar_chart</span>
+<span class="text-[11px] font-extrabold tracking-tight">기록</span>
+</button>
+<button class="flex flex-col items-center gap-1 text-text-muted hover:text-primary transition-colors flex-1 group">
+<span class="material-symbols-outlined group-hover:-translate-y-1 transition-transform duration-300" style="font-size: 28px;">face</span>
+<span class="text-[11px] font-extrabold tracking-tight">코치</span>
+</button>
+</div>
+</div>
+
+</body></html>

@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="ko"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Monthly Report</title>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+    tailwind.config = {
+        theme: {
+            extend: {
+                colors: {
+                    bg: {
+                        cream: "#FFF8F0",
+                        white: "#FFFFFF",
+                        soft: "#FFF1F2", // Very light pinkish
+                    },
+                    primary: {
+                        coral: "#FF8577",
+                        mint: "#6EE7B7", 
+                        yellow: "#FCD34D",
+                    },
+                    text: {
+                        dark: "#3D3D3D",
+                        muted: "#78716C", // Warm gray
+                    },
+                },
+                fontFamily: {
+                    "sans": ["Nunito", "sans-serif"]
+                },
+                borderRadius: {
+                    '3xl': '1.75rem',
+                    '4xl': '2.5rem',
+                },
+                boxShadow: {
+                    'bubbly': '0 8px 20px -6px rgba(255, 133, 119, 0.15)',
+                    'card': '0 4px 6px -1px rgba(0, 0, 0, 0.02), 0 2px 4px -1px rgba(0, 0, 0, 0.02)',
+                }
+            },
+        },
+    }
+</script>
+<style>
+    .no-scrollbar::-webkit-scrollbar { display: none; }
+    .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .material-symbols-outlined {
+        font-variation-settings: 'FILL' 1, 'wght' 600, 'GRAD' 0, 'opsz' 24;
+    }
+    body {
+        background-color: #FFF8F0;
+        min-height: 100vh;
+    }
+</style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="font-sans antialiased text-[#3D3D3D] bg-[#FFF8F0] pb-32">
+<header class="sticky top-0 z-50 px-6 py-4 bg-[#FFF8F0]/90 backdrop-blur-md transition-all duration-200">
+<div class="flex items-center justify-between">
+<div>
+<p class="text-sm font-extrabold text-[#FF8577] mb-0.5 tracking-wide uppercase">Hi, Runner!</p>
+<h1 class="text-3xl font-black tracking-tight text-[#3D3D3D]">10월 리포트</h1>
+</div>
+<button class="w-12 h-12 rounded-full overflow-hidden border-[3px] border-white shadow-md transition hover:scale-105 active:scale-95 ring-2 ring-[#FF8577]/30">
+<img alt="User Profile" class="w-full h-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDQoirGpC7LV0pxmdR-Yt3Of7x4qaD5V1hok8ZG_MBHDYQE1RWw-YpmJOV_We8dfgtR-E_D-3AD7qie7JzrgaLuDfUqwNAz0h3XRwGWuV64HLzz3htuwOFenAzytepnvdkGXRZJ3QIzQRHzuXp3q92x9F5ZIa6olUWn6Ml16GtqsbUkXMCqerSuVbYug5efMXkQpwNCVUcg7UqAo_nQxR0gddv4DLR3_zy_szabgoP2o8OruRdtSR2Oqha8Z3HHbLSmlffabADvr_g"/>
+</button>
+</div>
+</header>
+<main class="flex flex-col gap-6 p-6 pt-2">
+<section class="relative flex flex-col p-6 rounded-[2rem] bg-white shadow-bubbly border-2 border-[#FFF1F2] overflow-hidden">
+<div class="relative z-10 flex justify-between items-start mb-6">
+<div>
+<h2 class="text-sm font-bold text-[#78716C] flex items-center gap-2">
+<span class="material-symbols-outlined text-[18px] text-[#FF8577]">monitor_weight</span>
+                    체중 변화
+                </h2>
+<div class="flex items-baseline gap-2 mt-1">
+<span class="text-[3.5rem] leading-none font-black text-[#3D3D3D] tracking-tight">72.5</span>
+<span class="text-xl font-bold text-[#78716C]">kg</span>
+</div>
+</div>
+<div class="flex flex-col items-end pt-2">
+<div class="flex items-center gap-1 bg-[#6EE7B7]/20 border border-[#6EE7B7]/30 pl-2 pr-3 py-1.5 rounded-full text-[#059669]">
+<span class="material-symbols-outlined text-[18px]">trending_down</span>
+<span class="text-sm font-bold">-1.2kg</span>
+</div>
+<span class="text-[12px] font-bold text-[#FF8577] mt-2">Nice job! 🎉</span>
+</div>
+</div>
+<div class="relative w-full h-40 z-10">
+<svg class="w-full h-full overflow-visible" preserveAspectRatio="none" viewBox="0 0 350 100">
+<defs>
+<linearGradient id="chartGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#FF8577" stop-opacity="0.4"></stop>
+<stop offset="100%" stop-color="#FF8577" stop-opacity="0"></stop>
+</linearGradient>
+</defs>
+<line opacity="0.1" stroke="#3D3D3D" stroke-dasharray="6 6" stroke-linecap="round" stroke-width="1.5" x1="0" x2="350" y1="20" y2="20"></line>
+<line opacity="0.1" stroke="#3D3D3D" stroke-dasharray="6 6" stroke-linecap="round" stroke-width="1.5" x1="0" x2="350" y1="50" y2="50"></line>
+<line opacity="0.1" stroke="#3D3D3D" stroke-dasharray="6 6" stroke-linecap="round" stroke-width="1.5" x1="0" x2="350" y1="80" y2="80"></line>
+<path d="M0,70 C50,75 100,60 150,50 C200,40 250,30 350,20 V120 H0 Z" fill="url(#chartGradient)"></path>
+<path d="M0,70 C50,75 100,60 150,50 C200,40 250,30 350,20" fill="none" stroke="#FF8577" stroke-linecap="round" stroke-linejoin="round" stroke-width="4"></path>
+<circle class="fill-white stroke-[#FF8577] stroke-[3px]" cx="150" cy="50" r="6"></circle>
+<circle class="fill-white stroke-[#FF8577] stroke-[3px]" cx="250" cy="30" r="6"></circle>
+<circle class="fill-[#FF8577] stroke-white stroke-[3px] shadow-lg" cx="350" cy="20" r="8"></circle>
+<foreignObject height="40" width="80" x="285" y="-15">
+<div class="flex justify-center animate-bounce">
+<span class="bg-[#3D3D3D] text-white text-[11px] font-bold px-3 py-1 rounded-full shadow-lg">Now</span>
+</div>
+</foreignObject>
+</svg>
+</div>
+<div class="flex justify-between mt-4 pt-4 border-t-2 border-dashed border-gray-100">
+<span class="text-xs font-bold text-[#78716C]/60">10.01</span>
+<span class="text-xs font-bold text-[#78716C]/60">10.08</span>
+<span class="text-xs font-bold text-[#78716C]/60">10.15</span>
+<span class="text-xs font-bold text-[#78716C]/60">10.22</span>
+<span class="text-xs font-bold text-[#FF8577]">오늘</span>
+</div>
+</section>
+<section class="grid grid-cols-2 gap-4">
+<div class="relative flex flex-col justify-between p-5 min-h-[150px] rounded-[1.75rem] bg-white border-b-4 border-[#FF8577] shadow-sm active:scale-95 transition-transform">
+<div class="absolute top-4 right-4 w-10 h-10 bg-[#FF8577]/10 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[#FF8577] text-[20px]">fitness_center</span>
+</div>
+<div class="flex flex-col h-full justify-end mt-4">
+<span class="text-xs font-bold text-[#78716C] mb-1">총 운동</span>
+<div class="flex items-baseline gap-1">
+<span class="text-[2.2rem] leading-none font-black text-[#3D3D3D]">24</span>
+<span class="text-sm font-bold text-[#78716C]">회</span>
+</div>
+</div>
+</div>
+<div class="relative flex flex-col justify-between p-5 min-h-[150px] rounded-[1.75rem] bg-white border-b-4 border-[#FCD34D] shadow-sm active:scale-95 transition-transform">
+<div class="absolute top-4 right-4 w-10 h-10 bg-[#FCD34D]/10 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[#F59E0B] text-[20px]">emoji_events</span>
+</div>
+<div class="flex flex-col h-full justify-end mt-4">
+<span class="text-xs font-bold text-[#78716C] mb-1">PR 달성</span>
+<div class="flex items-baseline gap-1">
+<span class="text-[2.2rem] leading-none font-black text-[#3D3D3D]">5</span>
+<span class="text-sm font-bold text-[#78716C]">회</span>
+</div>
+</div>
+</div>
+<div class="relative flex flex-col justify-between p-5 min-h-[150px] rounded-[1.75rem] bg-white border-b-4 border-[#6EE7B7] shadow-sm active:scale-95 transition-transform">
+<div class="absolute top-4 right-4 w-10 h-10 bg-[#6EE7B7]/10 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[#059669] text-[20px]">weight</span>
+</div>
+<div class="flex flex-col h-full justify-end mt-4">
+<span class="text-xs font-bold text-[#78716C] mb-1">총 볼륨</span>
+<div class="flex items-baseline gap-1">
+<span class="text-[2.2rem] leading-none font-black text-[#3D3D3D]">12.4</span>
+<span class="text-sm font-bold text-[#78716C]">톤</span>
+</div>
+</div>
+</div>
+<div class="relative flex flex-col justify-between p-5 min-h-[150px] rounded-[1.75rem] bg-white border-b-4 border-[#A78BFA] shadow-sm active:scale-95 transition-transform">
+<div class="absolute top-4 right-4 w-10 h-10 bg-[#A78BFA]/10 rounded-full flex items-center justify-center">
+<span class="material-symbols-outlined text-[#7C3AED] text-[20px]">timer</span>
+</div>
+<div class="flex flex-col h-full justify-end mt-4">
+<span class="text-xs font-bold text-[#78716C] mb-1">총 시간</span>
+<div class="flex items-baseline gap-1">
+<span class="text-[2.2rem] leading-none font-black text-[#3D3D3D]">18.5</span>
+<span class="text-sm font-bold text-[#78716C]">시간</span>
+</div>
+</div>
+</div>
+</section>
+<section class="flex flex-col gap-4">
+<div class="flex items-center justify-between px-2">
+<h3 class="text-xl font-extrabold text-[#3D3D3D]">근력 밸런스</h3>
+<span class="text-[11px] font-bold text-[#059669] bg-[#6EE7B7]/20 px-3 py-1.5 rounded-full">Perfect Shape! ✨</span>
+</div>
+<div class="relative flex flex-col items-center justify-center p-6 rounded-[2rem] bg-white shadow-bubbly border-2 border-[#FFF1F2]">
+<div class="absolute top-4 left-4 z-20 bg-[#3D3D3D] text-white text-xs px-3 py-2 rounded-xl rounded-bl-none shadow-md">
+                어깨가 살짝 부족해요! 💪
+            </div>
+<div class="w-full max-w-[320px] aspect-square relative mt-4">
+<svg class="w-full h-full overflow-visible" viewBox="0 0 320 280">
+<defs>
+<linearGradient id="polyGradient" x1="0" x2="0" y1="0" y2="1">
+<stop offset="0%" stop-color="#6EE7B7" stop-opacity="0.7"></stop>
+<stop offset="100%" stop-color="#FF8577" stop-opacity="0.7"></stop>
+</linearGradient>
+</defs>
+<g transform="translate(160, 140)">
+<g class="stroke-[#E5E7EB]" stroke-dasharray="4 4" stroke-linecap="round" stroke-width="2">
+<line x1="0" x2="0" y1="0" y2="-90"></line>
+<line x1="0" x2="77.9" y1="0" y2="-45"></line>
+<line x1="0" x2="77.9" y1="0" y2="45"></line>
+<line x1="0" x2="0" y1="0" y2="90"></line>
+<line x1="0" x2="-77.9" y1="0" y2="45"></line>
+<line x1="0" x2="-77.9" y1="0" y2="-45"></line>
+</g>
+<g class="fill-none stroke-[#E5E7EB]" stroke-linejoin="round" stroke-width="2">
+<polygon points="0,-90 77.9,-45 77.9,45 0,90 -77.9,45 -77.9,-45"></polygon>
+<polygon opacity="0.6" points="0,-60 52,-30 52,30 0,60 -52,30 -52,-30"></polygon>
+<polygon opacity="0.3" points="0,-30 26,-15 26,15 0,30 -26,15 -26,-15"></polygon>
+</g>
+<polygon class="drop-shadow-sm" fill="url(#polyGradient)" points="0,-67.5 46.7,-27 66.2,38.2 0,63 -38.9,22.5 -50.6,-29.2" stroke="#3D3D3D" stroke-linejoin="round" stroke-width="3"></polygon>
+<circle class="fill-white stroke-[#3D3D3D]" cx="0" cy="-67.5" r="5" stroke-width="2.5"></circle>
+<circle class="fill-white stroke-[#3D3D3D]" cx="46.7" cy="-27" r="5" stroke-width="2.5"></circle>
+<circle class="fill-white stroke-[#3D3D3D]" cx="66.2" cy="38.2" r="5" stroke-width="2.5"></circle>
+<circle class="fill-white stroke-[#3D3D3D]" cx="0" cy="63" r="5" stroke-width="2.5"></circle>
+<circle class="fill-white stroke-[#3D3D3D]" cx="-38.9" cy="22.5" r="5" stroke-width="2.5"></circle>
+<circle class="fill-white stroke-[#3D3D3D]" cx="-50.6" cy="-29.2" r="5" stroke-width="2.5"></circle>
+</g>
+<foreignObject height="40" width="100" x="110" y="5">
+<div class="flex flex-col items-center justify-center text-center">
+<span class="text-xs font-bold text-[#78716C] bg-white px-2 py-0.5 rounded-full shadow-sm border border-gray-100">가슴</span>
+</div>
+</foreignObject>
+<foreignObject height="40" width="80" x="245" y="65">
+<div class="flex flex-col items-start justify-center">
+<span class="text-xs font-bold text-[#78716C] bg-white px-2 py-0.5 rounded-full shadow-sm border border-gray-100">등</span>
+</div>
+</foreignObject>
+<foreignObject height="40" width="80" x="245" y="175">
+<div class="flex flex-col items-start justify-center">
+<span class="text-xs font-bold text-[#78716C] bg-white px-2 py-0.5 rounded-full shadow-sm border border-gray-100">하체</span>
+</div>
+</foreignObject>
+<foreignObject height="40" width="100" x="110" y="240">
+<div class="flex flex-col items-center justify-center text-center">
+<span class="text-xs font-bold text-[#78716C] bg-white px-2 py-0.5 rounded-full shadow-sm border border-gray-100">코어</span>
+</div>
+</foreignObject>
+<foreignObject height="40" width="80" x="-5" y="175">
+<div class="flex flex-col items-end justify-center">
+<span class="text-xs font-bold text-[#78716C] bg-white px-2 py-0.5 rounded-full shadow-sm border border-gray-100">어깨</span>
+</div>
+</foreignObject>
+<foreignObject height="40" width="80" x="-5" y="65">
+<div class="flex flex-col items-end justify-center">
+<span class="text-xs font-bold text-[#78716C] bg-white px-2 py-0.5 rounded-full shadow-sm border border-gray-100">팔</span>
+</div>
+</foreignObject>
+</svg>
+</div>
+<div class="mt-2 text-center bg-[#FFF8F0] px-4 py-3 rounded-2xl w-full">
+<p class="text-sm font-extrabold text-[#3D3D3D] mb-1">균형잡힌 몸이에요!</p>
+<p class="text-xs font-semibold text-[#78716C]">다음엔 어깨 운동을 더 해볼까요?</p>
+</div>
+</div>
+</section>
+<section>
+<div class="flex items-center gap-2 mb-4 px-2">
+<h3 class="text-xl font-extrabold text-[#3D3D3D]">상위 운동 Top 3</h3>
+</div>
+<div class="flex flex-col gap-3">
+<div class="flex items-center p-4 rounded-[1.5rem] bg-white shadow-sm border-2 border-[#FCD34D]/30 relative overflow-hidden group active:scale-[0.98] transition-all">
+<div class="w-12 h-12 flex-shrink-0 flex items-center justify-center mr-4 relative">
+<div class="w-10 h-10 rounded-full bg-[#FCD34D] text-[#3D3D3D] text-lg font-black flex items-center justify-center shadow-md z-10 border-2 border-white">
+                        1
+                    </div>
+</div>
+<div class="flex-1 flex flex-col z-10">
+<span class="text-lg font-bold text-[#3D3D3D]">스쿼트</span>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="px-2 py-0.5 rounded-lg bg-[#FFF8F0] text-[10px] font-bold text-[#78716C] uppercase tracking-wide">Legs</span>
+<span class="px-2 py-0.5 rounded-lg bg-[#FFF8F0] text-[10px] font-bold text-[#78716C] uppercase tracking-wide">Barbell</span>
+</div>
+</div>
+<div class="px-3 py-1.5 bg-[#FCD34D]/20 rounded-xl">
+<span class="text-sm font-black text-[#D97706]">3,200kg</span>
+</div>
+</div>
+<div class="flex items-center p-4 rounded-[1.5rem] bg-white shadow-sm border border-gray-100 relative overflow-hidden group active:scale-[0.98] transition-all">
+<div class="w-12 h-12 flex-shrink-0 flex items-center justify-center mr-4 relative">
+<div class="w-10 h-10 rounded-full bg-[#E5E7EB] text-[#3D3D3D] text-lg font-black flex items-center justify-center shadow-md z-10 border-2 border-white">
+                        2
+                    </div>
+</div>
+<div class="flex-1 flex flex-col z-10">
+<span class="text-lg font-bold text-[#3D3D3D]">데드리프트</span>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="px-2 py-0.5 rounded-lg bg-[#FFF8F0] text-[10px] font-bold text-[#78716C] uppercase tracking-wide">Back</span>
+</div>
+</div>
+<div class="px-3 py-1.5 bg-gray-100 rounded-xl">
+<span class="text-sm font-black text-[#4B5563]">2,800kg</span>
+</div>
+</div>
+<div class="flex items-center p-4 rounded-[1.5rem] bg-white shadow-sm border border-gray-100 relative overflow-hidden group active:scale-[0.98] transition-all">
+<div class="w-12 h-12 flex-shrink-0 flex items-center justify-center mr-4 relative">
+<div class="w-10 h-10 rounded-full bg-[#FFEDD5] text-[#9A3412] text-lg font-black flex items-center justify-center shadow-md z-10 border-2 border-white">
+                        3
+                    </div>
+</div>
+<div class="flex-1 flex flex-col z-10">
+<span class="text-lg font-bold text-[#3D3D3D]">벤치프레스</span>
+<div class="flex items-center gap-1.5 mt-0.5">
+<span class="px-2 py-0.5 rounded-lg bg-[#FFF8F0] text-[10px] font-bold text-[#78716C] uppercase tracking-wide">Chest</span>
+</div>
+</div>
+<div class="px-3 py-1.5 bg-gray-100 rounded-xl">
+<span class="text-sm font-black text-[#4B5563]">1,500kg</span>
+</div>
+</div>
+</div>
+</section>
+</main>
+<div class="fixed bottom-0 left-0 w-full bg-white border-t border-gray-100 rounded-t-[2rem] shadow-[0_-5px_20px_rgba(0,0,0,0.03)] z-50">
+<div class="grid grid-cols-4 h-20 px-4">
+<button class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-[#FF8577] transition-colors">
+<span class="material-symbols-outlined text-[26px]">home</span>
+<span class="text-[10px] font-bold">Home</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-[#FF8577] transition-colors">
+<span class="material-symbols-outlined text-[26px]">fitness_center</span>
+<span class="text-[10px] font-bold">Workouts</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-1 text-[#FF8577] relative">
+<div class="absolute -top-6 w-12 h-12 bg-[#FF8577] rounded-full flex items-center justify-center shadow-lg border-4 border-[#FFF8F0]">
+<span class="material-symbols-outlined text-[24px] text-white">monitoring</span>
+</div>
+<span class="text-[10px] font-bold mt-8">Progress</span>
+</button>
+<button class="flex flex-col items-center justify-center gap-1 text-gray-400 hover:text-[#FF8577] transition-colors">
+<span class="material-symbols-outlined text-[26px]">face</span>
+<span class="text-[10px] font-bold">Coach</span>
+</button>
+</div>
+</div>
+
+</body></html>

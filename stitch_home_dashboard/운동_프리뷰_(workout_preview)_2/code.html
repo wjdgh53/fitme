@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Workout Preview - FitCoach</title>
+<link href="https://fonts.googleapis.com" rel="preconnect"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        "cream-bg": "#FFF9F6", 
+                        "peach": "#FF8577", 
+                        "peach-dark": "#E66A5C",
+                        "mint": "#6EE7B7", 
+                        "mint-light": "#F0FDF9",
+                        "mint-dark": "#047857",
+                        "sunny": "#FCD34D", 
+                        "sunny-light": "#FFFBEB",
+                        "sunny-dark": "#B45309",
+                        "text-main": "#2D2D2D", 
+                        "text-muted": "#9CA3AF",
+                        "card-bg": "#FFFFFF",
+                        "border-subtle": "#F3F4F6",
+                    },
+                    fontFamily: {
+                        "body": ["Nunito", "sans-serif"]
+                    },
+                    borderRadius: {
+                        "3xl": "1.5rem",
+                        "4xl": "2rem",
+                        "bubbly": "2.5rem",
+                    },
+                    boxShadow: {
+                        "soft": "0 4px 20px -2px rgba(0, 0, 0, 0.03)",
+                        "subtle": "0 1px 2px 0 rgba(0, 0, 0, 0.03)",
+                    }
+                },
+            },
+        }
+    </script>
+<style>
+        body {
+            font-family: 'Nunito', sans-serif;
+            background-color: #FFF9F6;
+        }
+        .hide-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .hide-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .pb-safe {
+            padding-bottom: env(safe-area-inset-bottom, 20px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-cream-bg text-text-main h-screen flex flex-col overflow-hidden selection:bg-peach selection:text-white">
+<header class="flex items-center justify-between px-6 py-5 shrink-0 z-10">
+<button class="flex items-center justify-center size-10 rounded-full bg-white text-text-main border border-gray-100 shadow-subtle hover:bg-gray-50 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">arrow_back</span>
+</button>
+<span class="text-xs font-bold tracking-widest text-text-muted/60 uppercase">Preview</span>
+<button class="flex items-center justify-center size-10 rounded-full bg-white text-text-main border border-gray-100 shadow-subtle hover:bg-gray-50 active:scale-95 transition-transform">
+<span class="material-symbols-outlined text-[20px]">more_horiz</span>
+</button>
+</header>
+<main class="flex-1 overflow-y-auto hide-scrollbar px-6 pb-48">
+<div class="space-y-4 pt-1 mb-8">
+<h1 class="text-3xl font-extrabold text-text-main leading-tight tracking-tight">Upper Body Fun!</h1>
+<div class="flex items-center gap-3">
+<div class="bg-white border border-gray-200 rounded-lg px-3 py-1.5 flex items-center gap-2">
+<span class="material-symbols-outlined text-mint text-[18px]">timer</span>
+<span class="text-[13px] font-bold text-text-main/80">45m</span>
+</div>
+<div class="bg-white border border-gray-200 rounded-lg px-3 py-1.5 flex items-center gap-2">
+<span class="material-symbols-outlined text-sunny text-[18px]">bolt</span>
+<span class="text-[13px] font-bold text-text-main/80">High Energy</span>
+</div>
+<div class="bg-white border border-gray-200 rounded-lg px-3 py-1.5 flex items-center gap-2">
+<span class="material-symbols-outlined text-peach text-[18px]">local_fire_department</span>
+<span class="text-[13px] font-bold text-text-main/80">320</span>
+</div>
+</div>
+</div>
+<div class="relative overflow-hidden rounded-2xl bg-white border border-gray-100 p-5 shadow-sm mb-8">
+<div class="flex items-start gap-4 relative z-10">
+<div class="shrink-0 size-10 rounded-full bg-gray-50 flex items-center justify-center border border-gray-100">
+<span class="material-symbols-outlined text-mint text-[22px]">sentiment_satisfied</span>
+</div>
+<div class="flex-1">
+<div class="flex items-center gap-2 mb-1">
+<span class="text-[11px] font-extrabold uppercase tracking-wider text-text-muted">Coach Says</span>
+</div>
+<p class="text-text-main text-[15px] font-semibold leading-relaxed opacity-90">
+                        "Yay! Your upper body is fully recovered! We added a bit more weight to keep things exciting."
+                    </p>
+</div>
+</div>
+<div class="absolute -top-10 -right-10 size-32 rounded-full bg-mint/5 blur-2xl pointer-events-none"></div>
+</div>
+<div class="space-y-4">
+<div class="flex items-end justify-between px-1 pb-1">
+<h3 class="text-lg font-bold text-text-main">Routine</h3>
+<span class="text-xs text-text-muted font-bold bg-white px-2.5 py-1 rounded-md border border-gray-100">6 Moves</span>
+</div>
+<div class="flex flex-col gap-3">
+<div class="bg-white rounded-xl pl-4 pr-3 py-3 flex items-center justify-between border border-transparent shadow-subtle hover:shadow-md transition-all active:scale-[0.99] cursor-pointer group">
+<div class="flex flex-col flex-1 pr-2">
+<h4 class="font-bold text-[15px] text-text-main leading-tight group-hover:text-peach transition-colors">Barbell Bench Press</h4>
+<p class="text-[12px] font-medium text-text-muted mt-0.5">Chest • Compound</p>
+</div>
+<div class="flex items-center gap-1">
+<button aria-label="Swap exercise" class="flex items-center justify-center p-2 rounded-full text-gray-400 hover:text-peach hover:bg-peach/10 transition-colors z-10">
+<span class="material-symbols-outlined text-[20px]">sync</span>
+</button>
+<span class="material-symbols-outlined text-[20px] text-gray-300 group-hover:text-gray-400 transition-colors">chevron_right</span>
+</div>
+</div>
+<div class="bg-white rounded-xl pl-4 pr-3 py-3 flex items-center justify-between border border-transparent shadow-subtle hover:shadow-md transition-all active:scale-[0.99] cursor-pointer group">
+<div class="flex flex-col flex-1 pr-2">
+<h4 class="font-bold text-[15px] text-text-main leading-tight group-hover:text-peach transition-colors">Incline Dumbbell Press</h4>
+<p class="text-[12px] font-medium text-text-muted mt-0.5">Upper Chest • Isolation</p>
+</div>
+<div class="flex items-center gap-1">
+<button aria-label="Swap exercise" class="flex items-center justify-center p-2 rounded-full text-gray-400 hover:text-peach hover:bg-peach/10 transition-colors z-10">
+<span class="material-symbols-outlined text-[20px]">sync</span>
+</button>
+<span class="material-symbols-outlined text-[20px] text-gray-300 group-hover:text-gray-400 transition-colors">chevron_right</span>
+</div>
+</div>
+<div class="bg-white rounded-xl pl-4 pr-3 py-3 flex items-center justify-between border border-transparent shadow-subtle hover:shadow-md transition-all active:scale-[0.99] cursor-pointer group">
+<div class="flex flex-col flex-1 pr-2">
+<h4 class="font-bold text-[15px] text-text-main leading-tight group-hover:text-peach transition-colors">Overhead Press</h4>
+<p class="text-[12px] font-medium text-text-muted mt-0.5">Shoulders • Stability</p>
+</div>
+<div class="flex items-center gap-1">
+<button aria-label="Swap exercise" class="flex items-center justify-center p-2 rounded-full text-gray-400 hover:text-peach hover:bg-peach/10 transition-colors z-10">
+<span class="material-symbols-outlined text-[20px]">sync</span>
+</button>
+<span class="material-symbols-outlined text-[20px] text-gray-300 group-hover:text-gray-400 transition-colors">chevron_right</span>
+</div>
+</div>
+<div class="bg-white rounded-xl pl-4 pr-3 py-3 flex items-center justify-between border border-transparent shadow-subtle hover:shadow-md transition-all active:scale-[0.99] cursor-pointer group">
+<div class="flex flex-col flex-1 pr-2">
+<h4 class="font-bold text-[15px] text-text-main leading-tight group-hover:text-peach transition-colors">Cable Chest Fly</h4>
+<p class="text-[12px] font-medium text-text-muted mt-0.5">Chest • Hypertrophy</p>
+</div>
+<div class="flex items-center gap-1">
+<button aria-label="Swap exercise" class="flex items-center justify-center p-2 rounded-full text-gray-400 hover:text-peach hover:bg-peach/10 transition-colors z-10">
+<span class="material-symbols-outlined text-[20px]">sync</span>
+</button>
+<span class="material-symbols-outlined text-[20px] text-gray-300 group-hover:text-gray-400 transition-colors">chevron_right</span>
+</div>
+</div>
+<div class="bg-white rounded-xl pl-4 pr-3 py-3 flex items-center justify-between border border-transparent shadow-subtle hover:shadow-md transition-all active:scale-[0.99] cursor-pointer group">
+<div class="flex flex-col flex-1 pr-2">
+<h4 class="font-bold text-[15px] text-text-main leading-tight group-hover:text-peach transition-colors">Tricep Pushdown</h4>
+<p class="text-[12px] font-medium text-text-muted mt-0.5">Triceps • Isolation</p>
+</div>
+<div class="flex items-center gap-1">
+<button aria-label="Swap exercise" class="flex items-center justify-center p-2 rounded-full text-gray-400 hover:text-peach hover:bg-peach/10 transition-colors z-10">
+<span class="material-symbols-outlined text-[20px]">sync</span>
+</button>
+<span class="material-symbols-outlined text-[20px] text-gray-300 group-hover:text-gray-400 transition-colors">chevron_right</span>
+</div>
+</div>
+<div class="bg-white rounded-xl pl-4 pr-3 py-3 flex items-center justify-between border border-transparent shadow-subtle hover:shadow-md transition-all active:scale-[0.99] cursor-pointer group">
+<div class="flex flex-col flex-1 pr-2">
+<h4 class="font-bold text-[15px] text-text-main leading-tight group-hover:text-peach transition-colors">Lateral Raises</h4>
+<p class="text-[12px] font-medium text-text-muted mt-0.5">Shoulders • Isolation</p>
+</div>
+<div class="flex items-center gap-1">
+<button aria-label="Swap exercise" class="flex items-center justify-center p-2 rounded-full text-gray-400 hover:text-peach hover:bg-peach/10 transition-colors z-10">
+<span class="material-symbols-outlined text-[20px]">sync</span>
+</button>
+<span class="material-symbols-outlined text-[20px] text-gray-300 group-hover:text-gray-400 transition-colors">chevron_right</span>
+</div>
+</div>
+</div>
+</div>
+</main>
+<div class="fixed bottom-0 left-0 w-full z-20 bg-white/95 backdrop-blur-md border-t border-gray-100 pb-safe">
+<div class="px-6 pt-4 pb-2">
+<button class="w-full bg-peach hover:bg-peach-dark text-white font-bold text-[17px] py-3.5 rounded-xl flex items-center justify-center gap-2 transition-all active:scale-[0.98]">
+                Start Workout
+            </button>
+</div>
+<nav class="flex justify-between items-center px-10 py-3 opacity-40 grayscale">
+<button class="flex flex-col items-center gap-1">
+<span class="material-symbols-outlined text-[26px]">home</span>
+</button>
+<button class="flex flex-col items-center gap-1">
+<span class="material-symbols-outlined text-[26px] filled">fitness_center</span>
+</button>
+<button class="flex flex-col items-center gap-1">
+<span class="material-symbols-outlined text-[26px]">show_chart</span>
+</button>
+<button class="flex flex-col items-center gap-1">
+<span class="material-symbols-outlined text-[26px]">face</span>
+</button>
+</nav>
+</div>
+
+</body></html>
