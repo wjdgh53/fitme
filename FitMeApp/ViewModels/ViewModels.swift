@@ -335,9 +335,9 @@ struct MyGoalsData {
 struct MyGoalsViewModel {
     let data: MyGoalsData
     let onBack: () -> Void
-    let onEditGoal: () -> Void
-    let onViewMission: () -> Void
-    let onGetQuest: () -> Void
+    let onCreateAIMissions: () async -> Void
+    let onCreateCustomMission: (MissionType, MissionDifficulty, Int) async -> Void
+    let onDeleteMission: (String) async -> Void
     
     init(appViewModel: AppViewModel) {
         // Calculate date range for current week
@@ -355,9 +355,13 @@ struct MyGoalsViewModel {
             dateRange: dateRange
         )
         self.onBack = { appViewModel.pop() }
-        self.onEditGoal = { appViewModel.openGoalEdit() }
-        self.onViewMission = { appViewModel.openWeeklyMission() }
-        self.onGetQuest = { appViewModel.openGetQuest() }
+        self.onCreateAIMissions = { await appViewModel.createAIMissions() }
+        self.onCreateCustomMission = { type, difficulty, target in
+            await appViewModel.createCustomMission(type: type, difficulty: difficulty, targetValue: target)
+        }
+        self.onDeleteMission = { id in
+            await appViewModel.deleteMission(id: id)
+        }
     }
 }
 

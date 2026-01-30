@@ -65,6 +65,10 @@ actor APIClient {
         return try await request(endpoint: "/missions", method: "POST", body: body)
     }
     
+    func deleteMission(id: String) async throws {
+        let _: DeleteMissionResponse = try await request(endpoint: "/missions/\(id)", method: "DELETE")
+    }
+    
     // MARK: - Workout Plan
     
     func generateWorkoutPlan(condition: String, targetMinutes: Int, equipment: [String]) async throws -> WorkoutPlan {

@@ -117,6 +117,15 @@ final class AppViewModel: ObservableObject {
         isLoading = false
     }
     
+    func deleteMission(id: String) async {
+        do {
+            try await APIClient.shared.deleteMission(id: id)
+            missions.removeAll { $0.id == id }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+    
     func generateWorkoutPlan() async {
         isGeneratingPlan = true
         errorMessage = nil

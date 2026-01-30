@@ -217,3 +217,7 @@ struct APIErrorDetail: Codable {
     let code: String
     let message: String
 }
+
+struct DeleteMissionResponse: Codable {
+    let success: Bool
+}
