@@ -1,0 +1,335 @@
+openapi: 3.0.3
+info:
+  title: Fitme API
+  version: 1.0.0
+
+servers:
+  - url: https://api.fitme.app/v1
+
+security:
+  - bearerAuth: []
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  schemas:
+
+    ErrorResponse:
+      type: object
+      properties:
+        error:
+          type: object
+          properties:
+            code:
+              type: string
+            message:
+              type: string
+
+    Mission:
+      type: object
+      properties:
+        id:
+          type: string
+        type:
+          type: string
+          enum: [calories, minutes, sessions]
+        target_value:
+          type: integer
+        difficulty:
+          type: string
+          enum: [easy, medium, hard]
+        start_at:
+          type: string
+          format: date
+        end_at:
+          type: string
+          format: date
+        progress_value:
+          type: integer
+
+    ExerciseSet:
+      type: object
+      properties:
+        weight:
+          type: number
+        reps:
+          type: integer
+
+    WorkoutPlanExercise:
+      type: object
+      properties:
+        exercise_id:
+          type: string
+        sets:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExerciseSet'
+
+    WorkoutPlan:
+      type: object
+      properties:
+        title:
+          type: string
+        estimated_minutes:
+          type: integer
+        estimated_calories:
+          type: integer
+        coach_message:
+          type: string
+        exercises:
+          type: array
+          items:
+            $ref: '#/components/schemas/WorkoutPlanExercise'
+
+    SessionExercise:
+      type: object
+      properties:
+        exercise_id:
+          type: string
+        sets:
+          type: array
+          items:
+            $ref: '#/components/schemas/ExerciseSet'
+
+    SessionSummary:
+      type: object
+      properties:
+        id:
+          type: string
+        date:
+          type: string
+          format: date
+        source:
+          type: string
+          enum: [fitme, apple_health, other]
+        duration_minutes:
+          type: integer
+        calories:
+          type: integer
+        total_exercises:
+          type: integer
+
+    SessionDetail:
+      type: object
+      properties:
+        id:
+          type: string
+        date:
+          type: string
+          format: date
+        source:
+          type: string
+          enum: [fitme, apple_health, other]
+        duration_minutes:
+          type: integer
+        calories:
+          type: integer
+        exercises:
+          type: array
+          items:
+            $ref: '#/components/schemas/SessionExercise'
+
+tags:
+  - name: Domain
+  - name: Dashboard
+
+paths:
+
+  /missions:
+    post:
+      tags: [Domain]
+      summary: Create missions (AI or custom)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [mode]
+              properties:
+                mode:
+                  type: string
+                  enum: [ai, custom]
+                type:
+                  type: string
+                  enum: [calories, minutes, sessions]
+                difficulty:
+                  type: string
+                  enum: [easy, medium, hard]
+                target_value:
+                  type: integer
+                start_at:
+                  type: string
+                  format: date
+      responses:
+        '200':
+          description: Missions created
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  missions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Mission'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags: [Domain]
+      summary: Get missions
+      responses:
+        '200':
+          description: Mission list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  missions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Mission'
+
+  /workout-plan:
+    post:
+      tags: [Domain]
+      summary: Generate workout plan (AI)
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [condition, target_minutes, equipment]
+              properties:
+                condition:
+                  type: string
+                  enum: [low, normal, high]
+                target_minutes:
+                  type: integer
+                equipment:
+                  type: array
+                  items:
+                    type: string
+      responses:
+        '200':
+          description: Workout plan generated
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WorkoutPlan'
+        '502':
+          description: AI provider error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /sessions:
+    post:
+      tags: [Domain]
+      summary: Save completed workout session
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [source, duration_minutes, exercises]
+              properties:
+                source:
+                  type: string
+                  enum: [fitme, apple_health, other]
+                duration_minutes:
+                  type: integer
+                exercises:
+                  type: array
+                  items:
+                    $ref: '#/components/schemas/SessionExercise'
+      responses:
+        '200':
+          description: Saved session
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionSummary'
+        '422':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+    get:
+      tags: [Domain]
+      summary: Get session history
+      parameters:
+        - in: query
+          name: period
+          schema:
+            type: string
+            enum: [week, month, all]
+      responses:
+        '200':
+          description: Session list
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/SessionSummary'
+
+  /sessions/{sessionId}:
+    get:
+      tags: [Domain]
+      summary: Get single session detail
+      parameters:
+        - in: path
+          name: sessionId
+          required: true
+          schema:
+            type: string
+      responses:
+        '200':
+          description: Session detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SessionDetail'
+        '404':
+          description: Session not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /dashboard:
+    get:
+      tags: [Dashboard]
+      summary: Home dashboard (BFF)
+      responses:
+        '200':
+          description: Dashboard data
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  missions:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Mission'
+                  total_points:
+                    type: integer
+                  rank:
+                    type: string

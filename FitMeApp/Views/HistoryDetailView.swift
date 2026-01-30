@@ -2,6 +2,7 @@ import SwiftUI
 
 struct HistoryDetailView: View {
     let viewModel: HistoryDetailViewModel
+    @State private var isEditMenuPresented = false
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -14,13 +15,23 @@ struct HistoryDetailView: View {
                     summaryGrid
                     aiNote
                     exerciseSection
-                    tricepsSection
                     actionButtons
                 }
                 .padding(.horizontal, 20)
                 .padding(.bottom, 160)
             }
         }
+    }
+    
+    private var dateTitle: String {
+        guard let session = viewModel.data.session else { return "Workout" }
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        if let date = formatter.date(from: session.date) {
+            formatter.dateFormat = "MMM d, yyyy"
+            return formatter.string(from: date)
+        }
+        return session.date
     }
 
     private var header: some View {
@@ -33,11 +44,11 @@ struct HistoryDetailView: View {
                     .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 3)
             }
             Spacer()
-            Text(viewModel.data.dateTitle)
+            Text(dateTitle)
                 .font(AppFonts.nunito(20, weight: .heavy))
                 .foregroundColor(Color(hex: "#3D3D3D"))
             Spacer()
-            Button(action: {}) {
+            Button(action: { isEditMenuPresented = true }) {
                 Text("Edit")
                     .font(AppFonts.nunito(14, weight: .bold))
                     .foregroundColor(.white)
@@ -46,15 +57,19 @@ struct HistoryDetailView: View {
                     .background(Color(hex: "#FF8577"))
                     .clipShape(Capsule())
             }
+            .confirmationDialog("Edit Workout", isPresented: $isEditMenuPresented) {
+                Button("Delete Workout", role: .destructive, action: viewModel.onDelete)
+                Button("Cancel", role: .cancel) {}
+            }
         }
         .padding(.top, 6)
     }
 
     private var summaryGrid: some View {
         HStack(spacing: 12) {
-            summaryCard(title: "Time", value: viewModel.data.time, unit: "m", icon: "timer", color: "#60A5FA")
-            summaryCard(title: "Volume", value: viewModel.data.volume, unit: "t", icon: "fitness_center", color: "#6EE7B7")
-            summaryCard(title: "Sets", value: viewModel.data.sets, unit: "", icon: "format_list_bulleted", color: "#A78BFA")
+            summaryCard(title: "Time", value: "\(viewModel.data.session?.durationMinutes ?? 0)", unit: "m", icon: "timer", color: "#60A5FA")
+            summaryCard(title: "Calories", value: "\(viewModel.data.session?.calories ?? 0)", unit: "kcal", icon: "local_fire_department", color: "#6EE7B7")
+            summaryCard(title: "Exercises", value: "\(viewModel.data.session?.exercises.count ?? 0)", unit: "", icon: "fitness_center", color: "#A78BFA")
         }
     }
 
@@ -103,7 +118,7 @@ struct HistoryDetailView: View {
                     MaterialSymbol(name: "auto_awesome", size: 16)
                         .foregroundColor(Color(hex: "#FF8577"))
                 }
-                Text(viewModel.data.aiNote)
+                Text("Great workout! You crushed it! 🎉")
                     .font(AppFonts.nunito(13, weight: .bold))
                     .foregroundColor(Color(hex: "#78716C"))
                     .lineSpacing(2)
@@ -119,39 +134,32 @@ struct HistoryDetailView: View {
     private var exerciseSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
-                Text("Chest Day")
+                Text("Exercises")
                     .font(AppFonts.nunito(20, weight: .heavy))
                     .foregroundColor(Color(hex: "#3D3D3D"))
                 Spacer()
-                Text("3 exercises")
-                    .font(AppFonts.nunito(11, weight: .bold))
-                    .foregroundColor(Color(hex: "#FF8577"))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(Color(hex: "#FF8577").opacity(0.1))
-                    .clipShape(Capsule())
+                if let session = viewModel.data.session {
+                    Text("\(session.exercises.count) exercises")
+                        .font(AppFonts.nunito(11, weight: .bold))
+                        .foregroundColor(Color(hex: "#FF8577"))
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(Color(hex: "#FF8577").opacity(0.1))
+                        .clipShape(Capsule())
+                }
             }
-            exerciseCard(title: "Bench Press", badge: "BEST", tag: "Barbell • Compound", sets: [("60", "12"), ("65", "10"), ("70", "8")])
-            exerciseCard(title: "Incline DB Press", badge: nil, tag: "Dumbbell • Upper Chest", sets: [("25", "12"), ("28", "10")])
-        }
-    }
-
-    private var tricepsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Triceps")
-                    .font(AppFonts.nunito(20, weight: .heavy))
-                    .foregroundColor(Color(hex: "#3D3D3D"))
-                Spacer()
-                Text("2 exercises")
-                    .font(AppFonts.nunito(11, weight: .bold))
-                    .foregroundColor(Color(hex: "#7C3AED"))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(Color(hex: "#E9D5FF"))
-                    .clipShape(Capsule())
+            
+            if let session = viewModel.data.session {
+                ForEach(session.exercises.indices, id: \.self) { index in
+                    let exercise = session.exercises[index]
+                    exerciseCard(
+                        title: exercise.exerciseId.replacingOccurrences(of: "_", with: " ").capitalized,
+                        badge: index == 0 ? "BEST" : nil,
+                        tag: "Exercise",
+                        sets: exercise.sets.map { ("\(Int($0.weight))", "\($0.reps)") }
+                    )
+                }
             }
-            exerciseCard(title: "Cable Pushdown", badge: nil, tag: "Cable • Isolation", sets: [("30", "15")])
         }
     }
 
@@ -161,7 +169,7 @@ struct HistoryDetailView: View {
                 RoundedRectangle(cornerRadius: 16, style: .continuous)
                     .fill(Color(hex: "#FFF8F0"))
                     .frame(width: 56, height: 56)
-                    .overlay(MaterialSymbol(name: "exercise", size: 24).foregroundColor(Color(hex: "#FF8577")))
+                    .overlay(MaterialSymbol(name: "fitness_center", size: 24).foregroundColor(Color(hex: "#FF8577")))
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
                         Text(title)
@@ -188,7 +196,7 @@ struct HistoryDetailView: View {
                 HStack {
                     Text("Set")
                     Spacer()
-                    Text("Kg")
+                    Text("Weight")
                     Spacer()
                     Text("Reps")
                     Spacer()
@@ -202,7 +210,7 @@ struct HistoryDetailView: View {
                     HStack {
                         Text("\(index + 1)")
                             .frame(width: 36)
-                        Text(set.0)
+                        Text("\(set.0) lb")
                             .frame(maxWidth: .infinity)
                         Text(set.1)
                             .frame(maxWidth: .infinity)
@@ -213,7 +221,7 @@ struct HistoryDetailView: View {
                     .font(AppFonts.nunito(14, weight: .bold))
                     .foregroundColor(Color(hex: "#3D3D3D"))
                     .padding(.vertical, 8)
-                    .background(Color(hex: index == 2 && badge != nil ? "#FF8577" : "#F5F5F4").opacity(index == 2 && badge != nil ? 0.1 : 1))
+                    .background(Color(hex: "#F5F5F4"))
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
                 }
             }

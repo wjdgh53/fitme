@@ -5,32 +5,24 @@ struct WorkoutSessionView: View {
     @State private var phase: SessionPhase = .lifting
     @State private var isPaused: Bool = false
     @State private var showPauseSheet: Bool = false
-    @State private var restRemaining: Int
-    @State private var setHistory: [WorkoutSetEntry]
-    @State private var weightValue: Int
-    @State private var repsValue: Int
-    @State private var currentSetIndex: Int
-    @State private var totalSets: Int
-    @State private var currentExerciseIndex: Int
-    @State private var totalExercises: Int
-    @State private var workoutElapsedSeconds: Int
+    @State private var restRemaining: Int = 60
+    @State private var setHistory: [WorkoutSetEntry] = []
+    @State private var weightValue: Int = 60
+    @State private var repsValue: Int = 10
+    @State private var currentSetIndex: Int = 1
+    @State private var totalSets: Int = 4
+    @State private var currentExerciseIndex: Int = 0
+    @State private var workoutElapsedSeconds: Int = 0
     @State private var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
-
-    init(viewModel: WorkoutSessionViewModel) {
-        self.viewModel = viewModel
-        _restRemaining = State(initialValue: viewModel.data.restSeconds)
-        _setHistory = State(initialValue: viewModel.data.previousSets.map {
-            WorkoutSetEntry(weight: $0.weight, reps: $0.reps)
-        })
-        _weightValue = State(initialValue: Int(viewModel.data.weight) ?? 0)
-        _repsValue = State(initialValue: Int(viewModel.data.reps) ?? 0)
-        let setParts = viewModel.data.currentSet.split(separator: "/").map { $0.trimmingCharacters(in: .whitespaces) }
-        _currentSetIndex = State(initialValue: Int(setParts.first ?? "1") ?? 1)
-        _totalSets = State(initialValue: Int(setParts.last ?? "4") ?? 4)
-        let exerciseParts = viewModel.data.currentExerciseIndex.split(separator: "/").map { $0.trimmingCharacters(in: .whitespaces) }
-        _currentExerciseIndex = State(initialValue: Int(exerciseParts.first ?? "1") ?? 1)
-        _totalExercises = State(initialValue: Int(exerciseParts.last ?? "6") ?? 6)
-        _workoutElapsedSeconds = State(initialValue: 0)
+    
+    private var currentExercise: WorkoutPlanExercise? {
+        guard let plan = viewModel.data.plan,
+              currentExerciseIndex < plan.exercises.count else { return nil }
+        return plan.exercises[currentExerciseIndex]
+    }
+    
+    private var totalExercises: Int {
+        viewModel.data.plan?.exercises.count ?? 0
     }
 
     var body: some View {
@@ -78,6 +70,13 @@ struct WorkoutSessionView: View {
                 workoutElapsedSeconds += 1
             }
         }
+        .onAppear {
+            if let exercise = currentExercise, let firstSet = exercise.sets.first {
+                weightValue = Int(firstSet.weight)
+                repsValue = firstSet.reps
+                totalSets = exercise.sets.count
+            }
+        }
     }
 
     private var timeRow: some View {
@@ -114,11 +113,11 @@ struct WorkoutSessionView: View {
     private var titleSection: some View {
         VStack(spacing: 8) {
             HStack {
-                Text(viewModel.data.exerciseName)
+                Text(currentExercise?.exerciseId.replacingOccurrences(of: "_", with: " ").capitalized ?? "Exercise")
                     .font(AppFonts.nunito(28, weight: .heavy))
                     .foregroundColor(Color(hex: "#3D3D3D"))
                 Spacer()
-                Text("\(currentExerciseIndex) / \(totalExercises)")
+                Text("\(currentExerciseIndex + 1) / \(totalExercises)")
                     .font(AppFonts.nunito(18, weight: .bold))
                     .foregroundColor(Color(hex: "#8B8B9B"))
             }
@@ -131,33 +130,30 @@ struct WorkoutSessionView: View {
                 .fill(Color.white)
                 .shadow(color: Color.black.opacity(0.04), radius: 10, x: 0, y: 6)
 
-            AsyncImage(url: viewModel.data.videoURL) { image in
-                image.resizable().scaledToFill()
-            } placeholder: {
-                Color.white
-            }
-            .frame(height: mediaHeight)
-            .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
-            .blur(radius: phase == .resting ? 10 : 0)
-            .overlay(
-                Group {
-                    if phase == .resting {
-                        Color.black.opacity(0.45)
-                            .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
-                            .overlay(
-                                Text(timeString(restRemaining))
-                                    .font(AppFonts.nunito(48, weight: .black))
-                                    .foregroundColor(Color(hex: "#22C55E"))
-                                    .monospacedDigit()
-                            )
-                            .transition(.opacity)
-                    } else {
-                        LinearGradient(colors: [Color(hex: "#FF8577").opacity(0.2), Color.clear], startPoint: .bottom, endPoint: .top)
-                            .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+            RoundedRectangle(cornerRadius: 26, style: .continuous)
+                .fill(Color(hex: "#FFF1EE"))
+                .frame(height: mediaHeight)
+                .overlay(
+                    MaterialSymbol(name: "fitness_center", size: 48)
+                        .foregroundColor(Color(hex: "#FF8577").opacity(0.3))
+                )
+                .blur(radius: phase == .resting ? 10 : 0)
+                .overlay(
+                    Group {
+                        if phase == .resting {
+                            Color.black.opacity(0.45)
+                                .clipShape(RoundedRectangle(cornerRadius: 26, style: .continuous))
+                                .overlay(
+                                    Text(timeString(restRemaining))
+                                        .font(AppFonts.nunito(48, weight: .black))
+                                        .foregroundColor(Color(hex: "#22C55E"))
+                                        .monospacedDigit()
+                                )
+                                .transition(.opacity)
+                        }
                     }
-                }
-            )
-            .padding(6)
+                )
+                .padding(6)
         }
         .frame(height: mediaContainerHeight, alignment: .top)
         .clipped()
@@ -180,7 +176,7 @@ struct WorkoutSessionView: View {
         Group {
             if phase == .lifting {
                 HStack(spacing: 24) {
-                    inputColumn(title: "WEIGHT", value: weightValue, unit: viewModel.data.weightUnit, onIncrease: { weightValue += 5 }, onDecrease: { weightValue = max(0, weightValue - 5) })
+                    inputColumn(title: "WEIGHT", value: weightValue, unit: "lb", onIncrease: { weightValue += 5 }, onDecrease: { weightValue = max(0, weightValue - 5) })
                     inputColumn(title: "REPS", value: repsValue, unit: "", onIncrease: { repsValue += 1 }, onDecrease: { repsValue = max(0, repsValue - 1) })
                 }
             } else {
@@ -198,20 +194,19 @@ struct WorkoutSessionView: View {
                     .foregroundColor(Color(hex: "#9CA3AF"))
                     .padding(.horizontal, 8)
 
-                    ForEach(recentSetHistory.indices, id: \.self) { index in
-                        let entry = recentSetHistory[index]
-                        let setNumber = setHistory.count - recentSetHistory.count + index + 1
+                    ForEach(setHistory.indices, id: \.self) { index in
+                        let entry = setHistory[index]
                         HStack(spacing: 8) {
                             HStack(spacing: 6) {
                                 MaterialSymbol(name: "check", size: 14)
                                     .foregroundColor(Color(hex: "#22C55E"))
-                                Text("\(setNumber)")
+                                Text("\(index + 1)")
                                     .font(AppFonts.nunito(14, weight: .bold))
                                     .foregroundColor(Color(hex: "#6B7280"))
                             }
                             .frame(width: 44, alignment: .leading)
 
-                            Text("\(entry.weight) \(viewModel.data.weightUnit)")
+                            Text("\(entry.weight) lb")
                                 .font(AppFonts.nunito(16, weight: .black))
                                 .foregroundColor(Color(hex: "#3D3D3D"))
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -268,7 +263,7 @@ struct WorkoutSessionView: View {
         switch phase {
         case .resting:
             if currentSetIndex >= totalSets {
-                if currentExerciseIndex >= totalExercises {
+                if currentExerciseIndex + 1 >= totalExercises {
                     viewModel.onComplete()
                 } else {
                     moveToNextExercise()
@@ -279,7 +274,7 @@ struct WorkoutSessionView: View {
         case .lifting:
             guard weightValue > 0, repsValue > 0 else { return }
             setHistory.append(WorkoutSetEntry(weight: String(weightValue), reps: String(repsValue)))
-            if currentSetIndex >= totalSets && currentExerciseIndex >= totalExercises {
+            if currentSetIndex >= totalSets && currentExerciseIndex + 1 >= totalExercises {
                 viewModel.onComplete()
             } else {
                 currentSetIndex = min(currentSetIndex + 1, totalSets)
@@ -290,7 +285,7 @@ struct WorkoutSessionView: View {
 
     private func startRest() {
         phase = .resting
-        restRemaining = viewModel.data.restSeconds
+        restRemaining = 60
     }
 
     private func timeString(_ seconds: Int) -> String {
@@ -378,15 +373,19 @@ struct WorkoutSessionView: View {
         phase == .lifting && (weightValue <= 0 || repsValue <= 0)
     }
 
-    private var recentSetHistory: [WorkoutSetEntry] {
-        setHistory // 전체 세트 기록 표시
-    }
-
     private func moveToNextExercise() {
-        currentExerciseIndex = min(currentExerciseIndex + 1, totalExercises)
+        currentExerciseIndex += 1
         currentSetIndex = 1
         setHistory = []
         phase = .lifting
+        
+        if let exercise = currentExercise {
+            totalSets = exercise.sets.count
+            if let firstSet = exercise.sets.first {
+                weightValue = Int(firstSet.weight)
+                repsValue = firstSet.reps
+            }
+        }
     }
 
     private func inputColumn(title: String, value: Int, unit: String, onIncrease: @escaping () -> Void, onDecrease: @escaping () -> Void) -> some View {

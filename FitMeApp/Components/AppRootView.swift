@@ -10,7 +10,7 @@ struct AppRootView: View {
                 case .home:
                     HomeDashboardView(viewModel: HomeDashboardViewModel(appViewModel: appViewModel))
                 case .report:
-                    ReportView(viewModel: ReportViewModel())
+                    ReportView(viewModel: ReportViewModel(appViewModel: appViewModel))
                 case .historyList:
                     HistoryListView(viewModel: HistoryListViewModel(appViewModel: appViewModel))
                 case .historyDetail:
@@ -47,6 +47,8 @@ struct AppRootView: View {
                     HelpCenterView(viewModel: HelpCenterViewModel(appViewModel: appViewModel))
                 case .appleHealth:
                     AppleHealthView(viewModel: AppleHealthViewModel(appViewModel: appViewModel))
+                case .appleWatch:
+                    AppleWatchView(viewModel: AppleWatchViewModel(appViewModel: appViewModel))
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)

@@ -1,185 +1,359 @@
 import Foundation
 
+// MARK: - Home Dashboard
+
+struct HomeDashboardData {
+    let userName: String
+    let greeting: String
+    let profileImageURL: URL?
+    let missions: [Mission]
+    let totalPoints: Int
+    let rank: String
+    let isLoading: Bool
+}
+
+@MainActor
 struct HomeDashboardViewModel {
-    let data: HomeDashboardMock
+    let data: HomeDashboardData
     let onStartWorkout: () -> Void
     let onOpenLibrary: () -> Void
     let onOpenExerciseDetail: () -> Void
     let onOpenWeeklyGoals: () -> Void
-
+    let onRefresh: () async -> Void
+    
     init(appViewModel: AppViewModel) {
-        self.data = MockDataProvider.homeDashboard
+        self.data = HomeDashboardData(
+            userName: appViewModel.userName,
+            greeting: "Ready to move?",
+            profileImageURL: appViewModel.profileImageURL,
+            missions: appViewModel.missions,
+            totalPoints: appViewModel.totalPoints,
+            rank: appViewModel.rank,
+            isLoading: appViewModel.isLoading
+        )
         self.onStartWorkout = { appViewModel.startWorkoutFlow() }
         self.onOpenLibrary = { appViewModel.openLibrary() }
         self.onOpenExerciseDetail = { appViewModel.openExerciseDetail() }
         self.onOpenWeeklyGoals = { appViewModel.openMyGoals() }
+        self.onRefresh = { await appViewModel.loadDashboard() }
     }
 }
 
+// MARK: - Preset Check
+
+struct PresetCheckData {
+    let energySelection: Int
+    let locationSelection: Int
+    let targetMinutes: Int
+}
+
+@MainActor
 struct PresetCheckViewModel {
-    let data: PresetCheckMock
+    let data: PresetCheckData
     let onBack: () -> Void
     let onClose: () -> Void
-    let onStart: () -> Void
-
+    let onStart: (String, Int, [String]) async -> Void
+    
     init(appViewModel: AppViewModel) {
-        self.data = MockDataProvider.presetCheck
+        self.data = PresetCheckData(
+            energySelection: 1,
+            locationSelection: 1,
+            targetMinutes: appViewModel.workoutTargetMinutes
+        )
         self.onBack = { appViewModel.goHomeFromFlow() }
         self.onClose = { appViewModel.goHomeFromFlow() }
-        self.onStart = { appViewModel.goToWorkoutPreview1() }
+        self.onStart = { condition, minutes, equipment in
+            appViewModel.workoutCondition = condition
+            appViewModel.workoutTargetMinutes = minutes
+            appViewModel.workoutEquipment = equipment
+            await appViewModel.generateWorkoutPlan()
+            appViewModel.goToWorkoutPreview1()
+        }
     }
 }
 
+// MARK: - Workout Preview
+
+struct WorkoutPreviewData {
+    let title: String
+    let duration: String
+    let energy: String
+    let calories: String
+    let coachNote: String
+    let exercises: [WorkoutPlanExercise]
+    let isLoading: Bool
+}
+
+@MainActor
 struct WorkoutPreviewViewModel {
-    let data: WorkoutPreviewMock
+    let data: WorkoutPreviewData
     let onBack: () -> Void
     let onMore: () -> Void
     let onStart: () -> Void
-
+    
     init(appViewModel: AppViewModel) {
-        self.data = MockDataProvider.workoutPreview
+        let plan = appViewModel.currentWorkoutPlan
+        self.data = WorkoutPreviewData(
+            title: plan?.title ?? "Workout",
+            duration: "\(plan?.estimatedMinutes ?? 0)m",
+            energy: appViewModel.workoutCondition.capitalized + " Energy",
+            calories: "\(plan?.estimatedCalories ?? 0)",
+            coachNote: plan?.coachMessage ?? "",
+            exercises: plan?.exercises ?? [],
+            isLoading: appViewModel.isGeneratingPlan
+        )
         self.onBack = { appViewModel.startWorkoutFlow() }
         self.onMore = { appViewModel.goToWorkoutPreview2() }
         self.onStart = { appViewModel.startWorkoutSession() }
     }
 }
 
+// MARK: - Workout Session
+
+struct WorkoutSessionData {
+    let plan: WorkoutPlan?
+    let currentExerciseIndex: Int
+}
+
+@MainActor
 struct WorkoutSessionViewModel {
-    let data: WorkoutSessionMock
+    let data: WorkoutSessionData
     let onBack: () -> Void
     let onComplete: () -> Void
-    let onIncreaseWeight: () -> Void
-    let onDecreaseWeight: () -> Void
-    let onIncreaseReps: () -> Void
-    let onDecreaseReps: () -> Void
-
+    let onRest: () -> Void
+    
     init(appViewModel: AppViewModel) {
-        self.data = MockDataProvider.workoutSession
+        self.data = WorkoutSessionData(
+            plan: appViewModel.currentWorkoutPlan,
+            currentExerciseIndex: 0
+        )
         self.onBack = { appViewModel.goToWorkoutPreview1() }
         self.onComplete = { appViewModel.goToSummary() }
-        self.onIncreaseWeight = {}
-        self.onDecreaseWeight = {}
-        self.onIncreaseReps = {}
-        self.onDecreaseReps = {}
+        self.onRest = { appViewModel.goToRest() }
     }
 }
 
+// MARK: - Rest
+
+@MainActor
 struct RestViewModel {
-    let data: RestMock
+    let plan: WorkoutPlan?
     let onBack: () -> Void
     let onContinue: () -> Void
-
+    
     init(appViewModel: AppViewModel) {
-        self.data = MockDataProvider.rest
+        self.plan = appViewModel.currentWorkoutPlan
         self.onBack = { appViewModel.startWorkoutSession() }
         self.onContinue = { appViewModel.goToSummary() }
     }
 }
 
+// MARK: - Summary
+
+struct SummaryData {
+    let plan: WorkoutPlan?
+}
+
+@MainActor
 struct SummaryViewModel {
+    let data: SummaryData
     let onFinish: () -> Void
-
+    let onSave: (Int, [SessionExercise]) async -> Void
+    
     init(appViewModel: AppViewModel) {
+        self.data = SummaryData(plan: appViewModel.currentWorkoutPlan)
         self.onFinish = { appViewModel.completeWorkoutFlow() }
+        self.onSave = { duration, exercises in
+            await appViewModel.saveWorkoutSession(durationMinutes: duration, exercises: exercises)
+        }
     }
 }
 
+// MARK: - Report
+
+struct ReportData {
+    let sessions: [SessionSummary]
+    let totalWorkouts: Int
+    let totalMinutes: Int
+    let totalCalories: Int
+}
+
+@MainActor
 struct ReportViewModel {
-    let data: ReportMock
-
-    init() {
-        self.data = MockDataProvider.report
-    }
-}
-
-struct HistoryListViewModel {
-    let data: HistoryListMock
-    let onSelectDetail: () -> Void
-
+    let data: ReportData
+    let onRefresh: () async -> Void
+    
     init(appViewModel: AppViewModel) {
-        self.data = MockDataProvider.historyList
-        self.onSelectDetail = { appViewModel.openHistoryDetail() }
+        let sessions = appViewModel.sessions
+        self.data = ReportData(
+            sessions: sessions,
+            totalWorkouts: sessions.count,
+            totalMinutes: sessions.reduce(0) { $0 + $1.durationMinutes },
+            totalCalories: sessions.reduce(0) { $0 + $1.calories }
+        )
+        self.onRefresh = { await appViewModel.loadSessions(period: "month") }
     }
 }
 
+// MARK: - History List
+
+struct HistoryListData {
+    let title: String
+    let subtitle: String
+    let sessions: [SessionSummary]
+}
+
+@MainActor
+struct HistoryListViewModel {
+    let data: HistoryListData
+    let onSelectDetail: (String) -> Void
+    let onRefresh: () async -> Void
+    
+    init(appViewModel: AppViewModel) {
+        self.data = HistoryListData(
+            title: "운동 기록",
+            subtitle: "Logbook",
+            sessions: appViewModel.sessions
+        )
+        self.onSelectDetail = { _ in appViewModel.openHistoryDetail() }
+        self.onRefresh = { await appViewModel.loadSessions() }
+    }
+}
+
+// MARK: - History Detail
+
+struct HistoryDetailData {
+    let session: SessionDetail?
+}
+
+@MainActor
 struct HistoryDetailViewModel {
-    let data: HistoryDetailMock
+    let data: HistoryDetailData
     let onBack: () -> Void
     let onHome: () -> Void
     let onShare: () -> Void
-
+    let onDelete: () -> Void
+    
     init(appViewModel: AppViewModel) {
-        self.data = MockDataProvider.historyDetail
+        self.data = HistoryDetailData(session: appViewModel.currentSessionDetail)
         self.onBack = { appViewModel.pop() }
         self.onHome = { appViewModel.goHomeFromFlow() }
         self.onShare = {}
-    }
-
-    init(data: HistoryDetailMock, onBack: @escaping () -> Void, onHome: @escaping () -> Void, onShare: @escaping () -> Void) {
-        self.data = data
-        self.onBack = onBack
-        self.onHome = onHome
-        self.onShare = onShare
+        self.onDelete = { appViewModel.pop() }
     }
 }
 
+// MARK: - Library (Static for now)
+
+struct LibraryItemData: Identifiable {
+    let id = UUID()
+    let title: String
+    let subtitle: String
+    let equipment: String
+    let imageURL: URL?
+}
+
+struct LibraryData {
+    let title: String
+    let searchPlaceholder: String
+    let categoryChips: [String]
+    let countText: String
+    let items: [LibraryItemData]
+}
+
+@MainActor
 struct LibraryViewModel {
-    let data: LibraryMock
+    let data: LibraryData
     let onBack: () -> Void
     let onSelectItem: () -> Void
-
+    
     init(appViewModel: AppViewModel) {
-        self.data = MockDataProvider.library
+        self.data = LibraryData(
+            title: "운동 라이브러리",
+            searchPlaceholder: "어떤 운동을 찾으세요?",
+            categoryChips: ["전체", "가슴", "등", "하체", "어깨", "팔", "코어"],
+            countText: "724개의 운동",
+            items: [
+                LibraryItemData(title: "벤치 프레스", subtitle: "가슴 (CHEST)", equipment: "Barbell", imageURL: URL(string: "https://lh3.googleusercontent.com/aida-public/AB6AXuCQttwyEWF6qXJa4GlsWMkmUdU50FAKOOvJsbb29QdPbTjuKa6JM9KUHC8VXJmH3Z-qYpUjy02hX1TNGkUvM_a-26iyv0gLVRBmpFfw1s76dlndFD7QkmJ84pezsisXP9fknFMNZ91Toj9hNKyqu0PjsvHBYT5ak3ZjtSBovtZqK56i9viOSEw6vAxQOGMHxbNG1_TPg5QOVlWAeHgJtqGhHGfqCMYXvIdTEESZdGMamX_0NotvWS4BAuYL0s10rUHmCGErVbnmGXE")),
+                LibraryItemData(title: "데드리프트", subtitle: "등 (BACK)", equipment: "Compound", imageURL: URL(string: "https://lh3.googleusercontent.com/aida-public/AB6AXuD31Hj9MkRMg5lQK90LgpZ0qcUvwuVmY2kOFc3Iedtzi-oPWhGlDNUuMM_HJmMaLDyWp7A4KAs1Cdq7LaMpIo4VY5ubIgojMQCxfvdO48x-F0AjRZmEtgLByV7NEHPCV-rH75MxiAVr23z9dqs_6K-Q7T5Cf-rViJ3Kcmga-CQ81tHMpIEn5iliPn2vW0r7zi9Mr-G3igHVqjs4YawPSI2bOoi_v7hn2ZuVKHFbynw4BCsyHCeNHeWmHJ1SYXCnY8srwSptRFdsDKQ"))
+            ]
+        )
         self.onBack = { appViewModel.pop() }
         self.onSelectItem = { appViewModel.openExerciseDetail() }
     }
 }
 
-struct ExerciseDetailViewModel {
-    let data: ExerciseDetailMock
-    let onBack: () -> Void
+// MARK: - Exercise Detail (Static for now)
 
+struct ExerciseDetailData {
+    let title: String
+    let description: String
+    let heroURL: URL?
+}
+
+@MainActor
+struct ExerciseDetailViewModel {
+    let data: ExerciseDetailData
+    let onBack: () -> Void
+    
     init(appViewModel: AppViewModel) {
-        self.data = MockDataProvider.exerciseDetail
+        self.data = ExerciseDetailData(
+            title: "Barbell Bench Press",
+            description: "Let's pump those pecs! A great move for a strong chest and arms. 💪",
+            heroURL: URL(string: "https://lh3.googleusercontent.com/aida-public/AB6AXuCUyk_A0ZAvBPbzKmC9ddJh6KwAfF5fHPOsqWS_cA4AcKWybACPncj6MQUvSMjQA4pr25S3lu6hrnJkd8_821ir86JS3ej4BHqiyl9BW2vmcKA8Kr9g82zzH249sz6TkmVCHprArcj_IZnJGbRm_8pjlTDXCiXq59yUVJYeNQZA5syBhp1UxXS00G0xn_qEBz28RhyXuYp43EWvXgQPiYHNH0Z4dI-h3HkF8_YujVi1Zkd-9iS-WHgkw6GD7E2mzHxBrDAqDXBa5W0")
+        )
         self.onBack = { appViewModel.pop() }
     }
 }
 
+// MARK: - Profile
+
+@MainActor
 struct ProfileViewModel {
+    let userName: String
     let onMyGoals: () -> Void
     let onAppSettings: () -> Void
     let onHelpCenter: () -> Void
-
+    
     init(appViewModel: AppViewModel) {
+        self.userName = appViewModel.userName
         self.onMyGoals = { appViewModel.openMyGoals() }
         self.onAppSettings = { appViewModel.openAppSettings() }
         self.onHelpCenter = { appViewModel.openHelpCenter() }
     }
 }
 
-struct MyGoalsViewModel {
-    let hasWeeklyGoal: Bool
+// MARK: - My Goals
+
+struct MyGoalsData {
+    let hasMissions: Bool
+    let missions: [Mission]
     let dateRange: String
-    let caloriesProgress: Int
-    let caloriesTarget: Int
-    let minutesProgress: Int
-    let minutesTarget: Int
-    let sessionsProgress: Int
-    let sessionsTarget: Int
+}
+
+@MainActor
+struct MyGoalsViewModel {
+    let data: MyGoalsData
     let onBack: () -> Void
     let onEditGoal: () -> Void
     let onViewMission: () -> Void
     let onGetQuest: () -> Void
-
+    
     init(appViewModel: AppViewModel) {
-        self.hasWeeklyGoal = appViewModel.hasWeeklyGoal
-        self.dateRange = "Jan 28 – Feb 3"
-        self.caloriesProgress = appViewModel.weeklyProgressCalories
-        self.caloriesTarget = appViewModel.weeklyTargetCalories
-        self.minutesProgress = appViewModel.weeklyProgressMinutes
-        self.minutesTarget = appViewModel.weeklyTargetMinutes
-        self.sessionsProgress = appViewModel.weeklyProgressSessions
-        self.sessionsTarget = appViewModel.weeklyTargetSessions
+        // Calculate date range for current week
+        let calendar = Calendar.current
+        let today = Date()
+        let weekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today))!
+        let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart)!
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        let dateRange = "\(formatter.string(from: weekStart)) – \(formatter.string(from: weekEnd))"
+        
+        self.data = MyGoalsData(
+            hasMissions: appViewModel.hasMissions,
+            missions: appViewModel.missions,
+            dateRange: dateRange
+        )
         self.onBack = { appViewModel.pop() }
         self.onEditGoal = { appViewModel.openGoalEdit() }
         self.onViewMission = { appViewModel.openWeeklyMission() }
@@ -187,87 +361,111 @@ struct MyGoalsViewModel {
     }
 }
 
+// MARK: - Goal Edit
+
+@MainActor
 struct GoalEditViewModel {
-    let caloriesTarget: Int
-    let minutesTarget: Int
-    let sessionsTarget: Int
+    let missions: [Mission]
     let onBack: () -> Void
-    let onSave: (Int, Int, Int) -> Void
-
+    let onSave: (MissionType, MissionDifficulty, Int) async -> Void
+    
     init(appViewModel: AppViewModel) {
-        self.caloriesTarget = appViewModel.weeklyTargetCalories
-        self.minutesTarget = appViewModel.weeklyTargetMinutes
-        self.sessionsTarget = appViewModel.weeklyTargetSessions
+        self.missions = appViewModel.missions
         self.onBack = { appViewModel.pop() }
-        self.onSave = { calories, minutes, sessions in
-            appViewModel.updateWeeklyGoal(calories: calories, minutes: minutes, sessions: sessions)
-            appViewModel.pop()
+        self.onSave = { type, difficulty, target in
+            await appViewModel.createCustomMission(type: type, difficulty: difficulty, targetValue: target)
+            await MainActor.run { appViewModel.pop() }
         }
     }
 }
 
-struct WeeklyMissionViewModel {
+// MARK: - Weekly Mission
+
+struct WeeklyMissionData {
+    let missions: [Mission]
     let dateRange: String
-    let caloriesProgress: Int
-    let caloriesTarget: Int
-    let minutesProgress: Int
-    let minutesTarget: Int
-    let sessionsProgress: Int
-    let sessionsTarget: Int
-    let onBack: () -> Void
+}
 
+@MainActor
+struct WeeklyMissionViewModel {
+    let data: WeeklyMissionData
+    let onBack: () -> Void
+    
     init(appViewModel: AppViewModel) {
-        self.dateRange = "Jan 28 – Feb 3"
-        self.caloriesProgress = appViewModel.weeklyProgressCalories
-        self.caloriesTarget = appViewModel.weeklyTargetCalories
-        self.minutesProgress = appViewModel.weeklyProgressMinutes
-        self.minutesTarget = appViewModel.weeklyTargetMinutes
-        self.sessionsProgress = appViewModel.weeklyProgressSessions
-        self.sessionsTarget = appViewModel.weeklyTargetSessions
+        let calendar = Calendar.current
+        let today = Date()
+        let weekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today))!
+        let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart)!
+        let formatter = DateFormatter()
+        formatter.dateFormat = "MMM d"
+        let dateRange = "\(formatter.string(from: weekStart)) – \(formatter.string(from: weekEnd))"
+        
+        self.data = WeeklyMissionData(
+            missions: appViewModel.missions,
+            dateRange: dateRange
+        )
         self.onBack = { appViewModel.pop() }
     }
 }
 
-struct GetQuestViewModel {
-    let caloriesDefault: Int
-    let minutesDefault: Int
-    let sessionsDefault: Int
-    let onBack: () -> Void
-    let onConfirm: (Int, Int, Int) -> Void
+// MARK: - Get Quest
 
+@MainActor
+struct GetQuestViewModel {
+    let onBack: () -> Void
+    let onConfirmAI: () async -> Void
+    let onConfirmCustom: (MissionType, MissionDifficulty, Int) async -> Void
+    
     init(appViewModel: AppViewModel) {
-        self.caloriesDefault = 1200
-        self.minutesDefault = 150
-        self.sessionsDefault = 3
         self.onBack = { appViewModel.pop() }
-        self.onConfirm = { calories, minutes, sessions in
-            appViewModel.updateWeeklyGoal(calories: calories, minutes: minutes, sessions: sessions)
-            appViewModel.pop()
+        self.onConfirmAI = {
+            await appViewModel.createAIMissions()
+            await MainActor.run { appViewModel.pop() }
+        }
+        self.onConfirmCustom = { type, difficulty, target in
+            await appViewModel.createCustomMission(type: type, difficulty: difficulty, targetValue: target)
+            await MainActor.run { appViewModel.pop() }
         }
     }
 }
 
+// MARK: - Settings Views
+
+@MainActor
 struct AppSettingsViewModel {
     let onBack: () -> Void
     let onAppleHealth: () -> Void
-
+    let onAppleWatch: () -> Void
+    
     init(appViewModel: AppViewModel) {
         self.onBack = { appViewModel.pop() }
         self.onAppleHealth = { appViewModel.openAppleHealth() }
+        self.onAppleWatch = { appViewModel.openAppleWatch() }
     }
 }
 
+@MainActor
 struct HelpCenterViewModel {
     let onBack: () -> Void
-
+    
     init(appViewModel: AppViewModel) {
         self.onBack = { appViewModel.pop() }
     }
 }
 
+@MainActor
 struct AppleHealthViewModel {
     let onBack: () -> Void
+    
+    init(appViewModel: AppViewModel) {
+        self.onBack = { appViewModel.pop() }
+    }
+}
 
+@MainActor
+struct AppleWatchViewModel {
+    let onBack: () -> Void
+    
     init(appViewModel: AppViewModel) {
         self.onBack = { appViewModel.pop() }
     }

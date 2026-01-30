@@ -40,6 +40,23 @@ struct AppSettingsView: View {
                     }
                 }
 
+                sectionCard(title: "Apple Watch") {
+                    Button(action: viewModel.onAppleWatch) {
+                        HStack {
+                            Text("Status")
+                                .font(AppFonts.nunito(14, weight: .bold))
+                                .foregroundColor(Color(hex: "#3D3D3D"))
+                            Spacer()
+                            Text("Not Connected")
+                                .font(AppFonts.nunito(14, weight: .bold))
+                                .foregroundColor(Color(hex: "#78716C"))
+                            MaterialSymbol(name: "chevron_right", size: 18)
+                                .foregroundColor(Color(hex: "#A8A29E"))
+                        }
+                        .padding(.vertical, 6)
+                    }
+                }
+
                 Spacer()
             }
             .padding(.horizontal, 24)

@@ -10,14 +10,25 @@ struct WorkoutPreviewView1: View {
 
             VStack(spacing: 0) {
                 header
-                ScrollView(showsIndicators: false) {
-                    VStack(alignment: .leading, spacing: 20) {
-                        titleSection
-                        coachCard
-                        routineList
+                if viewModel.data.isLoading {
+                    Spacer()
+                    ProgressView()
+                        .scaleEffect(1.5)
+                    Text("Generating workout...")
+                        .font(AppFonts.nunito(14, weight: .semibold))
+                        .foregroundColor(Color(hex: "#9CA3AF"))
+                        .padding(.top, 16)
+                    Spacer()
+                } else {
+                    ScrollView(showsIndicators: false) {
+                        VStack(alignment: .leading, spacing: 20) {
+                            titleSection
+                            coachCard
+                            routineList
+                        }
+                        .padding(.horizontal, 24)
+                        .padding(.bottom, 120)
                     }
-                    .padding(.horizontal, 24)
-                    .padding(.bottom, 120)
                 }
             }
         }
@@ -121,7 +132,7 @@ struct WorkoutPreviewView1: View {
                 Text("Routine")
                     .font(AppFonts.nunito(18, weight: .bold))
                 Spacer()
-                Text("6 Moves")
+                Text("\(viewModel.data.exercises.count) Moves")
                     .font(AppFonts.nunito(12, weight: .bold))
                     .foregroundColor(Color(hex: "#9CA3AF"))
                     .padding(.horizontal, 10)
@@ -132,33 +143,40 @@ struct WorkoutPreviewView1: View {
             }
 
             VStack(spacing: 10) {
-                ForEach(viewModel.data.routine.indices, id: \.self) { index in
-                    let item = viewModel.data.routine[index]
-                    routineRow(item: item, isHighlighted: index == 0)
+                ForEach(Array(viewModel.data.exercises.enumerated()), id: \.element.id) { index, exercise in
+                    routineRow(index: index + 1, exercise: exercise, isHighlighted: index == 0)
                 }
             }
         }
     }
 
-    private func routineRow(item: RoutineItemMock, isHighlighted: Bool) -> some View {
+    private func routineRow(index: Int, exercise: WorkoutPlanExercise, isHighlighted: Bool) -> some View {
         HStack(spacing: 12) {
             ZStack {
                 RoundedRectangle(cornerRadius: 10, style: .continuous)
                     .fill(isHighlighted ? Color(hex: "#FF8577") : Color(hex: "#F3F4F6"))
                     .frame(width: 36, height: 36)
-                Text("\(item.index)")
+                Text("\(index)")
                     .font(AppFonts.nunito(14, weight: .bold))
                     .foregroundColor(isHighlighted ? .white : Color(hex: "#9CA3AF"))
             }
             VStack(alignment: .leading, spacing: 2) {
-                Text(item.title)
+                Text(exercise.exerciseId.replacingOccurrences(of: "_", with: " ").capitalized)
                     .font(AppFonts.nunito(15, weight: .bold))
                     .foregroundColor(Color(hex: "#2D2D2D"))
-                Text(item.subtitle)
+                Text("\(exercise.sets.count) sets")
                     .font(AppFonts.nunito(12, weight: .medium))
                     .foregroundColor(Color(hex: "#9CA3AF"))
             }
             Spacer()
+            ZStack {
+                Circle()
+                    .fill(Color(hex: "#FFF1EE"))
+                    .frame(width: 30, height: 30)
+                    .overlay(Circle().stroke(Color(hex: "#FF8577").opacity(0.2), lineWidth: 1))
+                MaterialSymbol(name: "refresh", size: 20, style: .rounded)
+                    .foregroundColor(Color(hex: "#FF8577"))
+            }
         }
         .padding(.horizontal, 14)
         .padding(.vertical, 12)
@@ -193,6 +211,7 @@ struct WorkoutPreviewView1: View {
                     .background(Color(hex: "#FF8577"))
                     .clipShape(RoundedRectangle(cornerRadius: 12, style: .continuous))
             }
+            .disabled(viewModel.data.isLoading || viewModel.data.exercises.isEmpty)
             .padding(.horizontal, 24)
             .padding(.vertical, 12)
         }

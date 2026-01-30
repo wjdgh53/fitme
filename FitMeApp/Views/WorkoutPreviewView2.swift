@@ -121,7 +121,7 @@ struct WorkoutPreviewView2: View {
                 Text("Routine")
                     .font(AppFonts.nunito(18, weight: .bold))
                 Spacer()
-                Text("6 Moves")
+                Text("\(viewModel.data.exercises.count) Moves")
                     .font(AppFonts.nunito(12, weight: .bold))
                     .foregroundColor(Color(hex: "#9CA3AF"))
                     .padding(.horizontal, 10)
@@ -132,20 +132,20 @@ struct WorkoutPreviewView2: View {
             }
 
             VStack(spacing: 10) {
-                ForEach(viewModel.data.routine.indices, id: \.self) { index in
-                    routineRow(item: viewModel.data.routine[index])
+                ForEach(viewModel.data.exercises) { exercise in
+                    routineRow(exercise: exercise)
                 }
             }
         }
     }
 
-    private func routineRow(item: RoutineItemMock) -> some View {
+    private func routineRow(exercise: WorkoutPlanExercise) -> some View {
         HStack(spacing: 10) {
             VStack(alignment: .leading, spacing: 2) {
-                Text(item.title)
+                Text(exercise.exerciseId.replacingOccurrences(of: "_", with: " ").capitalized)
                     .font(AppFonts.nunito(15, weight: .bold))
                     .foregroundColor(Color(hex: "#2D2D2D"))
-                Text(item.subtitle)
+                Text("\(exercise.sets.count) sets")
                     .font(AppFonts.nunito(12, weight: .medium))
                     .foregroundColor(Color(hex: "#9CA3AF"))
             }

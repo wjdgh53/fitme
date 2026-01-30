@@ -11,10 +11,14 @@ struct WeeklyMissionView: View {
             VStack(spacing: 20) {
                 header
 
-                VStack(spacing: 16) {
-                    missionCard(icon: "local_fire_department", title: "Burn \(formatted(viewModel.caloriesTarget)) Calories", progress: viewModel.caloriesProgress, target: viewModel.caloriesTarget, unit: "kcal", tint: "#FB923C", background: "#FFF7ED")
-                    missionCard(icon: "timer", title: "\(formatted(viewModel.minutesTarget)) Minutes Active", progress: viewModel.minutesProgress, target: viewModel.minutesTarget, unit: "min", tint: "#60A5FA", background: "#EFF6FF")
-                    missionCard(icon: "fitness_center", title: "Complete \(formatted(viewModel.sessionsTarget)) Sessions", progress: viewModel.sessionsProgress, target: viewModel.sessionsTarget, unit: "sessions", tint: "#34D399", background: "#ECFDF3")
+                if viewModel.data.missions.isEmpty {
+                    emptyState
+                } else {
+                    VStack(spacing: 16) {
+                        ForEach(viewModel.data.missions) { mission in
+                            missionCard(mission: mission)
+                        }
+                    }
                 }
 
                 Spacer()
@@ -42,10 +46,42 @@ struct WeeklyMissionView: View {
                 .frame(width: 44, height: 44)
         }
     }
+    
+    private var emptyState: some View {
+        VStack(spacing: 16) {
+            Text("📋")
+                .font(.system(size: 48))
+            Text("No missions yet")
+                .font(AppFonts.nunito(18, weight: .bold))
+                .foregroundColor(Color(hex: "#3D3D3D"))
+            Text("Create a quest to get started!")
+                .font(AppFonts.nunito(14, weight: .medium))
+                .foregroundColor(Color(hex: "#78716C"))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 48)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
+    }
 
-    private func missionCard(icon: String, title: String, progress: Int, target: Int, unit: String, tint: String, background: String) -> some View {
-        let ratio = target == 0 ? 0 : min(Double(progress) / Double(target), 1)
-        let percent = Int(ratio * 100)
+    private func missionCard(mission: Mission) -> some View {
+        let tint: String
+        let background: String
+        
+        switch mission.type {
+        case .calories:
+            tint = "#FB923C"
+            background = "#FFF7ED"
+        case .minutes:
+            tint = "#60A5FA"
+            background = "#EFF6FF"
+        case .sessions:
+            tint = "#34D399"
+            background = "#ECFDF3"
+        }
+        
+        let percent = Int(mission.progress * 100)
 
         return VStack(alignment: .leading, spacing: 8) {
             HStack(alignment: .top) {
@@ -53,12 +89,12 @@ struct WeeklyMissionView: View {
                     Circle()
                         .fill(Color(hex: background))
                         .frame(width: 36, height: 36)
-                    MaterialSymbol(name: icon, size: 18)
+                    MaterialSymbol(name: mission.icon, size: 18)
                         .foregroundColor(Color(hex: tint))
                 }
                 VStack(alignment: .leading, spacing: 4) {
                     HStack {
-                        Text(title)
+                        Text(missionTitle(mission))
                             .font(AppFonts.nunito(15, weight: .black))
                             .foregroundColor(Color(hex: "#3D3D3D"))
                         Spacer()
@@ -66,7 +102,7 @@ struct WeeklyMissionView: View {
                             .font(AppFonts.nunito(12, weight: .bold))
                             .foregroundColor(Color(hex: "#A8A29E"))
                     }
-                    Text("\(formatted(progress)) / \(formatted(target)) \(unit)")
+                    Text("\(formatted(mission.progressValue)) / \(formatted(mission.targetValue)) \(unitText(mission))")
                         .font(AppFonts.nunito(12, weight: .bold))
                         .foregroundColor(Color(hex: "#78716C"))
                 }
@@ -79,12 +115,12 @@ struct WeeklyMissionView: View {
                         .frame(height: 8)
                     RoundedRectangle(cornerRadius: 999)
                         .fill(Color(hex: tint))
-                        .frame(width: geometry.size.width * CGFloat(ratio), height: 8)
+                        .frame(width: geometry.size.width * CGFloat(mission.progress), height: 8)
                 }
             }
             .frame(height: 8)
 
-            Text("Ends \(endDateText)")
+            Text("Ends \(endDateText(mission))")
                 .font(AppFonts.nunito(11, weight: .bold))
                 .foregroundColor(Color(hex: "#A8A29E"))
         }
@@ -93,15 +129,39 @@ struct WeeklyMissionView: View {
         .clipShape(RoundedRectangle(cornerRadius: 22, style: .continuous))
         .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
     }
+    
+    private func missionTitle(_ mission: Mission) -> String {
+        switch mission.type {
+        case .calories:
+            return "Burn \(formatted(mission.targetValue)) Calories"
+        case .minutes:
+            return "\(formatted(mission.targetValue)) Minutes Active"
+        case .sessions:
+            return "Complete \(formatted(mission.targetValue)) Sessions"
+        }
+    }
+    
+    private func unitText(_ mission: Mission) -> String {
+        switch mission.type {
+        case .calories: return "kcal"
+        case .minutes: return "min"
+        case .sessions: return "sessions"
+        }
+    }
+    
+    private func endDateText(_ mission: Mission) -> String {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        if let date = formatter.date(from: mission.endAt) {
+            formatter.dateFormat = "MMM d"
+            return formatter.string(from: date)
+        }
+        return mission.endAt
+    }
 
     private func formatted(_ value: Int) -> String {
         let formatter = NumberFormatter()
         formatter.numberStyle = .decimal
         return formatter.string(from: NSNumber(value: value)) ?? "\(value)"
-    }
-
-    private var endDateText: String {
-        let parts = viewModel.dateRange.split(separator: "–").map { $0.trimmingCharacters(in: .whitespaces) }
-        return parts.last.map { String($0) } ?? viewModel.dateRange
     }
 }

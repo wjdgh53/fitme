@@ -15,11 +15,14 @@
 		136C13EF6D5689FD4CC3E0C7 /* MyGoalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BAF2B2783E1934160BF6A72 /* MyGoalsView.swift */; };
 		1541F209F999BFB1427C5748 /* HistoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E08B401E26288D707300FA0 /* HistoryListView.swift */; };
 		19B91512FA2CC559BA053B63 /* AppleHealthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24C9CB26CA9886401D55B0D8 /* AppleHealthView.swift */; };
+		1B2C3D4E5F60718293A4B5C6 /* AppleWatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6B5A4938271605F4E3D2C1B /* AppleWatchView.swift */; };
 		1FA1288C80B108B311CF8056 /* AppModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C9BFB5A90DFD55EAB70D84F /* AppModels.swift */; };
 		2550F47B543CE71F5A8D87B4 /* WorkoutSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A251309B31739ACD8DC57D /* WorkoutSessionView.swift */; };
 		3931CDC9E6FE67DF7AAF2DBE /* AppSettingsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 27646F68650040225BE338E5 /* AppSettingsView.swift */; };
+		4817470F0143C0108FFD20BB /* APIModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = B39F2A969EE203DFFA72C46F /* APIModels.swift */; };
 		4A42AFBB6316424273EC7C8C /* GoalEditView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 49AB7977ADD038F4A1B08948 /* GoalEditView.swift */; };
 		51BCE53B42CF8622ACE2F4B5 /* HistoryDetailView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 85A6E98913DB049F72836009 /* HistoryDetailView.swift */; };
+		5C78FA7AD630E0ACB3086FDC /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC131A6294BD5699C921878 /* APIClient.swift */; };
 		5C960ADFB53709D96F0F0899 /* PlusJakartaSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 48CD99F8FF1B6BFE4C95D49E /* PlusJakartaSans-Regular.ttf */; };
 		66D8D8A0E926AD60A23D30B4 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3974B16CEA49C8A72D951FCC /* ProfileView.swift */; };
 		747B93D38CF7D8809103CF6C /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F304B610DFC2494C8CDCCCE8 /* AppViewModel.swift */; };
@@ -85,10 +88,13 @@
 		A4C2BAA700B4DC19467027D5 /* PlusJakartaSans-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-Medium.ttf"; sourceTree = "<group>"; };
 		A76E3EC16AFE79A743BF89CC /* Nunito-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-Regular.ttf"; sourceTree = "<group>"; };
 		B33FF33B603B19FF169542E2 /* Quicksand-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Quicksand-Regular.ttf"; sourceTree = "<group>"; };
+		B39F2A969EE203DFFA72C46F /* APIModels.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = APIModels.swift; sourceTree = "<group>"; };
 		B44B65E0847D8467F518D506 /* MaterialSymbolsOutlined.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = MaterialSymbolsOutlined.ttf; sourceTree = "<group>"; };
 		C5A251309B31739ACD8DC57D /* WorkoutSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSessionView.swift; sourceTree = "<group>"; };
+		C6B5A4938271605F4E3D2C1B /* AppleWatchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleWatchView.swift; sourceTree = "<group>"; };
 		CA74EEB3807436B23913E018 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
 		CC39EB3DC684E05A5CB18892 /* AppTabBar.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppTabBar.swift; sourceTree = "<group>"; };
+		CCC131A6294BD5699C921878 /* APIClient.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = APIClient.swift; sourceTree = "<group>"; };
 		D5E9C83DAA4EE3738D8F2900 /* ViewModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ViewModels.swift; sourceTree = "<group>"; };
 		D5FE6C22ADC7386E668DB8D6 /* RestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestView.swift; sourceTree = "<group>"; };
 		DD78D96BC09C122CBBFB616F /* SummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryView.swift; sourceTree = "<group>"; };
@@ -130,6 +136,16 @@
 			path = Fonts;
 			sourceTree = "<group>";
 		};
+		8DA3C5394086B7853DDA0E21 /* Services */ = {
+			isa = PBXGroup;
+			children = (
+				B39F2A969EE203DFFA72C46F /* APIModels.swift */,
+				CCC131A6294BD5699C921878 /* APIClient.swift */,
+			);
+			name = Services;
+			path = Services;
+			sourceTree = "<group>";
+		};
 		9A65290785BB7E3A8C7EBB10 /* Mock */ = {
 			isa = PBXGroup;
 			children = (
@@ -151,6 +167,7 @@
 			isa = PBXGroup;
 			children = (
 				24C9CB26CA9886401D55B0D8 /* AppleHealthView.swift */,
+				C6B5A4938271605F4E3D2C1B /* AppleWatchView.swift */,
 				27646F68650040225BE338E5 /* AppSettingsView.swift */,
 				8120774D25D6DC53FCC96742 /* ExerciseDetailView.swift */,
 				11425A42060C1759B62C83EC /* GetQuestView.swift */,
@@ -220,6 +237,7 @@
 				631EE424184165575186238A /* Resources */,
 				D7B2DDDE0B0180B4C90438C2 /* ViewModels */,
 				C6ABE517244B839BFB3E0CB8 /* Views */,
+				8DA3C5394086B7853DDA0E21 /* Services */,
 			);
 			path = FitMeApp;
 			sourceTree = "<group>";
@@ -247,8 +265,6 @@
 			dependencies = (
 			);
 			name = FitMeApp;
-			packageProductDependencies = (
-			);
 			productName = FitMeApp;
 			productReference = F75F57F7DB72776042AEC722 /* FitMeApp.app */;
 			productType = "com.apple.product-type.application";
@@ -273,6 +289,7 @@
 			mainGroup = C8FEB903F2BF482452DBF05B;
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
+			productRefGroup = ED04DDB1078DD39D49A226C6 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -316,6 +333,7 @@
 				8C8915E707D537B3B9B3F733 /* AppTabBar.swift in Sources */,
 				747B93D38CF7D8809103CF6C /* AppViewModel.swift in Sources */,
 				19B91512FA2CC559BA053B63 /* AppleHealthView.swift in Sources */,
+				1B2C3D4E5F60718293A4B5C6 /* AppleWatchView.swift in Sources */,
 				F1BB41B4CF50157467C8E91B /* DesignTokens.swift in Sources */,
 				D76F9CC520FB8FB78B8027A7 /* ExerciseDetailView.swift in Sources */,
 				00C5B554210058288BF09D99 /* FitMeApp.swift in Sources */,
@@ -339,6 +357,8 @@
 				95E5598765F081B38179D85B /* WorkoutPreviewView1.swift in Sources */,
 				CB90EADECEF08D2978916C08 /* WorkoutPreviewView2.swift in Sources */,
 				2550F47B543CE71F5A8D87B4 /* WorkoutSessionView.swift in Sources */,
+				4817470F0143C0108FFD20BB /* APIModels.swift in Sources */,
+				5C78FA7AD630E0ACB3086FDC /* APIClient.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
