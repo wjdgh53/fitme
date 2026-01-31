@@ -28,7 +28,7 @@ struct MyGoalsView: View {
                     VStack(spacing: 20) {
                         addButton
                         
-                        if !viewModel.data.missions.isEmpty {
+                        if !appViewModel.missions.isEmpty {
                             thisWeekSection
                         } else {
                             emptyState
@@ -82,14 +82,14 @@ struct MyGoalsView: View {
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
             .background(
-                viewModel.data.missions.count >= 3
+                appViewModel.missions.count >= 3
                     ? Color(hex: "#D1D5DB")
                     : Color(hex: "#FF8577")
             )
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .shadow(color: Color(hex: "#FF8577").opacity(0.25), radius: 8, x: 0, y: 4)
         }
-        .disabled(viewModel.data.missions.count >= 3)
+        .disabled(appViewModel.missions.count >= 3)
     }
     
     private var thisWeekSection: some View {
@@ -99,12 +99,12 @@ struct MyGoalsView: View {
                     .font(AppFonts.quicksand(18, weight: .heavy))
                     .foregroundColor(Color(hex: "#3D3D3D"))
                 Spacer()
-                Text("\(viewModel.data.missions.count)/3")
+                Text("\(appViewModel.missions.count)/3")
                     .font(AppFonts.nunito(14, weight: .bold))
                     .foregroundColor(Color(hex: "#A8A29E"))
             }
             
-            ForEach(viewModel.data.missions) { mission in
+            ForEach(appViewModel.missions) { mission in
                 missionCard(mission: mission)
             }
         }
