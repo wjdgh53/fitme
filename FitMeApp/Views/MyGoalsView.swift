@@ -1,12 +1,18 @@
 import SwiftUI
 
 struct MyGoalsView: View {
-    let viewModel: MyGoalsViewModel
+    @ObservedObject var viewModel: MyGoalsViewModel
+    @ObservedObject private var appViewModel: AppViewModel
     @State private var showAddSheet = false
     @State private var showCustomSheet = false
     @State private var selectedMissionType: MissionType = .sessions
     @State private var targetValue: Int = 4
     @State private var isCreating = false
+    
+    init(viewModel: MyGoalsViewModel) {
+        self.viewModel = viewModel
+        self.appViewModel = viewModel.appViewModel
+    }
 
     var body: some View {
         ZStack {
@@ -48,7 +54,7 @@ struct MyGoalsView: View {
 
     private var header: some View {
         HStack {
-            Button(action: viewModel.onBack) {
+            Button(action: { viewModel.onBack() }) {
                 Circle()
                     .fill(Color.white)
                     .frame(width: 44, height: 44)

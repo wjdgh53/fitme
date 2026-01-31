@@ -332,15 +332,10 @@ struct MyGoalsData {
 }
 
 @MainActor
-struct MyGoalsViewModel {
-    let data: MyGoalsData
-    let onBack: () -> Void
-    let onCreateAIMissions: () async -> Void
-    let onCreateCustomMission: (MissionType, MissionDifficulty, Int) async -> Void
-    let onDeleteMission: (String) async -> Void
+final class MyGoalsViewModel: ObservableObject {
+    let appViewModel: AppViewModel
     
-    init(appViewModel: AppViewModel) {
-        // Calculate date range for current week
+    var data: MyGoalsData {
         let calendar = Calendar.current
         let today = Date()
         let weekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today))!
@@ -349,19 +344,31 @@ struct MyGoalsViewModel {
         formatter.dateFormat = "MMM d"
         let dateRange = "\(formatter.string(from: weekStart)) – \(formatter.string(from: weekEnd))"
         
-        self.data = MyGoalsData(
+        return MyGoalsData(
             hasMissions: appViewModel.hasMissions,
             missions: appViewModel.missions,
             dateRange: dateRange
         )
-        self.onBack = { appViewModel.pop() }
-        self.onCreateAIMissions = { await appViewModel.createAIMissions() }
-        self.onCreateCustomMission = { type, difficulty, target in
-            await appViewModel.createCustomMission(type: type, difficulty: difficulty, targetValue: target)
-        }
-        self.onDeleteMission = { id in
-            await appViewModel.deleteMission(id: id)
-        }
+    }
+    
+    init(appViewModel: AppViewModel) {
+        self.appViewModel = appViewModel
+    }
+    
+    func onBack() {
+        appViewModel.pop()
+    }
+    
+    func onCreateAIMissions() async {
+        await appViewModel.createAIMissions()
+    }
+    
+    func onCreateCustomMission(_ type: MissionType, _ difficulty: MissionDifficulty, _ target: Int) async {
+        await appViewModel.createCustomMission(type: type, difficulty: difficulty, targetValue: target)
+    }
+    
+    func onDeleteMission(_ id: String) async {
+        await appViewModel.deleteMission(id: id)
     }
 }
 
