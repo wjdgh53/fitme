@@ -177,11 +177,13 @@ struct CreateMissionRequest: Encodable {
     let difficulty: String?
     let targetValue: Int?
     let startAt: String?
+    let aiSingle: Bool?
     
     enum CodingKeys: String, CodingKey {
         case mode, type, difficulty
         case targetValue = "target_value"
         case startAt = "start_at"
+        case aiSingle = "ai_single"
     }
 }
 

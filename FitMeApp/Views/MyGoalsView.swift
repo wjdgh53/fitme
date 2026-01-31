@@ -5,6 +5,7 @@ struct MyGoalsView: View {
     @ObservedObject private var appViewModel: AppViewModel
     @State private var showAddSheet = false
     @State private var showCustomSheet = false
+    @State private var showAITypeSheet = false
     @State private var selectedMissionType: MissionType = .sessions
     @State private var targetValue: Int = 4
     @State private var isCreating = false
@@ -48,6 +49,11 @@ struct MyGoalsView: View {
         .sheet(isPresented: $showCustomSheet) {
             customMissionSheet
                 .presentationDetents([.height(380)])
+                .presentationDragIndicator(.visible)
+        }
+        .sheet(isPresented: $showAITypeSheet) {
+            aiTypeSheet
+                .presentationDetents([.height(320)])
                 .presentationDragIndicator(.visible)
         }
     }
@@ -228,8 +234,8 @@ struct MyGoalsView: View {
             VStack(spacing: 12) {
                 Button(action: {
                     showAddSheet = false
-                    Task {
-                        await viewModel.onCreateAIMissions()
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
+                        showAITypeSheet = true
                     }
                 }) {
                     HStack(spacing: 12) {
@@ -244,7 +250,7 @@ struct MyGoalsView: View {
                             Text("AI Recommend")
                                 .font(AppFonts.nunito(16, weight: .black))
                                 .foregroundColor(Color(hex: "#3D3D3D"))
-                            Text("Let AI create 3 personalized goals")
+                            Text("AI sets the perfect target for you")
                                 .font(AppFonts.nunito(12, weight: .bold))
                                 .foregroundColor(Color(hex: "#A8A29E"))
                         }
@@ -435,5 +441,66 @@ struct MyGoalsView: View {
         case .minutes: return "active minutes this week"
         case .calories: return "calories to burn this week"
         }
+    }
+    
+    // MARK: - AI Type Sheet
+    
+    private var aiTypeSheet: some View {
+        VStack(spacing: 20) {
+            Text("What type of goal?")
+                .font(AppFonts.quicksand(20, weight: .bold))
+                .foregroundColor(Color(hex: "#3D3D3D"))
+                .padding(.top, 8)
+            
+            Text("AI will set the perfect target for you")
+                .font(AppFonts.nunito(14, weight: .bold))
+                .foregroundColor(Color(hex: "#A8A29E"))
+            
+            VStack(spacing: 12) {
+                aiTypeButton(.sessions, icon: "fitness_center", title: "Workout Sessions", subtitle: "Track number of workouts", color: "#34D399")
+                aiTypeButton(.minutes, icon: "timer", title: "Active Minutes", subtitle: "Track exercise duration", color: "#60A5FA")
+                aiTypeButton(.calories, icon: "local_fire_department", title: "Calories", subtitle: "Track calories burned", color: "#FB923C")
+            }
+            .padding(.horizontal, 20)
+            
+            Spacer()
+        }
+        .background(Color.white)
+    }
+    
+    private func aiTypeButton(_ type: MissionType, icon: String, title: String, subtitle: String, color: String) -> some View {
+        Button(action: {
+            showAITypeSheet = false
+            isCreating = true
+            Task {
+                await viewModel.onCreateAISingleMission(type)
+                isCreating = false
+            }
+        }) {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle()
+                        .fill(Color(hex: color).opacity(0.15))
+                        .frame(width: 48, height: 48)
+                    MaterialSymbol(name: icon, size: 24)
+                        .foregroundColor(Color(hex: color))
+                }
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(AppFonts.nunito(16, weight: .black))
+                        .foregroundColor(Color(hex: "#3D3D3D"))
+                    Text(subtitle)
+                        .font(AppFonts.nunito(12, weight: .bold))
+                        .foregroundColor(Color(hex: "#A8A29E"))
+                }
+                Spacer()
+                MaterialSymbol(name: "auto_awesome", size: 20)
+                    .foregroundColor(Color(hex: "#8B5CF6"))
+            }
+            .padding(14)
+            .background(Color(hex: "#FAFAFA"))
+            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        }
+        .disabled(isCreating)
     }
 }

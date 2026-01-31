@@ -101,6 +101,17 @@ final class AppViewModel: ObservableObject {
         isLoading = false
     }
     
+    func createAISingleMission(type: MissionType) async {
+        isLoading = true
+        do {
+            let response = try await APIClient.shared.createMissions(mode: "ai", type: type, aiSingle: true)
+            missions = response.missions
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        isLoading = false
+    }
+    
     func createCustomMission(type: MissionType, difficulty: MissionDifficulty, targetValue: Int) async {
         isLoading = true
         do {

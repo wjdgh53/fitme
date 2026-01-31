@@ -54,13 +54,14 @@ actor APIClient {
         return try await request(endpoint: "/missions", method: "GET")
     }
     
-    func createMissions(mode: String, type: MissionType? = nil, difficulty: MissionDifficulty? = nil, targetValue: Int? = nil, startAt: String? = nil) async throws -> MissionsResponse {
+    func createMissions(mode: String, type: MissionType? = nil, difficulty: MissionDifficulty? = nil, targetValue: Int? = nil, startAt: String? = nil, aiSingle: Bool = false) async throws -> MissionsResponse {
         let body = CreateMissionRequest(
             mode: mode,
             type: type?.rawValue,
             difficulty: difficulty?.rawValue,
             targetValue: targetValue,
-            startAt: startAt
+            startAt: startAt,
+            aiSingle: aiSingle
         )
         return try await request(endpoint: "/missions", method: "POST", body: body)
     }

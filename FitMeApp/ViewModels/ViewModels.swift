@@ -363,6 +363,10 @@ final class MyGoalsViewModel: ObservableObject {
         await appViewModel.createAIMissions()
     }
     
+    func onCreateAISingleMission(_ type: MissionType) async {
+        await appViewModel.createAISingleMission(type: type)
+    }
+    
     func onCreateCustomMission(_ type: MissionType, _ difficulty: MissionDifficulty, _ target: Int) async {
         await appViewModel.createCustomMission(type: type, difficulty: difficulty, targetValue: target)
     }
