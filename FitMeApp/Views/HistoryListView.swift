@@ -118,6 +118,72 @@ struct HistoryListView: View {
         }
     }
 
+    private var missionHistorySection: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack {
+                Text("Goal History")
+                    .font(AppFonts.nunito(16, weight: .black))
+                    .foregroundColor(Color(hex: "#3D3D3D"))
+                Spacer()
+                Text("\(viewModel.data.completedMissions.count)")
+                    .font(AppFonts.nunito(12, weight: .bold))
+                    .foregroundColor(Color(hex: "#34D399"))
+            }
+            VStack(spacing: 12) {
+                ForEach(viewModel.data.completedMissions) { mission in
+                    missionHistoryRow(mission: mission)
+                }
+            }
+        }
+        .padding(.top, 6)
+    }
+
+    private func missionHistoryRow(mission: Mission) -> some View {
+        let tint: String
+        let iconName: String
+        switch mission.type {
+        case .calories:
+            tint = "#FB923C"
+            iconName = "local_fire_department"
+        case .minutes:
+            tint = "#60A5FA"
+            iconName = "timer"
+        case .sessions:
+            tint = "#34D399"
+            iconName = "fitness_center"
+        }
+
+        return HStack(spacing: 14) {
+            ZStack {
+                Circle()
+                    .fill(Color(hex: tint).opacity(0.12))
+                    .frame(width: 44, height: 44)
+                MaterialSymbol(name: iconName, size: 20)
+                    .foregroundColor(Color(hex: tint))
+            }
+            VStack(alignment: .leading, spacing: 4) {
+                Text(missionTitle(mission.type))
+                    .font(AppFonts.nunito(15, weight: .black))
+                    .foregroundColor(Color(hex: "#3D3D3D"))
+                Text("Completed • \(mission.targetValue) \(missionUnit(mission.type))")
+                    .font(AppFonts.nunito(12, weight: .bold))
+                    .foregroundColor(Color(hex: tint))
+            }
+            Spacer()
+            Text("+10 pts")
+                .font(AppFonts.nunito(12, weight: .black))
+                .foregroundColor(Color(hex: tint))
+                .padding(.horizontal, 10)
+                .padding(.vertical, 6)
+                .background(Color(hex: tint).opacity(0.12))
+                .clipShape(Capsule())
+        }
+        .padding(14)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
+        .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 3)
+    }
+
     private func historyRow(session: SessionSummary, isAccent: Bool) -> some View {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd"
@@ -184,5 +250,39 @@ struct HistoryListView: View {
         .background(Color.white)
         .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
         .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 3)
+    }
+    
+    private var workoutEmptyState: some View {
+        VStack(spacing: 16) {
+            Text("🏋️")
+                .font(.system(size: 48))
+            Text("No workout sessions yet")
+                .font(AppFonts.nunito(18, weight: .bold))
+                .foregroundColor(Color(hex: "#3D3D3D"))
+            Text("Complete a workout to see it here")
+                .font(AppFonts.nunito(14, weight: .medium))
+                .foregroundColor(Color(hex: "#8B8B8B"))
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 48)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 3)
+    }
+    
+    private func missionTitle(_ type: MissionType) -> String {
+        switch type {
+        case .calories: return "Calorie Goal"
+        case .minutes: return "Active Minutes"
+        case .sessions: return "Workout Sessions"
+        }
+    }
+    
+    private func missionUnit(_ type: MissionType) -> String {
+        switch type {
+        case .calories: return "kcal"
+        case .minutes: return "min"
+        case .sessions: return "sessions"
+        }
     }
 }

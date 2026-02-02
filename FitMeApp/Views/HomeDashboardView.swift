@@ -2,6 +2,12 @@ import SwiftUI
 
 struct HomeDashboardView: View {
     let viewModel: HomeDashboardViewModel
+    @ObservedObject private var appViewModel: AppViewModel
+    
+    init(viewModel: HomeDashboardViewModel, appViewModel: AppViewModel) {
+        self.viewModel = viewModel
+        self.appViewModel = appViewModel
+    }
 
     var body: some View {
         ZStack {
@@ -109,8 +115,8 @@ struct HomeDashboardView: View {
 
             HStack(spacing: 12) {
                 ForEach(0..<3, id: \.self) { index in
-                    if index < viewModel.data.missions.count {
-                        let mission = viewModel.data.missions[index]
+                    if index < appViewModel.activeMissions.count {
+                        let mission = appViewModel.activeMissions[index]
                         missionCard(mission: mission)
                     } else {
                         emptyMissionCard

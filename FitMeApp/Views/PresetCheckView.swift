@@ -6,6 +6,8 @@ struct PresetCheckView: View {
     @State private var locationSelection: Int
     @State private var targetMinutes: Int
     @State private var isLoading = false
+    @State private var errorMessage: String?
+    @State private var showError = false
 
     private let minTargetMinutes = 15
     private let maxTargetMinutes = 180
@@ -65,6 +67,11 @@ struct PresetCheckView: View {
         }
         .safeAreaInset(edge: .bottom) {
             startButton
+        }
+        .alert("Workout Generation Failed", isPresented: $showError) {
+            Button("OK") { }
+        } message: {
+            Text(errorMessage ?? "Please try again")
         }
     }
 
@@ -285,7 +292,10 @@ struct PresetCheckView: View {
             Button {
                 Task {
                     isLoading = true
-                    await viewModel.onStart(conditionString, targetMinutes, equipmentList)
+                    if let error = await viewModel.onStart(conditionString, targetMinutes, equipmentList) {
+                        errorMessage = error
+                        showError = true
+                    }
                     isLoading = false
                 }
             } label: {

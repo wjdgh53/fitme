@@ -1,7 +1,8 @@
 import SwiftUI
 
 struct SummaryView: View {
-    let viewModel: SummaryViewModel
+    @ObservedObject var viewModel: SummaryViewModel
+    @State private var isSaving = false
     
     var body: some View {
         ZStack {
@@ -41,18 +42,52 @@ struct SummaryView: View {
                 Spacer()
                 
                 // Done Button
-                Button(action: viewModel.onFinish) {
-                    Text("Done")
-                        .font(AppFonts.nunito(18, weight: .bold))
-                        .foregroundColor(.white)
-                        .frame(maxWidth: .infinity)
-                        .padding(.vertical, 16)
-                        .background(Color(hex: "#FF8577"))
-                        .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
+                Button(action: saveAndFinish) {
+                    HStack(spacing: 8) {
+                        if isSaving {
+                            ProgressView()
+                                .tint(.white)
+                        }
+                        Text(isSaving ? "Saving..." : "Done")
+                            .font(AppFonts.nunito(18, weight: .bold))
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 16)
+                    .background(isSaving ? Color(hex: "#FFB5AD") : Color(hex: "#FF8577"))
+                    .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
                 }
+                .disabled(isSaving)
                 .padding(.horizontal, 24)
                 .padding(.bottom, 32)
             }
+        }
+    }
+    
+    private func saveAndFinish() {
+        guard let plan = viewModel.data.plan else {
+            print("❌ [SummaryView] plan is nil! Cannot save.")
+            viewModel.onFinish()
+            return
+        }
+        
+        print("✅ [SummaryView] Saving workout: \(plan.estimatedMinutes)min, \(plan.exercises.count) exercises, \(plan.estimatedCalories) cal")
+        
+        isSaving = true
+        Task {
+            // Convert plan exercises to session exercises
+            let exercises = plan.exercises.map { exercise in
+                SessionExercise(
+                    exerciseId: exercise.exerciseId,
+                    sets: exercise.sets
+                )
+            }
+            
+            print("📤 [SummaryView] Calling onSave with \(exercises.count) exercises")
+            await viewModel.onSave(plan.estimatedMinutes, exercises)
+            print("✅ [SummaryView] Save completed")
+            isSaving = false
+            viewModel.onFinish()
         }
     }
     

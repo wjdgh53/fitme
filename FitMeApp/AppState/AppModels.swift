@@ -29,4 +29,5 @@ enum AppScreen: Equatable {
     case helpCenter
     case appleHealth
     case appleWatch
+    case points
 }

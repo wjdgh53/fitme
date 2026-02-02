@@ -10,13 +10,31 @@ struct Mission: Codable, Identifiable, Equatable {
     let startAt: String
     let endAt: String
     let progressValue: Int
+    var status: MissionStatus
     
     enum CodingKeys: String, CodingKey {
-        case id, type, difficulty
+        case id, type, difficulty, status
         case targetValue = "target_value"
         case startAt = "start_at"
         case endAt = "end_at"
         case progressValue = "progress_value"
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        id = try container.decode(String.self, forKey: .id)
+        type = try container.decode(MissionType.self, forKey: .type)
+        targetValue = try container.decode(Int.self, forKey: .targetValue)
+        difficulty = try container.decode(MissionDifficulty.self, forKey: .difficulty)
+        startAt = try container.decode(String.self, forKey: .startAt)
+        endAt = try container.decode(String.self, forKey: .endAt)
+        progressValue = try container.decode(Int.self, forKey: .progressValue)
+        // status 없으면 기본값 active
+        status = try container.decodeIfPresent(MissionStatus.self, forKey: .status) ?? .active
+    }
+    
+    var isComplete: Bool {
+        progress >= 1.0
     }
     
     var progress: Double {
@@ -74,6 +92,12 @@ enum MissionDifficulty: String, Codable {
     case easy
     case medium
     case hard
+}
+
+enum MissionStatus: String, Codable {
+    case active
+    case suspended
+    case complete
 }
 
 struct DashboardResponse: Codable {
@@ -222,4 +246,12 @@ struct APIErrorDetail: Codable {
 
 struct DeleteMissionResponse: Codable {
     let success: Bool
+}
+
+struct UpdateMissionStatusRequest: Encodable {
+    let status: String
+}
+
+struct UpdateMissionStatusResponse: Codable {
+    let mission: Mission
 }

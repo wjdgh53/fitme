@@ -25,6 +25,7 @@
 		5C78FA7AD630E0ACB3086FDC /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC131A6294BD5699C921878 /* APIClient.swift */; };
 		5C960ADFB53709D96F0F0899 /* PlusJakartaSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 48CD99F8FF1B6BFE4C95D49E /* PlusJakartaSans-Regular.ttf */; };
 		66D8D8A0E926AD60A23D30B4 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3974B16CEA49C8A72D951FCC /* ProfileView.swift */; };
+		P01NTS001BU1LD000001 /* PointsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = P01NTS001V1EW0000001 /* PointsView.swift */; };
 		747B93D38CF7D8809103CF6C /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F304B610DFC2494C8CDCCCE8 /* AppViewModel.swift */; };
 		7A85918194D97446FF30AA71 /* MaterialSymbolsOutlined.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B44B65E0847D8467F518D506 /* MaterialSymbolsOutlined.ttf */; };
 		8A7979EC64B6E7B6E98B2458 /* MaterialSymbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CEB47DDA2FD0DDB75A87B91 /* MaterialSymbol.swift */; };
@@ -70,6 +71,7 @@
 		27646F68650040225BE338E5 /* AppSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsView.swift; sourceTree = "<group>"; };
 		2CDBDACBA9632DB10DF3827E /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
 		3974B16CEA49C8A72D951FCC /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
+		P01NTS001V1EW0000001 /* PointsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PointsView.swift; sourceTree = "<group>"; };
 		3ACFF253D2116D3DCE405B66 /* ReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportView.swift; sourceTree = "<group>"; };
 		3CEB47DDA2FD0DDB75A87B91 /* MaterialSymbol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaterialSymbol.swift; sourceTree = "<group>"; };
 		48498964939301C073F7DD6E /* PlusJakartaSans-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-Bold.ttf"; sourceTree = "<group>"; };
@@ -179,6 +181,7 @@
 				12864A65C2193525D670BE88 /* LibraryView.swift */,
 				5BAF2B2783E1934160BF6A72 /* MyGoalsView.swift */,
 				59551757B4207A242693BFEC /* PresetCheckView.swift */,
+				P01NTS001V1EW0000001 /* PointsView.swift */,
 				3974B16CEA49C8A72D951FCC /* ProfileView.swift */,
 				3ACFF253D2116D3DCE405B66 /* ReportView.swift */,
 				D5FE6C22ADC7386E668DB8D6 /* RestView.swift */,
@@ -349,6 +352,7 @@
 				136C13EF6D5689FD4CC3E0C7 /* MyGoalsView.swift in Sources */,
 				D7FAA9CA89B5B93A5C303697 /* PresetCheckView.swift in Sources */,
 				66D8D8A0E926AD60A23D30B4 /* ProfileView.swift in Sources */,
+				P01NTS001BU1LD000001 /* PointsView.swift in Sources */,
 				B849555D76CCA642904A1A1B /* ReportView.swift in Sources */,
 				F6E7E6C4D38DB2AEC0AA3517 /* RestView.swift in Sources */,
 				03FE9040C762BC318316D0AF /* SummaryView.swift in Sources */,

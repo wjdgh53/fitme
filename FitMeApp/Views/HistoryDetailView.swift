@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct HistoryDetailView: View {
-    let viewModel: HistoryDetailViewModel
+    @ObservedObject var viewModel: HistoryDetailViewModel
     @State private var isEditMenuPresented = false
 
     var body: some View {

@@ -3,11 +3,6 @@ import SwiftUI
 struct MyGoalsView: View {
     @ObservedObject var viewModel: MyGoalsViewModel
     @ObservedObject private var appViewModel: AppViewModel
-    @State private var showAddSheet = false
-    @State private var showCustomSheet = false
-    @State private var showAITypeSheet = false
-    @State private var selectedMissionType: MissionType = .sessions
-    @State private var targetValue: Int = 4
     @State private var isCreating = false
     
     init(viewModel: MyGoalsViewModel) {
@@ -27,12 +22,15 @@ struct MyGoalsView: View {
                 
                 ScrollView(showsIndicators: false) {
                     VStack(spacing: 20) {
-                        addButton
-                        
-                        if !appViewModel.missions.isEmpty {
-                            thisWeekSection
-                        } else {
+                        if appViewModel.activeMissions.isEmpty {
                             emptyState
+                            generateButton
+                        } else {
+                            thisWeekSection
+                        }
+                        
+                        if !appViewModel.completedMissions.isEmpty {
+                            completedSection
                         }
                     }
                     .padding(.horizontal, 24)
@@ -40,21 +38,6 @@ struct MyGoalsView: View {
                     .padding(.bottom, 40)
                 }
             }
-        }
-        .sheet(isPresented: $showAddSheet) {
-            addMissionSheet
-                .presentationDetents([.height(220)])
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showCustomSheet) {
-            customMissionSheet
-                .presentationDetents([.height(380)])
-                .presentationDragIndicator(.visible)
-        }
-        .sheet(isPresented: $showAITypeSheet) {
-            aiTypeSheet
-                .presentationDetents([.height(320)])
-                .presentationDragIndicator(.visible)
         }
     }
 
@@ -77,43 +60,137 @@ struct MyGoalsView: View {
         }
     }
     
-    private var addButton: some View {
-        Button(action: { showAddSheet = true }) {
+    private var generateButton: some View {
+        Button(action: {
+            isCreating = true
+            Task {
+                await appViewModel.createAIMissions()
+                isCreating = false
+            }
+        }) {
             HStack(spacing: 8) {
-                MaterialSymbol(name: "add_circle", size: 22)
-                Text("Add New Goal")
+                if isCreating {
+                    ProgressView()
+                        .tint(.white)
+                } else {
+                    MaterialSymbol(name: "auto_awesome", size: 22)
+                }
+                Text(isCreating ? "Generating..." : "Generate Weekly Goals")
                     .font(AppFonts.nunito(16, weight: .black))
             }
             .foregroundColor(.white)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 16)
-            .background(
-                appViewModel.missions.count >= 3
-                    ? Color(hex: "#D1D5DB")
-                    : Color(hex: "#FF8577")
-            )
+            .background(Color(hex: "#FF8577"))
             .clipShape(RoundedRectangle(cornerRadius: 18, style: .continuous))
             .shadow(color: Color(hex: "#FF8577").opacity(0.25), radius: 8, x: 0, y: 4)
         }
-        .disabled(appViewModel.missions.count >= 3)
+        .disabled(isCreating)
     }
     
     private var thisWeekSection: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack {
-                Text("This Week")
+                Text("Active Goals")
                     .font(AppFonts.quicksand(18, weight: .heavy))
                     .foregroundColor(Color(hex: "#3D3D3D"))
                 Spacer()
-                Text("\(appViewModel.missions.count)/3")
+                Text("\(appViewModel.activeMissions.count)/3")
                     .font(AppFonts.nunito(14, weight: .bold))
                     .foregroundColor(Color(hex: "#A8A29E"))
             }
             
-            ForEach(appViewModel.missions) { mission in
+            ForEach(appViewModel.activeMissions) { mission in
                 missionCard(mission: mission)
             }
         }
+    }
+    
+    private var completedSection: some View {
+        VStack(alignment: .leading, spacing: 14) {
+            VStack(alignment: .leading, spacing: 4) {
+                HStack {
+                    Text("Completed")
+                        .font(AppFonts.quicksand(18, weight: .heavy))
+                        .foregroundColor(Color(hex: "#3D3D3D"))
+                    Spacer()
+                    Text("\(appViewModel.completedMissions.count)")
+                        .font(AppFonts.nunito(14, weight: .bold))
+                        .foregroundColor(Color(hex: "#34D399"))
+                }
+                Text("Goals you've crushed this week 🎉")
+                    .font(AppFonts.nunito(13, weight: .semibold))
+                    .foregroundColor(Color(hex: "#A8A29E"))
+            }
+            
+            ForEach(appViewModel.completedMissions) { mission in
+                completedMissionCard(mission: mission)
+            }
+        }
+    }
+    
+    private func completedMissionCard(mission: Mission) -> some View {
+        let tint: String
+        let iconName: String
+        
+        switch mission.type {
+        case .calories:
+            tint = "#FB923C"
+            iconName = "local_fire_department"
+        case .minutes:
+            tint = "#60A5FA"
+            iconName = "timer"
+        case .sessions:
+            tint = "#34D399"
+            iconName = "fitness_center"
+        }
+
+        return HStack(spacing: 14) {
+            // Checkmark with type color accent
+            ZStack {
+                Circle()
+                    .fill(Color.white)
+                    .frame(width: 44, height: 44)
+                Circle()
+                    .stroke(Color(hex: tint).opacity(0.3), lineWidth: 2)
+                    .frame(width: 44, height: 44)
+                MaterialSymbol(name: "check", size: 20)
+                    .foregroundColor(Color(hex: tint))
+                    .fontWeight(.bold)
+            }
+            
+            VStack(alignment: .leading, spacing: 3) {
+                Text(missionTypeLabel(mission.type))
+                    .font(AppFonts.nunito(15, weight: .black))
+                    .foregroundColor(Color(hex: "#3D3D3D"))
+                HStack(spacing: 4) {
+                    Text("\(mission.targetValue)")
+                        .font(AppFonts.nunito(13, weight: .black))
+                        .foregroundColor(Color(hex: tint))
+                    Text(mission.type == .sessions ? "sessions" : mission.type == .minutes ? "min" : "kcal")
+                        .font(AppFonts.nunito(13, weight: .semibold))
+                        .foregroundColor(Color(hex: "#78716C"))
+                }
+            }
+            
+            Spacer()
+            
+            // Points earned badge
+            HStack(spacing: 4) {
+                MaterialSymbol(name: "star", size: 14)
+                Text("+10")
+                    .font(AppFonts.nunito(13, weight: .black))
+            }
+            .foregroundColor(Color(hex: "#F59E0B"))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background(Color(hex: "#FEF3C7"))
+            .clipShape(Capsule())
+        }
+        .padding(14)
+        .background(Color.white)
+        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+        .shadow(color: Color(hex: "#34D399").opacity(0.1), radius: 4, x: 0, y: 2)
     }
 
     private func missionCard(mission: Mission) -> some View {
@@ -222,285 +299,4 @@ struct MyGoalsView: View {
         .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
     }
     
-    // MARK: - Add Mission Sheet
-    
-    private var addMissionSheet: some View {
-        VStack(spacing: 16) {
-            Text("Add New Goal")
-                .font(AppFonts.quicksand(20, weight: .bold))
-                .foregroundColor(Color(hex: "#3D3D3D"))
-                .padding(.top, 8)
-            
-            VStack(spacing: 12) {
-                Button(action: {
-                    showAddSheet = false
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        showAITypeSheet = true
-                    }
-                }) {
-                    HStack(spacing: 12) {
-                        ZStack {
-                            Circle()
-                                .fill(Color(hex: "#EDE9FE"))
-                                .frame(width: 44, height: 44)
-                            MaterialSymbol(name: "auto_awesome", size: 22)
-                                .foregroundColor(Color(hex: "#8B5CF6"))
-                        }
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("AI Recommend")
-                                .font(AppFonts.nunito(16, weight: .black))
-                                .foregroundColor(Color(hex: "#3D3D3D"))
-                            Text("AI sets the perfect target for you")
-                                .font(AppFonts.nunito(12, weight: .bold))
-                                .foregroundColor(Color(hex: "#A8A29E"))
-                        }
-                        Spacer()
-                        MaterialSymbol(name: "chevron_right", size: 20)
-                            .foregroundColor(Color(hex: "#D1D5DB"))
-                    }
-                    .padding(14)
-                    .background(Color(hex: "#FAFAFA"))
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                }
-                
-                Button(action: {
-                    showAddSheet = false
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) {
-                        showCustomSheet = true
-                    }
-                }) {
-                    HStack(spacing: 12) {
-                        ZStack {
-                            Circle()
-                                .fill(Color(hex: "#FEF3C7"))
-                                .frame(width: 44, height: 44)
-                            MaterialSymbol(name: "edit", size: 22)
-                                .foregroundColor(Color(hex: "#F59E0B"))
-                        }
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("Custom Goal")
-                                .font(AppFonts.nunito(16, weight: .black))
-                                .foregroundColor(Color(hex: "#3D3D3D"))
-                            Text("Set your own target")
-                                .font(AppFonts.nunito(12, weight: .bold))
-                                .foregroundColor(Color(hex: "#A8A29E"))
-                        }
-                        Spacer()
-                        MaterialSymbol(name: "chevron_right", size: 20)
-                            .foregroundColor(Color(hex: "#D1D5DB"))
-                    }
-                    .padding(14)
-                    .background(Color(hex: "#FAFAFA"))
-                    .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-                }
-            }
-            .padding(.horizontal, 20)
-            
-            Spacer()
-        }
-        .background(Color.white)
-    }
-    
-    // MARK: - Custom Mission Sheet
-    
-    private var customMissionSheet: some View {
-        VStack(spacing: 20) {
-            Text("Create Custom Goal")
-                .font(AppFonts.quicksand(20, weight: .bold))
-                .foregroundColor(Color(hex: "#3D3D3D"))
-                .padding(.top, 8)
-            
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Goal Type")
-                    .font(AppFonts.nunito(14, weight: .bold))
-                    .foregroundColor(Color(hex: "#6B7280"))
-                
-                HStack(spacing: 10) {
-                    missionTypeButton(.sessions, icon: "fitness_center", label: "Sessions")
-                    missionTypeButton(.minutes, icon: "timer", label: "Minutes")
-                    missionTypeButton(.calories, icon: "local_fire_department", label: "Calories")
-                }
-            }
-            .padding(.horizontal, 20)
-            
-            VStack(alignment: .leading, spacing: 10) {
-                Text("Target Value")
-                    .font(AppFonts.nunito(14, weight: .bold))
-                    .foregroundColor(Color(hex: "#6B7280"))
-                
-                HStack(spacing: 16) {
-                    Button(action: { targetValue = max(1, targetValue - stepValue) }) {
-                        Circle()
-                            .fill(Color(hex: "#F3F4F6"))
-                            .frame(width: 44, height: 44)
-                            .overlay(MaterialSymbol(name: "remove", size: 22).foregroundColor(Color(hex: "#6B7280")))
-                    }
-                    
-                    Text("\(targetValue)")
-                        .font(AppFonts.nunito(36, weight: .black))
-                        .foregroundColor(Color(hex: "#3D3D3D"))
-                        .frame(minWidth: 80)
-                    
-                    Button(action: { targetValue += stepValue }) {
-                        Circle()
-                            .fill(Color(hex: "#FF8577"))
-                            .frame(width: 44, height: 44)
-                            .overlay(MaterialSymbol(name: "add", size: 22).foregroundColor(.white))
-                    }
-                }
-                .frame(maxWidth: .infinity)
-                
-                Text(targetHint)
-                    .font(AppFonts.nunito(12, weight: .bold))
-                    .foregroundColor(Color(hex: "#A8A29E"))
-                    .frame(maxWidth: .infinity)
-            }
-            .padding(.horizontal, 20)
-            
-            Button(action: {
-                isCreating = true
-                Task {
-                    await viewModel.onCreateCustomMission(selectedMissionType, .medium, targetValue)
-                    isCreating = false
-                    showCustomSheet = false
-                }
-            }) {
-                HStack {
-                    if isCreating {
-                        ProgressView()
-                            .tint(.white)
-                    } else {
-                        Text("Create Goal")
-                            .font(AppFonts.nunito(16, weight: .black))
-                    }
-                }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 16)
-                .background(Color(hex: "#FF8577"))
-                .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-            }
-            .disabled(isCreating)
-            .padding(.horizontal, 20)
-            
-            Spacer()
-        }
-        .background(Color.white)
-        .onChange(of: selectedMissionType) { _, _ in
-            targetValue = defaultTargetValue
-        }
-    }
-    
-    private func missionTypeButton(_ type: MissionType, icon: String, label: String) -> some View {
-        let isSelected = selectedMissionType == type
-        let tint: String
-        switch type {
-        case .sessions: tint = "#34D399"
-        case .minutes: tint = "#60A5FA"
-        case .calories: tint = "#FB923C"
-        }
-        
-        return Button(action: { selectedMissionType = type }) {
-            VStack(spacing: 6) {
-                MaterialSymbol(name: icon, size: 24)
-                    .foregroundColor(isSelected ? Color(hex: tint) : Color(hex: "#9CA3AF"))
-                Text(label)
-                    .font(AppFonts.nunito(12, weight: .bold))
-                    .foregroundColor(isSelected ? Color(hex: "#3D3D3D") : Color(hex: "#9CA3AF"))
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .background(isSelected ? Color(hex: tint).opacity(0.1) : Color(hex: "#F9FAFB"))
-            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
-            .overlay(
-                RoundedRectangle(cornerRadius: 14, style: .continuous)
-                    .stroke(isSelected ? Color(hex: tint) : Color.clear, lineWidth: 2)
-            )
-        }
-    }
-    
-    private var stepValue: Int {
-        switch selectedMissionType {
-        case .sessions: return 1
-        case .minutes: return 30
-        case .calories: return 100
-        }
-    }
-    
-    private var defaultTargetValue: Int {
-        switch selectedMissionType {
-        case .sessions: return 4
-        case .minutes: return 120
-        case .calories: return 800
-        }
-    }
-    
-    private var targetHint: String {
-        switch selectedMissionType {
-        case .sessions: return "workout sessions this week"
-        case .minutes: return "active minutes this week"
-        case .calories: return "calories to burn this week"
-        }
-    }
-    
-    // MARK: - AI Type Sheet
-    
-    private var aiTypeSheet: some View {
-        VStack(spacing: 20) {
-            Text("What type of goal?")
-                .font(AppFonts.quicksand(20, weight: .bold))
-                .foregroundColor(Color(hex: "#3D3D3D"))
-                .padding(.top, 8)
-            
-            Text("AI will set the perfect target for you")
-                .font(AppFonts.nunito(14, weight: .bold))
-                .foregroundColor(Color(hex: "#A8A29E"))
-            
-            VStack(spacing: 12) {
-                aiTypeButton(.sessions, icon: "fitness_center", title: "Workout Sessions", subtitle: "Track number of workouts", color: "#34D399")
-                aiTypeButton(.minutes, icon: "timer", title: "Active Minutes", subtitle: "Track exercise duration", color: "#60A5FA")
-                aiTypeButton(.calories, icon: "local_fire_department", title: "Calories", subtitle: "Track calories burned", color: "#FB923C")
-            }
-            .padding(.horizontal, 20)
-            
-            Spacer()
-        }
-        .background(Color.white)
-    }
-    
-    private func aiTypeButton(_ type: MissionType, icon: String, title: String, subtitle: String, color: String) -> some View {
-        Button(action: {
-            showAITypeSheet = false
-            isCreating = true
-            Task {
-                await viewModel.onCreateAISingleMission(type)
-                isCreating = false
-            }
-        }) {
-            HStack(spacing: 14) {
-                ZStack {
-                    Circle()
-                        .fill(Color(hex: color).opacity(0.15))
-                        .frame(width: 48, height: 48)
-                    MaterialSymbol(name: icon, size: 24)
-                        .foregroundColor(Color(hex: color))
-                }
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(AppFonts.nunito(16, weight: .black))
-                        .foregroundColor(Color(hex: "#3D3D3D"))
-                    Text(subtitle)
-                        .font(AppFonts.nunito(12, weight: .bold))
-                        .foregroundColor(Color(hex: "#A8A29E"))
-                }
-                Spacer()
-                MaterialSymbol(name: "auto_awesome", size: 20)
-                    .foregroundColor(Color(hex: "#8B5CF6"))
-            }
-            .padding(14)
-            .background(Color(hex: "#FAFAFA"))
-            .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        }
-        .disabled(isCreating)
-    }
 }

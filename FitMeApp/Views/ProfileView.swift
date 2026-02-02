@@ -114,6 +114,7 @@ struct ProfileView: View {
 
             VStack(spacing: 6) {
                 settingsRow(title: "My Goals", icon: "flag", action: viewModel.onMyGoals)
+                pointsRow
                 settingsRow(title: "App Settings", icon: "tune", action: viewModel.onAppSettings)
                 settingsRow(title: "Help Center", icon: "help", action: viewModel.onHelpCenter)
             }
@@ -124,6 +125,45 @@ struct ProfileView: View {
         }
     }
 
+    private var pointsRow: some View {
+        Button(action: viewModel.onPoints) {
+            HStack {
+                RoundedRectangle(cornerRadius: 20, style: .continuous)
+                    .fill(
+                        LinearGradient(
+                            colors: [Color(hex: "#FFD700").opacity(0.3), Color(hex: "#FFA500").opacity(0.3)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        )
+                    )
+                    .frame(width: 48, height: 48)
+                    .overlay(Text("🏆").font(.system(size: 22)))
+                
+                Text("Points")
+                    .font(AppFonts.nunito(16, weight: .bold))
+                    .foregroundColor(Color(hex: "#3D3D3D"))
+                
+                Spacer()
+                
+                // Points badge
+                Text("\(viewModel.totalPoints) pts")
+                    .font(AppFonts.nunito(14, weight: .black))
+                    .foregroundColor(Color(hex: "#FF8577"))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Color(hex: "#FF8577").opacity(0.1))
+                    .clipShape(Capsule())
+                
+                MaterialSymbol(name: "chevron_right", size: 20)
+                    .foregroundColor(Color(hex: "#78716C"))
+            }
+            .padding(.horizontal, 8)
+            .padding(.vertical, 6)
+            .background(Color.white)
+            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+        }
+    }
+    
     private func settingsRow(title: String, icon: String, action: @escaping () -> Void) -> some View {
         Button(action: action) {
             HStack {

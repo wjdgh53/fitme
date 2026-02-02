@@ -1,4 +1,5 @@
 import Foundation
+import Combine
 
 // MARK: - Home Dashboard
 
@@ -26,7 +27,7 @@ struct HomeDashboardViewModel {
             userName: appViewModel.userName,
             greeting: "Ready to move?",
             profileImageURL: appViewModel.profileImageURL,
-            missions: appViewModel.missions,
+            missions: appViewModel.activeMissions,
             totalPoints: appViewModel.totalPoints,
             rank: appViewModel.rank,
             isLoading: appViewModel.isLoading
@@ -52,7 +53,7 @@ struct PresetCheckViewModel {
     let data: PresetCheckData
     let onBack: () -> Void
     let onClose: () -> Void
-    let onStart: (String, Int, [String]) async -> Void
+    let onStart: (String, Int, [String]) async -> String?  // 에러 메시지 반환
     
     init(appViewModel: AppViewModel) {
         self.data = PresetCheckData(
@@ -67,7 +68,13 @@ struct PresetCheckViewModel {
             appViewModel.workoutTargetMinutes = minutes
             appViewModel.workoutEquipment = equipment
             await appViewModel.generateWorkoutPlan()
-            appViewModel.goToWorkoutPreview1()
+            // plan 생성 성공했을 때만 Preview로 이동
+            if appViewModel.currentWorkoutPlan != nil {
+                appViewModel.goToWorkoutPreview1()
+                return nil
+            }
+            // 실패 시 에러 메시지 반환
+            return appViewModel.errorMessage ?? "Failed to generate workout plan"
         }
     }
 }
@@ -85,15 +92,13 @@ struct WorkoutPreviewData {
 }
 
 @MainActor
-struct WorkoutPreviewViewModel {
-    let data: WorkoutPreviewData
-    let onBack: () -> Void
-    let onMore: () -> Void
-    let onStart: () -> Void
+class WorkoutPreviewViewModel: ObservableObject {
+    private let appViewModel: AppViewModel
+    private var cancellable: AnyCancellable?
     
-    init(appViewModel: AppViewModel) {
+    var data: WorkoutPreviewData {
         let plan = appViewModel.currentWorkoutPlan
-        self.data = WorkoutPreviewData(
+        return WorkoutPreviewData(
             title: plan?.title ?? "Workout",
             duration: "\(plan?.estimatedMinutes ?? 0)m",
             energy: appViewModel.workoutCondition.capitalized + " Energy",
@@ -102,9 +107,17 @@ struct WorkoutPreviewViewModel {
             exercises: plan?.exercises ?? [],
             isLoading: appViewModel.isGeneratingPlan
         )
-        self.onBack = { appViewModel.startWorkoutFlow() }
-        self.onMore = { appViewModel.goToWorkoutPreview2() }
-        self.onStart = { appViewModel.startWorkoutSession() }
+    }
+    
+    var onBack: () -> Void { { [weak self] in self?.appViewModel.startWorkoutFlow() } }
+    var onMore: () -> Void { { [weak self] in self?.appViewModel.goToWorkoutPreview2() } }
+    var onStart: () -> Void { { [weak self] in self?.appViewModel.startWorkoutSession() } }
+    
+    init(appViewModel: AppViewModel) {
+        self.appViewModel = appViewModel
+        self.cancellable = appViewModel.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
     }
 }
 
@@ -155,16 +168,29 @@ struct SummaryData {
 }
 
 @MainActor
-struct SummaryViewModel {
-    let data: SummaryData
-    let onFinish: () -> Void
-    let onSave: (Int, [SessionExercise]) async -> Void
+class SummaryViewModel: ObservableObject {
+    private let appViewModel: AppViewModel
+    private var cancellable: AnyCancellable?
+    
+    var data: SummaryData {
+        // 완료된 운동 데이터 사용 (현재 plan보다 우선)
+        SummaryData(plan: appViewModel.completedWorkoutPlan ?? appViewModel.currentWorkoutPlan)
+    }
+    
+    var onFinish: () -> Void {
+        { [weak self] in self?.appViewModel.completeWorkoutFlow() }
+    }
+    
+    var onSave: (Int, [SessionExercise]) async -> Void {
+        { [weak self] duration, exercises in
+            await self?.appViewModel.saveWorkoutSession(durationMinutes: duration, exercises: exercises)
+        }
+    }
     
     init(appViewModel: AppViewModel) {
-        self.data = SummaryData(plan: appViewModel.currentWorkoutPlan)
-        self.onFinish = { appViewModel.completeWorkoutFlow() }
-        self.onSave = { duration, exercises in
-            await appViewModel.saveWorkoutSession(durationMinutes: duration, exercises: exercises)
+        self.appViewModel = appViewModel
+        self.cancellable = appViewModel.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
         }
     }
 }
@@ -201,6 +227,7 @@ struct HistoryListData {
     let title: String
     let subtitle: String
     let sessions: [SessionSummary]
+    let completedMissions: [Mission]
 }
 
 @MainActor
@@ -213,9 +240,15 @@ struct HistoryListViewModel {
         self.data = HistoryListData(
             title: "운동 기록",
             subtitle: "Logbook",
-            sessions: appViewModel.sessions
+            sessions: appViewModel.sessions,
+            completedMissions: appViewModel.completedMissions
         )
-        self.onSelectDetail = { _ in appViewModel.openHistoryDetail() }
+        self.onSelectDetail = { id in
+            Task {
+                await appViewModel.loadSessionDetail(id: id)
+                appViewModel.openHistoryDetail()
+            }
+        }
         self.onRefresh = { await appViewModel.loadSessions() }
     }
 }
@@ -227,19 +260,24 @@ struct HistoryDetailData {
 }
 
 @MainActor
-struct HistoryDetailViewModel {
-    let data: HistoryDetailData
-    let onBack: () -> Void
-    let onHome: () -> Void
-    let onShare: () -> Void
-    let onDelete: () -> Void
+class HistoryDetailViewModel: ObservableObject {
+    private let appViewModel: AppViewModel
+    private var cancellable: AnyCancellable?
+    
+    var data: HistoryDetailData {
+        HistoryDetailData(session: appViewModel.currentSessionDetail)
+    }
+    
+    var onBack: () -> Void { { [weak self] in self?.appViewModel.pop() } }
+    var onHome: () -> Void { { [weak self] in self?.appViewModel.goHomeFromFlow() } }
+    var onShare: () -> Void { { } }
+    var onDelete: () -> Void { { [weak self] in self?.appViewModel.pop() } }
     
     init(appViewModel: AppViewModel) {
-        self.data = HistoryDetailData(session: appViewModel.currentSessionDetail)
-        self.onBack = { appViewModel.pop() }
-        self.onHome = { appViewModel.goHomeFromFlow() }
-        self.onShare = {}
-        self.onDelete = { appViewModel.pop() }
+        self.appViewModel = appViewModel
+        self.cancellable = appViewModel.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
     }
 }
 
@@ -311,13 +349,17 @@ struct ExerciseDetailViewModel {
 @MainActor
 struct ProfileViewModel {
     let userName: String
+    let totalPoints: Int
     let onMyGoals: () -> Void
+    let onPoints: () -> Void
     let onAppSettings: () -> Void
     let onHelpCenter: () -> Void
     
     init(appViewModel: AppViewModel) {
         self.userName = appViewModel.userName
+        self.totalPoints = appViewModel.calculatedPoints
         self.onMyGoals = { appViewModel.openMyGoals() }
+        self.onPoints = { appViewModel.openPoints() }
         self.onAppSettings = { appViewModel.openAppSettings() }
         self.onHelpCenter = { appViewModel.openHelpCenter() }
     }
@@ -483,5 +525,43 @@ struct AppleWatchViewModel {
     
     init(appViewModel: AppViewModel) {
         self.onBack = { appViewModel.pop() }
+    }
+}
+
+// MARK: - Points
+
+struct PointsData {
+    let totalPoints: Int
+    let completedWorkouts: Int
+    let completedMissions: Int
+}
+
+@MainActor
+class PointsViewModel: ObservableObject {
+    private let appViewModel: AppViewModel
+    private var cancellable: AnyCancellable?
+    
+    var data: PointsData {
+        PointsData(
+            totalPoints: appViewModel.calculatedPoints,
+            completedWorkouts: appViewModel.completedWorkoutsCount,
+            completedMissions: appViewModel.completedMissionsCount
+        )
+    }
+    
+    var onBack: () -> Void {
+        { [weak self] in self?.appViewModel.pop() }
+    }
+    
+    init(appViewModel: AppViewModel) {
+        self.appViewModel = appViewModel
+        self.cancellable = appViewModel.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
+    }
+    
+    func loadData() async {
+        await appViewModel.loadSessions()
+        await appViewModel.loadMissions()
     }
 }

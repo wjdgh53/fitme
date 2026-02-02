@@ -14,6 +14,8 @@ struct WorkoutSessionView: View {
     @State private var currentExerciseIndex: Int = 0
     @State private var workoutElapsedSeconds: Int = 0
     @State private var timer = Timer.publish(every: 1, on: .main, in: .common).autoconnect()
+    @State private var showCelebration: Bool = false
+    @State private var celebrationMessage: String = ""
     
     private var currentExercise: WorkoutPlanExercise? {
         guard let plan = viewModel.data.plan,
@@ -56,6 +58,13 @@ struct WorkoutSessionView: View {
             if showPauseSheet {
                 pauseOverlay
                     .transition(.opacity)
+            }
+            
+            // Celebration popup
+            if showCelebration {
+                celebrationPopup
+                    .transition(.scale.combined(with: .opacity))
+                    .zIndex(100)
             }
         }
         .animation(.easeInOut, value: phase)
@@ -262,6 +271,24 @@ struct WorkoutSessionView: View {
     private func handlePrimaryAction() {
         switch phase {
         case .resting:
+            // Rest 끝 = 1세트 완료 → 다음 세트로
+            if currentSetIndex >= totalSets {
+                // 마지막 세트 완료
+                if currentExerciseIndex + 1 >= totalExercises {
+                    viewModel.onComplete()
+                } else {
+                    moveToNextExercise()
+                }
+            } else {
+                // 다음 세트로
+                currentSetIndex += 1
+                phase = .lifting
+            }
+        case .lifting:
+            guard weightValue > 0, repsValue > 0 else { return }
+            setHistory.append(WorkoutSetEntry(weight: String(weightValue), reps: String(repsValue)))
+            
+            // 마지막 세트의 lifting이면 rest 없이 바로 완료/다음 운동
             if currentSetIndex >= totalSets {
                 if currentExerciseIndex + 1 >= totalExercises {
                     viewModel.onComplete()
@@ -269,15 +296,7 @@ struct WorkoutSessionView: View {
                     moveToNextExercise()
                 }
             } else {
-                phase = .lifting
-            }
-        case .lifting:
-            guard weightValue > 0, repsValue > 0 else { return }
-            setHistory.append(WorkoutSetEntry(weight: String(weightValue), reps: String(repsValue)))
-            if currentSetIndex >= totalSets && currentExerciseIndex + 1 >= totalExercises {
-                viewModel.onComplete()
-            } else {
-                currentSetIndex = min(currentSetIndex + 1, totalSets)
+                // lifting 끝 → rest 시작 (아직 세트 완료 아님)
                 startRest()
             }
         }
@@ -374,6 +393,9 @@ struct WorkoutSessionView: View {
     }
 
     private func moveToNextExercise() {
+        // Show celebration before moving
+        showCelebrationPopup()
+        
         currentExerciseIndex += 1
         currentSetIndex = 1
         setHistory = []
@@ -384,6 +406,70 @@ struct WorkoutSessionView: View {
             if let firstSet = exercise.sets.first {
                 weightValue = Int(firstSet.weight)
                 repsValue = firstSet.reps
+            }
+        }
+    }
+    
+    private func showCelebrationPopup() {
+        let messages = [
+            "You did it! 💪",
+            "Crushed it! 🔥",
+            "Beast mode! 🦁",
+            "Keep going! 🚀",
+            "Amazing! ⭐️",
+            "Nailed it! 🎯"
+        ]
+        celebrationMessage = messages.randomElement() ?? "Great job!"
+        
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) {
+            showCelebration = true
+        }
+    }
+    
+    private func dismissCelebration() {
+        withAnimation(.easeOut(duration: 0.2)) {
+            showCelebration = false
+        }
+    }
+    
+    private var celebrationPopup: some View {
+        ZStack {
+            // Tap anywhere to dismiss
+            Color.black.opacity(0.001)
+                .ignoresSafeArea()
+                .onTapGesture {
+                    dismissCelebration()
+                }
+            
+            // Speech bubble
+            VStack(spacing: 0) {
+                Text(celebrationMessage)
+                    .font(AppFonts.nunito(24, weight: .black))
+                    .foregroundColor(Color(hex: "#3D3D3D"))
+                    .padding(.horizontal, 28)
+                    .padding(.vertical, 20)
+                    .background(
+                        ZStack {
+                            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                                .fill(Color.white)
+                            RoundedRectangle(cornerRadius: 24, style: .continuous)
+                                .stroke(Color(hex: "#FF8577"), lineWidth: 3)
+                        }
+                    )
+                    .shadow(color: Color(hex: "#FF8577").opacity(0.3), radius: 20, x: 0, y: 10)
+                
+                // Bubble tail
+                Triangle()
+                    .fill(Color.white)
+                    .frame(width: 20, height: 12)
+                    .overlay(
+                        Triangle()
+                            .stroke(Color(hex: "#FF8577"), lineWidth: 3)
+                    )
+                    .offset(y: -3)
+            }
+            .onTapGesture {
+                dismissCelebration()
             }
         }
     }
@@ -427,4 +513,15 @@ private struct WorkoutSetEntry: Equatable {
 private enum SessionPhase {
     case lifting
     case resting
+}
+
+private struct Triangle: Shape {
+    func path(in rect: CGRect) -> Path {
+        var path = Path()
+        path.move(to: CGPoint(x: rect.midX, y: rect.maxY))
+        path.addLine(to: CGPoint(x: rect.minX, y: rect.minY))
+        path.addLine(to: CGPoint(x: rect.maxX, y: rect.minY))
+        path.closeSubpath()
+        return path
+    }
 }

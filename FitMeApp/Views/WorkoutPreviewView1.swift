@@ -1,7 +1,7 @@
 import SwiftUI
 
 struct WorkoutPreviewView1: View {
-    let viewModel: WorkoutPreviewViewModel
+    @ObservedObject var viewModel: WorkoutPreviewViewModel
 
     var body: some View {
         ZStack {

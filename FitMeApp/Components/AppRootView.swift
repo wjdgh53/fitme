@@ -8,7 +8,7 @@ struct AppRootView: View {
             Group {
                 switch appViewModel.currentScreen {
                 case .home:
-                    HomeDashboardView(viewModel: HomeDashboardViewModel(appViewModel: appViewModel))
+                    HomeDashboardView(viewModel: HomeDashboardViewModel(appViewModel: appViewModel), appViewModel: appViewModel)
                 case .report:
                     ReportView(viewModel: ReportViewModel(appViewModel: appViewModel))
                 case .historyList:
@@ -49,6 +49,8 @@ struct AppRootView: View {
                     AppleHealthView(viewModel: AppleHealthViewModel(appViewModel: appViewModel))
                 case .appleWatch:
                     AppleWatchView(viewModel: AppleWatchViewModel(appViewModel: appViewModel))
+                case .points:
+                    PointsView(viewModel: PointsViewModel(appViewModel: appViewModel))
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
