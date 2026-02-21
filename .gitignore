@@ -27,3 +27,16 @@ fastlane/report.xml
 fastlane/Preview.html
 fastlane/screenshots/
 fastlane/test_output/
+
+# Secrets and local config
+.env
+.env.*
+!.env.example
+*.p8
+*.pem
+*.key
+*service-account*.json
+*serviceAccount*.json
+*firebase-adminsdk*.json
+google-services.json
+GoogleService-Info.plist

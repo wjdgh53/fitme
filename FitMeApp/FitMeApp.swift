@@ -8,6 +8,14 @@ import FirebaseCore
 import FirebaseAuth
 #endif
 
+#if canImport(GoogleSignIn)
+import GoogleSignIn
+#endif
+
+#if canImport(UIKit)
+import UIKit
+#endif
+
 @main
 struct FitMeApp: App {
     @StateObject private var appViewModel = AppViewModel()
@@ -72,12 +80,21 @@ final class AuthManager: ObservableObject {
     }
 
     func start() {
-        configureFirebaseIfNeeded()
+        #if canImport(FirebaseAuth)
+        guard configureFirebaseIfNeeded() else {
+            isAuthenticated = false
+            isGuest = false
+            displayName = "User"
+            email = nil
+            return
+        }
+        #endif
         observeAuthChanges()
     }
 
     func getIDToken() async -> String? {
         #if canImport(FirebaseAuth)
+        guard configureFirebaseIfNeeded() else { return nil }
         guard let user = Auth.auth().currentUser else { return nil }
         return await withCheckedContinuation { continuation in
             user.getIDToken(completion: { token, _ in
@@ -93,6 +110,7 @@ final class AuthManager: ObservableObject {
         errorMessage = nil
 
         #if canImport(FirebaseAuth)
+        guard configureFirebaseIfNeeded() else { return }
         do {
             _ = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<AuthDataResult, Error>) in
                 Auth.auth().signInAnonymously { result, error in
@@ -123,14 +141,61 @@ final class AuthManager: ObservableObject {
     }
 
     func signInWithGoogle() async {
+        #if canImport(FirebaseCore) && canImport(FirebaseAuth) && canImport(GoogleSignIn) && canImport(UIKit)
+        errorMessage = nil
+        guard configureFirebaseIfNeeded() else { return }
+
+        do {
+            guard let clientID = FirebaseApp.app()?.options.clientID else {
+                throw NSError(
+                    domain: "fitme.auth",
+                    code: -20,
+                    userInfo: [NSLocalizedDescriptionKey: "Firebase clientID is missing. Check GoogleService-Info.plist."]
+                )
+            }
+
+            let config = GIDConfiguration(clientID: clientID)
+            GIDSignIn.sharedInstance.configuration = config
+
+            guard let presenter = Self.resolvePresenter() else {
+                throw NSError(
+                    domain: "fitme.auth",
+                    code: -21,
+                    userInfo: [NSLocalizedDescriptionKey: "Cannot find a view controller to present Google sign-in."]
+                )
+            }
+
+            let result = try await GIDSignIn.sharedInstance.signIn(withPresenting: presenter)
+            guard let idToken = result.user.idToken?.tokenString else {
+                throw NSError(
+                    domain: "fitme.auth",
+                    code: -22,
+                    userInfo: [NSLocalizedDescriptionKey: "Google ID token is missing."]
+                )
+            }
+
+            let credential = GoogleAuthProvider.credential(
+                withIDToken: idToken,
+                accessToken: result.user.accessToken.tokenString
+            )
+            try await authenticate(with: credential)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        #else
         await signInWithOAuth(providerID: "google.com")
+        #endif
     }
 
     func signOut() async {
         errorMessage = nil
 
         #if canImport(FirebaseAuth)
+        guard configureFirebaseIfNeeded() else { return }
         do {
+            #if canImport(GoogleSignIn)
+            GIDSignIn.sharedInstance.signOut()
+            #endif
             try Auth.auth().signOut()
         } catch {
             errorMessage = error.localizedDescription
@@ -148,22 +213,10 @@ final class AuthManager: ObservableObject {
         errorMessage = nil
 
         #if canImport(FirebaseAuth)
+        guard configureFirebaseIfNeeded() else { return }
         do {
             let credential = try await fetchOAuthCredential(providerID: providerID)
-
-            if let currentUser = Auth.auth().currentUser, currentUser.isAnonymous {
-                do {
-                    _ = try await link(user: currentUser, with: credential)
-                    return
-                } catch {
-                    let nsError = error as NSError
-                    if nsError.code != AuthErrorCode.credentialAlreadyInUse.rawValue {
-                        throw error
-                    }
-                }
-            }
-
-            _ = try await signIn(with: credential)
+            try await authenticate(with: credential)
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -173,16 +226,21 @@ final class AuthManager: ObservableObject {
     }
 
     #if canImport(FirebaseAuth)
-    private func configureFirebaseIfNeeded() {
-        guard !firebaseConfigured else { return }
+    private func configureFirebaseIfNeeded() -> Bool {
+        guard !firebaseConfigured else { return true }
 
         #if canImport(FirebaseCore)
         if FirebaseApp.app() == nil {
+            guard Bundle.main.path(forResource: "GoogleService-Info", ofType: "plist") != nil else {
+                errorMessage = "GoogleService-Info.plist is missing in app target. Add it to FitMeApp target."
+                return false
+            }
             FirebaseApp.configure()
         }
         #endif
 
         firebaseConfigured = true
+        return true
     }
 
     private func observeAuthChanges() {
@@ -250,6 +308,37 @@ final class AuthManager: ObservableObject {
         }
     }
 
+    private func authenticate(with credential: AuthCredential) async throws {
+        if let currentUser = Auth.auth().currentUser, currentUser.isAnonymous {
+            do {
+                _ = try await link(user: currentUser, with: credential)
+                return
+            } catch {
+                let nsError = error as NSError
+                if nsError.code != AuthErrorCode.credentialAlreadyInUse.rawValue {
+                    throw error
+                }
+            }
+        }
+
+        _ = try await signIn(with: credential)
+    }
+
+    #if canImport(UIKit)
+    private static func resolvePresenter() -> UIViewController? {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        for scene in scenes {
+            if let root = scene.windows.first(where: { $0.isKeyWindow })?.rootViewController {
+                return root
+            }
+            if let root = scene.windows.first?.rootViewController {
+                return root
+            }
+        }
+        return nil
+    }
+    #endif
+
     private func signIn(with credential: AuthCredential) async throws -> AuthDataResult {
         try await withCheckedThrowingContinuation { continuation in
             Auth.auth().signIn(with: credential) { result, error in
@@ -282,7 +371,7 @@ final class AuthManager: ObservableObject {
         }
     }
     #else
-    private func configureFirebaseIfNeeded() {}
+    private func configureFirebaseIfNeeded() -> Bool { false }
 
     private func observeAuthChanges() {
         isAuthenticated = false
