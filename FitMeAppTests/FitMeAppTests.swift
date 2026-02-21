@@ -22,6 +22,16 @@ final class FitMeAppTests: XCTestCase {
 
     @MainActor
     func testGenerateWorkoutPlanLiveAPI() async throws {
+        let env = ProcessInfo.processInfo.environment
+        guard env["FITME_RUN_LIVE_API_TESTS"] == "1" else {
+            throw XCTSkip("Live API test is disabled by default. Set FITME_RUN_LIVE_API_TESTS=1 to enable.")
+        }
+        guard let bearerToken = env["FITME_LIVE_BEARER_TOKEN"], !bearerToken.isEmpty else {
+            throw XCTSkip("Missing FITME_LIVE_BEARER_TOKEN for authenticated live API test.")
+        }
+
+        await APIClient.shared.setAuthToken(bearerToken)
+
         let viewModel = AppViewModel()
         viewModel.workoutCondition = "normal"
         viewModel.workoutTargetMinutes = 30
