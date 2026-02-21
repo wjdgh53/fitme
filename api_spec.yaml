@@ -133,6 +133,24 @@ components:
           items:
             $ref: '#/components/schemas/SessionExercise'
 
+    WeeklyReport:
+      type: object
+      properties:
+        period_start:
+          type: string
+          format: date
+        period_end:
+          type: string
+          format: date
+        total_workouts:
+          type: integer
+        total_minutes:
+          type: integer
+        total_calories:
+          type: integer
+        average_minutes:
+          type: integer
+
 tags:
   - name: Domain
   - name: Dashboard
@@ -199,6 +217,67 @@ paths:
                     type: array
                     items:
                       $ref: '#/components/schemas/Mission'
+
+  /reports/weekly:
+    get:
+      tags: [Domain]
+      summary: Get weekly reports
+      parameters:
+        - in: query
+          name: limit
+          schema:
+            type: integer
+            minimum: 1
+            maximum: 52
+      responses:
+        '200':
+          description: Weekly reports list
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  reports:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/WeeklyReport'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /reports/weekly/{startAt}:
+    get:
+      tags: [Domain]
+      summary: Get weekly report by start date
+      parameters:
+        - in: path
+          name: startAt
+          required: true
+          schema:
+            type: string
+            format: date
+      responses:
+        '200':
+          description: Weekly report detail
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/WeeklyReport'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
 
   /workout-plan:
     post:

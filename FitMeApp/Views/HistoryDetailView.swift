@@ -5,57 +5,72 @@ struct HistoryDetailView: View {
     @State private var isEditMenuPresented = false
 
     var body: some View {
-        ZStack(alignment: .bottom) {
-            Color(hex: "#FFF8F0")
+        ZStack {
+            AppTheme.appBackground
                 .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 18) {
+                VStack(alignment: .leading, spacing: 14) {
                     header
                     summaryGrid
-                    aiNote
-                    exerciseSection
-                    actionButtons
+                    coachBubble
+                    exercisesHeader
+                    exerciseCards
                 }
                 .padding(.horizontal, 20)
-                .padding(.bottom, 160)
+                .padding(.top, 6)
+                .padding(.bottom, AppLayout.tabBarHeight + 28)
             }
         }
     }
-    
+
+    private var session: SessionDetail? {
+        viewModel.data.session
+    }
+
     private var dateTitle: String {
-        guard let session = viewModel.data.session else { return "Workout" }
+        guard let session else { return "Workout" }
+        let parser = DateFormatter()
+        parser.locale = Locale(identifier: "en_US_POSIX")
+        parser.dateFormat = "yyyy-MM-dd"
+        guard let date = parser.date(from: session.date) else { return session.date }
+
         let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        if let date = formatter.date(from: session.date) {
-            formatter.dateFormat = "MMM d, yyyy"
-            return formatter.string(from: date)
-        }
-        return session.date
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        formatter.dateFormat = "MMM d, yyyy"
+        return formatter.string(from: date)
     }
 
     private var header: some View {
-        HStack {
+        HStack(spacing: 12) {
             Button(action: viewModel.onBack) {
                 Circle()
-                    .fill(Color.white)
-                    .frame(width: 44, height: 44)
-                    .overlay(MaterialSymbol(name: "arrow_back_ios_new", size: 20).foregroundColor(Color(hex: "#3D3D3D")))
-                    .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 3)
+                    .fill(AppTheme.elevatedSurface.opacity(0.95))
+                    .frame(width: 50, height: 50)
+                    .overlay(
+                        MaterialSymbol(name: "arrow_back_ios_new", size: 20)
+                            .foregroundColor(AppTheme.title)
+                    )
+                    .overlay(Circle().stroke(AppTheme.border.opacity(0.3), lineWidth: 1))
             }
+
             Spacer()
+
             Text(dateTitle)
-                .font(AppFonts.nunito(20, weight: .heavy))
-                .foregroundColor(Color(hex: "#3D3D3D"))
+                .font(AppFonts.plusJakarta(20, weight: .bold))
+                .foregroundColor(AppTheme.title)
+
             Spacer()
+
             Button(action: { isEditMenuPresented = true }) {
                 Text("Edit")
-                    .font(AppFonts.nunito(14, weight: .bold))
+                    .font(AppFonts.plusJakarta(16, weight: .bold))
                     .foregroundColor(.white)
-                    .padding(.horizontal, 18)
-                    .padding(.vertical, 8)
-                    .background(Color(hex: "#FF8577"))
+                    .padding(.horizontal, 24)
+                    .padding(.vertical, 12)
+                    .background(AppTheme.primaryButton)
                     .clipShape(Capsule())
+                    .overlay(Capsule().stroke(AppTheme.primaryButtonPressed.opacity(0.6), lineWidth: 1))
             }
             .confirmationDialog("Edit Workout", isPresented: $isEditMenuPresented) {
                 Button("Delete Workout", role: .destructive, action: viewModel.onDelete)
@@ -67,202 +82,254 @@ struct HistoryDetailView: View {
 
     private var summaryGrid: some View {
         HStack(spacing: 12) {
-            summaryCard(title: "Time", value: "\(viewModel.data.session?.durationMinutes ?? 0)", unit: "m", icon: "timer", color: "#60A5FA")
-            summaryCard(title: "Calories", value: "\(viewModel.data.session?.calories ?? 0)", unit: "kcal", icon: "local_fire_department", color: "#6EE7B7")
-            summaryCard(title: "Exercises", value: "\(viewModel.data.session?.exercises.count ?? 0)", unit: "", icon: "fitness_center", color: "#A78BFA")
+            summaryCard(title: "TIME",
+                        value: "\(session?.durationMinutes ?? 0)",
+                        unit: "m",
+                        icon: "timer",
+                        iconTint: Color(hex: "#7EB2FF"))
+            summaryCard(title: "CALORIES",
+                        value: "\(session?.calories ?? 0)",
+                        unit: "kcal",
+                        icon: "local_fire_department",
+                        iconTint: Color(hex: "#74D9B0"))
+            summaryCard(title: "EXERCISES",
+                        value: "\(session?.exercises.count ?? 0)",
+                        unit: "",
+                        icon: "fitness_center",
+                        iconTint: Color(hex: "#B6A0F2"))
         }
     }
 
-    private func summaryCard(title: String, value: String, unit: String, icon: String, color: String) -> some View {
+    private func summaryCard(title: String, value: String, unit: String, icon: String, iconTint: Color) -> some View {
         VStack(spacing: 6) {
             Circle()
-                .fill(Color(hex: color).opacity(0.2))
-                .frame(width: 40, height: 40)
-                .overlay(MaterialSymbol(name: icon, size: 22).foregroundColor(Color(hex: color)))
-            Text(title.uppercased())
-                .font(AppFonts.nunito(10, weight: .bold))
-                .tracking(1)
-                .foregroundColor(Color(hex: "#78716C"))
+                .fill(iconTint.opacity(0.22))
+                .frame(width: 44, height: 44)
+                .overlay(
+                    MaterialSymbol(name: icon, size: 20)
+                        .foregroundColor(iconTint)
+                )
+
+            Text(title)
+                .font(AppFonts.plusJakarta(10, weight: .bold))
+                .tracking(1.5)
+                .foregroundColor(AppTheme.muted.opacity(0.72))
+
             HStack(alignment: .lastTextBaseline, spacing: 2) {
                 Text(value)
-                    .font(AppFonts.nunito(20, weight: .heavy))
-                    .foregroundColor(Color(hex: "#3D3D3D"))
+                    .font(AppFonts.quicksand(36, weight: .black))
+                    .foregroundColor(AppTheme.title)
                 if !unit.isEmpty {
                     Text(unit)
-                        .font(AppFonts.nunito(12, weight: .bold))
-                        .foregroundColor(Color(hex: "#78716C"))
+                        .font(AppFonts.plusJakarta(12, weight: .bold))
+                        .foregroundColor(AppTheme.muted.opacity(0.8))
                 }
             }
         }
-        .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 3)
+        .frame(maxWidth: .infinity, minHeight: 154)
+        .padding(.vertical, 2)
+        .background(AppTheme.elevatedSurface.opacity(0.92))
+        .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 28, style: .continuous)
+                .stroke(AppTheme.border.opacity(0.2), lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.03), radius: 8, x: 0, y: 4)
     }
 
-    private var aiNote: some View {
+    private var coachBubble: some View {
         HStack(alignment: .top, spacing: 12) {
             Circle()
-                .fill(Color(hex: "#FCD34D"))
-                .frame(width: 48, height: 48)
-                .overlay(MaterialSymbol(name: "sentiment_very_satisfied", size: 28).foregroundColor(.white))
-                .overlay(Circle().stroke(Color.white, lineWidth: 3))
-                .shadow(color: Color.black.opacity(0.04), radius: 6, x: 0, y: 3)
+                .fill(AppTheme.primaryButton)
+                .frame(width: 52, height: 52)
+                .overlay(
+                    MaterialSymbol(name: "mood", size: 24, style: .rounded)
+                        .foregroundColor(.white)
+                )
+                .overlay(Circle().stroke(AppTheme.elevatedSurface, lineWidth: 3))
 
             VStack(alignment: .leading, spacing: 6) {
                 HStack(spacing: 4) {
                     Text("FitCoach AI")
-                        .font(AppFonts.nunito(12, weight: .black))
-                        .foregroundColor(Color(hex: "#FF8577"))
+                        .font(AppFonts.plusJakarta(16, weight: .bold))
+                        .foregroundColor(AppTheme.primaryButton)
                     MaterialSymbol(name: "auto_awesome", size: 16)
-                        .foregroundColor(Color(hex: "#FF8577"))
+                        .foregroundColor(AppTheme.primaryButton)
                 }
-                Text("Great workout! You crushed it! 🎉")
-                    .font(AppFonts.nunito(13, weight: .bold))
-                    .foregroundColor(Color(hex: "#78716C"))
-                    .lineSpacing(2)
+                Text("Great workout! You crushed it!")
+                    .font(AppFonts.plusJakarta(16, weight: .bold))
+                    .foregroundColor(AppTheme.subtitle)
+                    .lineLimit(2)
             }
-            .padding(16)
-            .background(Color.white)
+            .padding(.horizontal, 16)
+            .padding(.vertical, 14)
+            .background(AppTheme.elevatedSurface.opacity(0.92))
             .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .shadow(color: Color.black.opacity(0.05), radius: 8, x: 0, y: 4)
+            .overlay(
+                RoundedRectangle(cornerRadius: 24, style: .continuous)
+                    .stroke(AppTheme.border.opacity(0.2), lineWidth: 1)
+            )
         }
-        .padding(.top, 8)
+        .padding(.top, 2)
     }
 
-    private var exerciseSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("Exercises")
-                    .font(AppFonts.nunito(20, weight: .heavy))
-                    .foregroundColor(Color(hex: "#3D3D3D"))
-                Spacer()
-                if let session = viewModel.data.session {
-                    Text("\(session.exercises.count) exercises")
-                        .font(AppFonts.nunito(11, weight: .bold))
-                        .foregroundColor(Color(hex: "#FF8577"))
-                        .padding(.horizontal, 10)
-                        .padding(.vertical, 6)
-                        .background(Color(hex: "#FF8577").opacity(0.1))
-                        .clipShape(Capsule())
-                }
-            }
-            
-            if let session = viewModel.data.session {
-                ForEach(session.exercises.indices, id: \.self) { index in
-                    let exercise = session.exercises[index]
-                    exerciseCard(
-                        title: exercise.exerciseId.replacingOccurrences(of: "_", with: " ").capitalized,
-                        badge: index == 0 ? "BEST" : nil,
-                        tag: "Exercise",
-                        sets: exercise.sets.map { ("\(Int($0.weight))", "\($0.reps)") }
-                    )
-                }
-            }
+    private var exercisesHeader: some View {
+        HStack {
+            Text("Exercises")
+                .font(AppFonts.quicksand(38, weight: .black))
+                .foregroundColor(AppTheme.title)
+
+            Spacer()
+
+            Text("\(session?.exercises.count ?? 0) exercises")
+                .font(AppFonts.plusJakarta(15, weight: .bold))
+                .foregroundColor(AppTheme.primaryButton)
+                .padding(.horizontal, 14)
+                .padding(.vertical, 8)
+                .background(AppTheme.elevatedSurface.opacity(0.8))
+                .clipShape(Capsule())
+                .overlay(Capsule().stroke(AppTheme.border.opacity(0.22), lineWidth: 1))
         }
+        .padding(.top, 6)
     }
 
-    private func exerciseCard(title: String, badge: String?, tag: String, sets: [(String, String)]) -> some View {
+    private var exerciseCards: some View {
         VStack(spacing: 12) {
-            HStack(spacing: 12) {
-                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                    .fill(Color(hex: "#FFF8F0"))
-                    .frame(width: 56, height: 56)
-                    .overlay(MaterialSymbol(name: "fitness_center", size: 24).foregroundColor(Color(hex: "#FF8577")))
+            if let session {
+                ForEach(session.exercises.indices, id: \.self) { index in
+                    exerciseCard(exercise: session.exercises[index])
+                }
+            } else {
+                emptyStateCard
+            }
+        }
+    }
+
+    private func exerciseCard(exercise: SessionExercise) -> some View {
+        let setColumnWidth: CGFloat = 52
+        let repsColumnWidth: CGFloat = 72
+
+        return VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 10) {
                 VStack(alignment: .leading, spacing: 4) {
                     HStack(spacing: 6) {
-                        Text(title)
-                            .font(AppFonts.nunito(18, weight: .bold))
-                            .foregroundColor(Color(hex: "#3D3D3D"))
-                        if let badge = badge {
-                            Text(badge)
-                                .font(AppFonts.nunito(9, weight: .bold))
-                                .foregroundColor(.white)
-                                .padding(.horizontal, 6)
-                                .padding(.vertical, 2)
-                                .background(Color(hex: "#FCD34D"))
-                                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-                        }
+                        MaterialSymbol(name: "pets", size: 14, style: .rounded)
+                            .foregroundColor(AppTheme.accentGold)
+                        Text(exerciseDisplayName(exercise.exerciseId))
+                            .font(AppFonts.quicksand(28, weight: .black))
+                            .foregroundColor(AppTheme.title)
+                            .lineLimit(1)
+                            .minimumScaleFactor(0.75)
                     }
-                    Text(tag)
-                        .font(AppFonts.nunito(11, weight: .bold))
-                        .foregroundColor(Color(hex: "#A8A29E"))
+
+                    Text("Exercise")
+                        .font(AppFonts.plusJakarta(12, weight: .bold))
+                        .foregroundColor(AppTheme.muted.opacity(0.6))
                 }
                 Spacer()
             }
 
-            VStack(spacing: 8) {
-                HStack {
-                    Text("Set")
-                    Spacer()
-                    Text("Weight")
-                    Spacer()
-                    Text("Reps")
-                    Spacer()
-                    Text(" ")
-                }
-                .font(AppFonts.nunito(11, weight: .bold))
-                .foregroundColor(Color(hex: "#A8A29E"))
+            HStack(spacing: 0) {
+                Text("Set")
+                    .frame(width: setColumnWidth, alignment: .center)
+                Rectangle()
+                    .fill(AppTheme.cardBorderGold.opacity(0.45))
+                    .frame(width: 1, height: 18)
+                Text("Weight")
+                    .frame(maxWidth: .infinity, alignment: .center)
+                Rectangle()
+                    .fill(AppTheme.cardBorderGold.opacity(0.45))
+                    .frame(width: 1, height: 18)
+                Text("Reps")
+                    .frame(width: repsColumnWidth, alignment: .center)
+            }
+            .font(AppFonts.plusJakarta(13, weight: .bold))
+            .foregroundColor(AppTheme.muted.opacity(0.6))
+            .padding(.horizontal, 10)
+            .padding(.vertical, 10)
+            .background(AppTheme.cardGold.opacity(0.34))
+            .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .overlay(
+                RoundedRectangle(cornerRadius: 14, style: .continuous)
+                    .stroke(AppTheme.cardBorderGold.opacity(0.52), lineWidth: 1)
+            )
 
-                ForEach(sets.indices, id: \.self) { index in
-                    let set = sets[index]
-                    HStack {
-                        Text("\(index + 1)")
-                            .frame(width: 36)
-                        Text("\(set.0) lb")
-                            .frame(maxWidth: .infinity)
-                        Text(set.1)
-                            .frame(maxWidth: .infinity)
-                        MaterialSymbol(name: "check_circle", size: 20)
-                            .foregroundColor(Color(hex: "#6EE7B7"))
-                            .frame(width: 36)
-                    }
-                    .font(AppFonts.nunito(14, weight: .bold))
-                    .foregroundColor(Color(hex: "#3D3D3D"))
-                    .padding(.vertical, 8)
-                    .background(Color(hex: "#F5F5F4"))
+            if exercise.sets.isEmpty {
+                Text("No set data")
+                    .font(AppFonts.plusJakarta(14, weight: .medium))
+                    .foregroundColor(AppTheme.muted.opacity(0.65))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 10)
+                    .background(AppTheme.elevatedSurface.opacity(0.55))
                     .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+            } else {
+                VStack(spacing: 8) {
+                    ForEach(Array(exercise.sets.enumerated()), id: \.offset) { idx, set in
+                        HStack(spacing: 0) {
+                            Text("\(idx + 1)")
+                                .frame(width: setColumnWidth, alignment: .center)
+                            Rectangle()
+                                .fill(AppTheme.cardBorderGold.opacity(0.32))
+                                .frame(width: 1, height: 18)
+                            Text("\(formatWeight(set.weight)) lb")
+                                .frame(maxWidth: .infinity, alignment: .center)
+                            Rectangle()
+                                .fill(AppTheme.cardBorderGold.opacity(0.32))
+                                .frame(width: 1, height: 18)
+                            Text("\(set.reps)")
+                                .frame(width: repsColumnWidth, alignment: .center)
+                        }
+                        .font(AppFonts.plusJakarta(16, weight: .bold))
+                        .foregroundColor(AppTheme.title)
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 10)
+                        .background(AppTheme.elevatedSurface.opacity(0.82))
+                        .clipShape(RoundedRectangle(cornerRadius: 14, style: .continuous))
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 14, style: .continuous)
+                                .stroke(AppTheme.cardBorderGold.opacity(0.34), lineWidth: 1)
+                        )
+                    }
                 }
             }
-            .padding(.horizontal, 4)
         }
-        .padding(16)
-        .background(Color.white)
-        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-        .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 3)
+        .padding(.horizontal, 14)
+        .padding(.vertical, 14)
+        .background(AppTheme.elevatedSurface.opacity(0.9))
+        .clipShape(RoundedRectangle(cornerRadius: 30, style: .continuous))
+        .overlay(
+            RoundedRectangle(cornerRadius: 30, style: .continuous)
+                .stroke(AppTheme.border.opacity(0.2), lineWidth: 1)
+        )
+        .shadow(color: Color.black.opacity(0.035), radius: 8, x: 0, y: 4)
     }
 
-    private var actionButtons: some View {
-        HStack(spacing: 12) {
-            Button(action: viewModel.onShare) {
-                HStack(spacing: 6) {
-                    MaterialSymbol(name: "share", size: 18)
-                    Text("Share")
-                        .font(AppFonts.nunito(16, weight: .bold))
-                }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(Color(hex: "#FF8577"))
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .shadow(color: Color(hex: "#FF8577").opacity(0.25), radius: 10, x: 0, y: 5)
-            }
-
-            Button(action: viewModel.onHome) {
-                HStack(spacing: 6) {
-                    MaterialSymbol(name: "home", size: 18)
-                    Text("Home")
-                        .font(AppFonts.nunito(16, weight: .bold))
-                }
-                .foregroundColor(.white)
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 14)
-                .background(Color(hex: "#22C55E"))
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-                .shadow(color: Color(hex: "#22C55E").opacity(0.25), radius: 10, x: 0, y: 5)
-            }
+    private var emptyStateCard: some View {
+        VStack(spacing: 10) {
+            MaterialSymbol(name: "fitness_center", size: 42, style: .rounded)
+                .foregroundColor(AppTheme.primaryButton)
+            Text("No exercise data")
+                .font(AppFonts.plusJakarta(16, weight: .bold))
+                .foregroundColor(AppTheme.title)
         }
-        .padding(.top, 4)
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 28)
+        .background(AppTheme.elevatedSurface.opacity(0.9))
+        .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
+    }
+
+    private func exerciseDisplayName(_ raw: String) -> String {
+        raw
+            .split(separator: "_")
+            .map { $0.prefix(1).uppercased() + $0.dropFirst().lowercased() }
+            .joined(separator: " ")
+    }
+
+    private func formatWeight(_ value: Double) -> String {
+        if value.truncatingRemainder(dividingBy: 1) == 0 {
+            return "\(Int(value))"
+        }
+        return String(format: "%.1f", value)
     }
 }

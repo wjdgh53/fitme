@@ -1,0 +1,2 @@
+- [ ] Update `FitMeWatchApp/WatchMainView.swift` to be safe-area adaptive: keep `ignoresSafeArea` on background only; remove full-frame fill patterns and brittle fixed sizing that can clip on smaller/curved watches.
+- [ ] Verify: `lsp_diagnostics` has no errors; build/test commands run successfully (or document any tooling gaps) and the updated `FitMeWatchApp/WatchMainView.swift` matches the guideline.

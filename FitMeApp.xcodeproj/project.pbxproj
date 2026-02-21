@@ -3,7 +3,7 @@
 	archiveVersion = 1;
 	classes = {
 	};
-	objectVersion = 77;
+	objectVersion = 63;
 	objects = {
 
 /* Begin PBXBuildFile section */
@@ -15,6 +15,7 @@
 		136C13EF6D5689FD4CC3E0C7 /* MyGoalsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 5BAF2B2783E1934160BF6A72 /* MyGoalsView.swift */; };
 		1541F209F999BFB1427C5748 /* HistoryListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 0E08B401E26288D707300FA0 /* HistoryListView.swift */; };
 		19B91512FA2CC559BA053B63 /* AppleHealthView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 24C9CB26CA9886401D55B0D8 /* AppleHealthView.swift */; };
+		1A2B3C4D5E6F708192A3B4C5 /* FitMeAppTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = 8F7A1C2D3E4F5061728394A5 /* FitMeAppTests.swift */; };
 		1B2C3D4E5F60718293A4B5C6 /* AppleWatchView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C6B5A4938271605F4E3D2C1B /* AppleWatchView.swift */; };
 		1FA1288C80B108B311CF8056 /* AppModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = 4C9BFB5A90DFD55EAB70D84F /* AppModels.swift */; };
 		2550F47B543CE71F5A8D87B4 /* WorkoutSessionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = C5A251309B31739ACD8DC57D /* WorkoutSessionView.swift */; };
@@ -25,7 +26,6 @@
 		5C78FA7AD630E0ACB3086FDC /* APIClient.swift in Sources */ = {isa = PBXBuildFile; fileRef = CCC131A6294BD5699C921878 /* APIClient.swift */; };
 		5C960ADFB53709D96F0F0899 /* PlusJakartaSans-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 48CD99F8FF1B6BFE4C95D49E /* PlusJakartaSans-Regular.ttf */; };
 		66D8D8A0E926AD60A23D30B4 /* ProfileView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3974B16CEA49C8A72D951FCC /* ProfileView.swift */; };
-		P01NTS001BU1LD000001 /* PointsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = P01NTS001V1EW0000001 /* PointsView.swift */; };
 		747B93D38CF7D8809103CF6C /* AppViewModel.swift in Sources */ = {isa = PBXBuildFile; fileRef = F304B610DFC2494C8CDCCCE8 /* AppViewModel.swift */; };
 		7A85918194D97446FF30AA71 /* MaterialSymbolsOutlined.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B44B65E0847D8467F518D506 /* MaterialSymbolsOutlined.ttf */; };
 		8A7979EC64B6E7B6E98B2458 /* MaterialSymbol.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3CEB47DDA2FD0DDB75A87B91 /* MaterialSymbol.swift */; };
@@ -38,12 +38,18 @@
 		A0D5CCA6DA344E7AFCAD65E0 /* WeeklyMissionView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 20FC345BF73E3BA6790D804E /* WeeklyMissionView.swift */; };
 		A58C47CA69EB5557316866FA /* ViewModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5E9C83DAA4EE3738D8F2900 /* ViewModels.swift */; };
 		A5D40CAB1D25CBD07D9BAC5C /* Nunito-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A76E3EC16AFE79A743BF89CC /* Nunito-Regular.ttf */; };
+		AABBCCDD0011223344556677 /* FitMeWatchApp.app in Embed Watch Content */ = {isa = PBXBuildFile; fileRef = WATCPROD0000000000000001 /* FitMeWatchApp.app */; settings = {ATTRIBUTES = (RemoveHeadersOnCopy, ); }; };
+		ABCDEF1234567890ABCDEF12 /* MotionModifiers.swift in Sources */ = {isa = PBXBuildFile; fileRef = ABCDEF1234567890ABCDEF13 /* MotionModifiers.swift */; };
+		B1C2D3E4F5061728394A5B6C /* ReportListView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A1B2C3D4E5F60718293A4B70 /* ReportListView.swift */; };
+		B22B22B22B22B22B22B22B22 /* AvatarImageView.swift in Sources */ = {isa = PBXBuildFile; fileRef = A11A11A11A11A11A11A11A11 /* AvatarImageView.swift */; };
 		B37454858CD12E07EC5B487B /* Quicksand-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 04238C40E94B967DEF1C89A8 /* Quicksand-Medium.ttf */; };
 		B4AD836F371925EF0B871B05 /* Quicksand-Regular.ttf in Resources */ = {isa = PBXBuildFile; fileRef = B33FF33B603B19FF169542E2 /* Quicksand-Regular.ttf */; };
 		B7F30CED0B9C890C2829D7A9 /* Nunito-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 0F37FB9BD0A44898483E43B9 /* Nunito-SemiBold.ttf */; };
 		B849555D76CCA642904A1A1B /* ReportView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 3ACFF253D2116D3DCE405B66 /* ReportView.swift */; };
 		B8F824B3DC75C93A8C9086DE /* PlusJakartaSans-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = A4C2BAA700B4DC19467027D5 /* PlusJakartaSans-Medium.ttf */; };
+		BEA1BEEF0000000000000001 /* bear-hero.png in Resources */ = {isa = PBXBuildFile; fileRef = BEA1BEEF0000000000000002 /* bear-hero.png */; };
 		BF7A31E9B7CCC8BE0364CCF3 /* GetQuestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 11425A42060C1759B62C83EC /* GetQuestView.swift */; };
+		C0FEBEEF0000000000000001 /* moonbear.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = C0FEBEEF0000000000000002 /* moonbear.mp4 */; };
 		CB90EADECEF08D2978916C08 /* WorkoutPreviewView2.swift in Sources */ = {isa = PBXBuildFile; fileRef = 151F297BA13867883692FF6D /* WorkoutPreviewView2.swift */; };
 		CD7FBB9E4A5EA1EFEE532631 /* LibraryView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 12864A65C2193525D670BE88 /* LibraryView.swift */; };
 		D40BF48C1E1F4A877F050D97 /* Nunito-Medium.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 919D7DCFE1081DAA2BD9A83A /* Nunito-Medium.ttf */; };
@@ -52,9 +58,51 @@
 		DD717B69B878ECD84602BC12 /* Quicksand-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = 147DAF9200DE093E734DA12B /* Quicksand-SemiBold.ttf */; };
 		E07ACCE591CBD709D7546EE2 /* HelpCenterView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 65F64ECF39C8DEE61CBC0644 /* HelpCenterView.swift */; };
 		E0F9C67294B96E970646C2FC /* PlusJakartaSans-SemiBold.ttf in Resources */ = {isa = PBXBuildFile; fileRef = FBF02894437B2AA1494AE31C /* PlusJakartaSans-SemiBold.ttf */; };
+		EXRCBEEF0000000000000001 /* exercise_bear.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = EXRCBEEF0000000000000002 /* exercise_bear.mp4 */; };
 		F1BB41B4CF50157467C8E91B /* DesignTokens.swift in Sources */ = {isa = PBXBuildFile; fileRef = FCDCFDAB3DF91C927562DDCC /* DesignTokens.swift */; };
 		F6E7E6C4D38DB2AEC0AA3517 /* RestView.swift in Sources */ = {isa = PBXBuildFile; fileRef = D5FE6C22ADC7386E668DB8D6 /* RestView.swift */; };
+		H00RAYBEEF00000000000001 /* hooray_bear.png in Resources */ = {isa = PBXBuildFile; fileRef = H00RAYBEEF00000000000002 /* hooray_bear.png */; };
+		P01NTS001BU1LD000001 /* PointsView.swift in Sources */ = {isa = PBXBuildFile; fileRef = P01NTS001V1EW0000001 /* PointsView.swift */; };
+		RESTBEEF0000000000000001 /* cute_rest_bear.mp4 in Resources */ = {isa = PBXBuildFile; fileRef = RESTBEEF0000000000000002 /* cute_rest_bear.mp4 */; };
+		WATC00000000000000000001 /* FitMeWatchModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = WATC00000000000000000011 /* FitMeWatchModels.swift */; };
+		WATC00000000000000000002 /* WatchWorkoutSync.swift in Sources */ = {isa = PBXBuildFile; fileRef = WATC00000000000000000012 /* WatchWorkoutSync.swift */; };
+		WATC00000000000000000003 /* WatchSyncTests.swift in Sources */ = {isa = PBXBuildFile; fileRef = WATC00000000000000000013 /* WatchSyncTests.swift */; };
+		WATCAAAABBBBCCCCDDDDEEEE /* FitMeWatchApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = WATC11112222333344445555 /* FitMeWatchApp.swift */; };
+		WATCAAAABBBBCCCCDDDDEEEF /* WatchMainView.swift in Sources */ = {isa = PBXBuildFile; fileRef = WATC11112222333344445556 /* WatchMainView.swift */; };
+		WATCAAAABBBBCCCCDDDDEEF0 /* WatchWorkoutController.swift in Sources */ = {isa = PBXBuildFile; fileRef = WATC11112222333344445557 /* WatchWorkoutController.swift */; };
+		WATCAAAABBBBCCCCDDDDEEF1 /* FitMeWatchModels.swift in Sources */ = {isa = PBXBuildFile; fileRef = WATC00000000000000000011 /* FitMeWatchModels.swift */; };
 /* End PBXBuildFile section */
+
+/* Begin PBXContainerItemProxy section */
+		2233445566778899AABBCCDD /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8BB3A5E3FF86EE2E83111135 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = WATCTARGET00000000000000;
+			remoteInfo = FitMeWatchApp;
+		};
+		D1E2F3A4B5C60718293A4B5C /* PBXContainerItemProxy */ = {
+			isa = PBXContainerItemProxy;
+			containerPortal = 8BB3A5E3FF86EE2E83111135 /* Project object */;
+			proxyType = 1;
+			remoteGlobalIDString = 3C9465E311D3F197A215F14F;
+			remoteInfo = FitMeApp;
+		};
+/* End PBXContainerItemProxy section */
+
+/* Begin PBXCopyFilesBuildPhase section */
+		8899AABBCCDDEEFF00112233 /* Embed Watch Content */ = {
+			isa = PBXCopyFilesBuildPhase;
+			buildActionMask = 2147483647;
+			dstPath = "";
+			dstSubfolderSpec = 13;
+			files = (
+				AABBCCDD0011223344556677 /* FitMeWatchApp.app in Embed Watch Content */,
+			);
+			name = "Embed Watch Content";
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+/* End PBXCopyFilesBuildPhase section */
 
 /* Begin PBXFileReference section */
 		04238C40E94B967DEF1C89A8 /* Quicksand-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Quicksand-Medium.ttf"; sourceTree = "<group>"; };
@@ -71,27 +119,34 @@
 		27646F68650040225BE338E5 /* AppSettingsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppSettingsView.swift; sourceTree = "<group>"; };
 		2CDBDACBA9632DB10DF3827E /* AppRootView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppRootView.swift; sourceTree = "<group>"; };
 		3974B16CEA49C8A72D951FCC /* ProfileView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ProfileView.swift; sourceTree = "<group>"; };
-		P01NTS001V1EW0000001 /* PointsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PointsView.swift; sourceTree = "<group>"; };
 		3ACFF253D2116D3DCE405B66 /* ReportView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportView.swift; sourceTree = "<group>"; };
 		3CEB47DDA2FD0DDB75A87B91 /* MaterialSymbol.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MaterialSymbol.swift; sourceTree = "<group>"; };
 		48498964939301C073F7DD6E /* PlusJakartaSans-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-Bold.ttf"; sourceTree = "<group>"; };
 		48CD99F8FF1B6BFE4C95D49E /* PlusJakartaSans-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-Regular.ttf"; sourceTree = "<group>"; };
 		49AB7977ADD038F4A1B08948 /* GoalEditView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GoalEditView.swift; sourceTree = "<group>"; };
 		4C9BFB5A90DFD55EAB70D84F /* AppModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppModels.swift; sourceTree = "<group>"; };
+		4F0A1B2C3D4E5F60718293A1 /* FitMeApp.entitlements */ = {isa = PBXFileReference; lastKnownFileType = text.plist.entitlements; path = FitMeApp.entitlements; sourceTree = "<group>"; };
 		54E95DA6D508BFD5774F54AD /* WorkoutPreviewView1.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutPreviewView1.swift; sourceTree = "<group>"; };
 		59551757B4207A242693BFEC /* PresetCheckView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PresetCheckView.swift; sourceTree = "<group>"; };
 		5BAF2B2783E1934160BF6A72 /* MyGoalsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MyGoalsView.swift; sourceTree = "<group>"; };
 		65F64ECF39C8DEE61CBC0644 /* HelpCenterView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HelpCenterView.swift; sourceTree = "<group>"; };
 		6A6E1CBF5C9A4F85B718822B /* Nunito-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-Bold.ttf"; sourceTree = "<group>"; };
+		7E6D5C4B3A29181716151413 /* FitMeAppTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = FitMeAppTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		8120774D25D6DC53FCC96742 /* ExerciseDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ExerciseDetailView.swift; sourceTree = "<group>"; };
 		85A6E98913DB049F72836009 /* HistoryDetailView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HistoryDetailView.swift; sourceTree = "<group>"; };
+		8F7A1C2D3E4F5061728394A5 /* FitMeAppTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitMeAppTests.swift; sourceTree = "<group>"; };
 		919D7DCFE1081DAA2BD9A83A /* Nunito-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-Medium.ttf"; sourceTree = "<group>"; };
+		A11A11A11A11A11A11A11A11 /* AvatarImageView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AvatarImageView.swift; sourceTree = "<group>"; };
 		A1A8EE2B56F5859843D93F89 /* MockDataProvider.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MockDataProvider.swift; sourceTree = "<group>"; };
+		A1B2C3D4E5F60718293A4B70 /* ReportListView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ReportListView.swift; sourceTree = "<group>"; };
 		A4C2BAA700B4DC19467027D5 /* PlusJakartaSans-Medium.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-Medium.ttf"; sourceTree = "<group>"; };
 		A76E3EC16AFE79A743BF89CC /* Nunito-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Nunito-Regular.ttf"; sourceTree = "<group>"; };
+		ABCDEF1234567890ABCDEF13 /* MotionModifiers.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = MotionModifiers.swift; sourceTree = "<group>"; };
 		B33FF33B603B19FF169542E2 /* Quicksand-Regular.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Quicksand-Regular.ttf"; sourceTree = "<group>"; };
 		B39F2A969EE203DFFA72C46F /* APIModels.swift */ = {isa = PBXFileReference; includeInIndex = 1; lastKnownFileType = sourcecode.swift; path = APIModels.swift; sourceTree = "<group>"; };
 		B44B65E0847D8467F518D506 /* MaterialSymbolsOutlined.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = MaterialSymbolsOutlined.ttf; sourceTree = "<group>"; };
+		BEA1BEEF0000000000000002 /* bear-hero.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = "bear-hero.png"; sourceTree = "<group>"; };
+		C0FEBEEF0000000000000002 /* moonbear.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = moonbear.mp4; sourceTree = "<group>"; };
 		C5A251309B31739ACD8DC57D /* WorkoutSessionView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WorkoutSessionView.swift; sourceTree = "<group>"; };
 		C6B5A4938271605F4E3D2C1B /* AppleWatchView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppleWatchView.swift; sourceTree = "<group>"; };
 		CA74EEB3807436B23913E018 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
@@ -101,17 +156,43 @@
 		D5FE6C22ADC7386E668DB8D6 /* RestView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = RestView.swift; sourceTree = "<group>"; };
 		DD78D96BC09C122CBBFB616F /* SummaryView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SummaryView.swift; sourceTree = "<group>"; };
 		EA42FD0BA9B296CD09A65268 /* Quicksand-Bold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "Quicksand-Bold.ttf"; sourceTree = "<group>"; };
+		EXRCBEEF0000000000000002 /* exercise_bear.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = exercise_bear.mp4; sourceTree = "<group>"; };
 		F304B610DFC2494C8CDCCCE8 /* AppViewModel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = AppViewModel.swift; sourceTree = "<group>"; };
-		F75F57F7DB72776042AEC722 /* FitMeApp.app */ = {isa = PBXFileReference; includeInIndex = 0; lastKnownFileType = wrapper.application; path = FitMeApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
+		F75F57F7DB72776042AEC722 /* FitMeApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FitMeApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		F7DF08A46575D9EB1FAA3682 /* HomeDashboardView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = HomeDashboardView.swift; sourceTree = "<group>"; };
 		FBF02894437B2AA1494AE31C /* PlusJakartaSans-SemiBold.ttf */ = {isa = PBXFileReference; lastKnownFileType = file; path = "PlusJakartaSans-SemiBold.ttf"; sourceTree = "<group>"; };
 		FCDCFDAB3DF91C927562DDCC /* DesignTokens.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = DesignTokens.swift; sourceTree = "<group>"; };
+		H00RAYBEEF00000000000002 /* hooray_bear.png */ = {isa = PBXFileReference; lastKnownFileType = image.png; path = hooray_bear.png; sourceTree = "<group>"; };
+		P01NTS001V1EW0000001 /* PointsView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PointsView.swift; sourceTree = "<group>"; };
+		RESTBEEF0000000000000002 /* cute_rest_bear.mp4 */ = {isa = PBXFileReference; lastKnownFileType = file; path = cute_rest_bear.mp4; sourceTree = "<group>"; };
+		WATC00000000000000000011 /* FitMeWatchModels.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitMeWatchModels.swift; sourceTree = "<group>"; };
+		WATC00000000000000000012 /* WatchWorkoutSync.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchWorkoutSync.swift; sourceTree = "<group>"; };
+		WATC00000000000000000013 /* WatchSyncTests.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchSyncTests.swift; sourceTree = "<group>"; };
+		WATC11112222333344445555 /* FitMeWatchApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = FitMeWatchApp.swift; sourceTree = "<group>"; };
+		WATC11112222333344445556 /* WatchMainView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchMainView.swift; sourceTree = "<group>"; };
+		WATC11112222333344445557 /* WatchWorkoutController.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = WatchWorkoutController.swift; sourceTree = "<group>"; };
+		WATC11112222333344445558 /* Info.plist */ = {isa = PBXFileReference; lastKnownFileType = text.plist; path = Info.plist; sourceTree = "<group>"; };
+		WATCPROD0000000000000001 /* FitMeWatchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; path = FitMeWatchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
 /* Begin PBXGroup section */
+		5F4E3D2C1B0A9F8E7D6C5B4A /* FitMeAppTests */ = {
+			isa = PBXGroup;
+			children = (
+				8F7A1C2D3E4F5061728394A5 /* FitMeAppTests.swift */,
+				WATC00000000000000000013 /* WatchSyncTests.swift */,
+			);
+			path = FitMeAppTests;
+			sourceTree = "<group>";
+		};
 		631EE424184165575186238A /* Resources */ = {
 			isa = PBXGroup;
 			children = (
+				BEA1BEEF0000000000000002 /* bear-hero.png */,
+				C0FEBEEF0000000000000002 /* moonbear.mp4 */,
+				EXRCBEEF0000000000000002 /* exercise_bear.mp4 */,
+				RESTBEEF0000000000000002 /* cute_rest_bear.mp4 */,
+				H00RAYBEEF00000000000002 /* hooray_bear.png */,
 				75E18FC136365A8450070C6C /* Fonts */,
 			);
 			path = Resources;
@@ -143,8 +224,8 @@
 			children = (
 				B39F2A969EE203DFFA72C46F /* APIModels.swift */,
 				CCC131A6294BD5699C921878 /* APIClient.swift */,
+				WATC00000000000000000021 /* WatchSync */,
 			);
-			name = Services;
 			path = Services;
 			sourceTree = "<group>";
 		};
@@ -184,6 +265,7 @@
 				P01NTS001V1EW0000001 /* PointsView.swift */,
 				3974B16CEA49C8A72D951FCC /* ProfileView.swift */,
 				3ACFF253D2116D3DCE405B66 /* ReportView.swift */,
+				A1B2C3D4E5F60718293A4B70 /* ReportListView.swift */,
 				D5FE6C22ADC7386E668DB8D6 /* RestView.swift */,
 				DD78D96BC09C122CBBFB616F /* SummaryView.swift */,
 				20FC345BF73E3BA6790D804E /* WeeklyMissionView.swift */,
@@ -198,6 +280,8 @@
 			isa = PBXGroup;
 			children = (
 				E88A810BAF5FA3F5A863D347 /* FitMeApp */,
+				WATCGROUP000000000000000 /* FitMeWatchApp */,
+				5F4E3D2C1B0A9F8E7D6C5B4A /* FitMeAppTests */,
 				ED04DDB1078DD39D49A226C6 /* Products */,
 			);
 			sourceTree = "<group>";
@@ -216,6 +300,7 @@
 				2CDBDACBA9632DB10DF3827E /* AppRootView.swift */,
 				CC39EB3DC684E05A5CB18892 /* AppTabBar.swift */,
 				3CEB47DDA2FD0DDB75A87B91 /* MaterialSymbol.swift */,
+				A11A11A11A11A11A11A11A11 /* AvatarImageView.swift */,
 			);
 			path = Components;
 			sourceTree = "<group>";
@@ -224,6 +309,7 @@
 			isa = PBXGroup;
 			children = (
 				FCDCFDAB3DF91C927562DDCC /* DesignTokens.swift */,
+				ABCDEF1234567890ABCDEF13 /* MotionModifiers.swift */,
 			);
 			path = Design;
 			sourceTree = "<group>";
@@ -233,6 +319,7 @@
 			children = (
 				1F6FE60DDB53A4339AE7D3E3 /* FitMeApp.swift */,
 				CA74EEB3807436B23913E018 /* Info.plist */,
+				4F0A1B2C3D4E5F60718293A1 /* FitMeApp.entitlements */,
 				9EE9F99E94E2C6145FC06233 /* AppState */,
 				DAEB4624BCE73E73CC9D0C21 /* Components */,
 				E86F92372F2ACE14E33D842E /* Design */,
@@ -249,8 +336,30 @@
 			isa = PBXGroup;
 			children = (
 				F75F57F7DB72776042AEC722 /* FitMeApp.app */,
+				WATCPROD0000000000000001 /* FitMeWatchApp.app */,
+				7E6D5C4B3A29181716151413 /* FitMeAppTests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		WATC00000000000000000021 /* WatchSync */ = {
+			isa = PBXGroup;
+			children = (
+				WATC00000000000000000011 /* FitMeWatchModels.swift */,
+				WATC00000000000000000012 /* WatchWorkoutSync.swift */,
+			);
+			path = WatchSync;
+			sourceTree = "<group>";
+		};
+		WATCGROUP000000000000000 /* FitMeWatchApp */ = {
+			isa = PBXGroup;
+			children = (
+				WATC11112222333344445555 /* FitMeWatchApp.swift */,
+				WATC11112222333344445556 /* WatchMainView.swift */,
+				WATC11112222333344445557 /* WatchWorkoutController.swift */,
+				WATC11112222333344445558 /* Info.plist */,
+			);
+			path = FitMeWatchApp;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -262,14 +371,47 @@
 			buildPhases = (
 				5EA0CB1018442311A3CB1C75 /* Sources */,
 				660DA01EF98B2ACBEADA2AF9 /* Resources */,
+				8899AABBCCDDEEFF00112233 /* Embed Watch Content */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				112233445566778899AABBCC /* PBXTargetDependency */,
+			);
+			name = FitMeApp;
+			productName = FitMeApp;
+			productReference = F75F57F7DB72776042AEC722 /* FitMeApp.app */;
+			productType = "com.apple.product-type.application";
+		};
+		B2C3D4E5F60718293A4B5C6D /* FitMeAppTests */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = C1D2E3F405162738495A6B7C /* Build configuration list for PBXNativeTarget "FitMeAppTests" */;
+			buildPhases = (
+				0A1B2C3D4E5F60718293A4B6 /* Sources */,
+			);
+			buildRules = (
+			);
+			dependencies = (
+				E2F3A4B5C6D708192A3B4C5D /* PBXTargetDependency */,
+			);
+			name = FitMeAppTests;
+			productName = FitMeAppTests;
+			productReference = 7E6D5C4B3A29181716151413 /* FitMeAppTests.xctest */;
+			productType = "com.apple.product-type.bundle.unit-test";
+		};
+		WATCTARGET00000000000000 /* FitMeWatchApp */ = {
+			isa = PBXNativeTarget;
+			buildConfigurationList = WATCCONFIG00000000000000 /* Build configuration list for PBXNativeTarget "FitMeWatchApp" */;
+			buildPhases = (
+				WATCSOURCES0000000000000 /* Sources */,
 			);
 			buildRules = (
 			);
 			dependencies = (
 			);
-			name = FitMeApp;
-			productName = FitMeApp;
-			productReference = F75F57F7DB72776042AEC722 /* FitMeApp.app */;
+			name = FitMeWatchApp;
+			productName = FitMeWatchApp;
+			productReference = WATCPROD0000000000000001 /* FitMeWatchApp.app */;
 			productType = "com.apple.product-type.application";
 		};
 /* End PBXNativeTarget section */
@@ -291,12 +433,13 @@
 			);
 			mainGroup = C8FEB903F2BF482452DBF05B;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
 			productRefGroup = ED04DDB1078DD39D49A226C6 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
 				3C9465E311D3F197A215F14F /* FitMeApp */,
+				WATCTARGET00000000000000 /* FitMeWatchApp */,
+				B2C3D4E5F60718293A4B5C6D /* FitMeAppTests */,
 			);
 		};
 /* End PBXProject section */
@@ -306,6 +449,11 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				BEA1BEEF0000000000000001 /* bear-hero.png in Resources */,
+				C0FEBEEF0000000000000001 /* moonbear.mp4 in Resources */,
+				EXRCBEEF0000000000000001 /* exercise_bear.mp4 in Resources */,
+				RESTBEEF0000000000000001 /* cute_rest_bear.mp4 in Resources */,
+				H00RAYBEEF00000000000001 /* hooray_bear.png in Resources */,
 				7A85918194D97446FF30AA71 /* MaterialSymbolsOutlined.ttf in Resources */,
 				04FA529940CB0C366576B05C /* MaterialSymbolsRounded.ttf in Resources */,
 				1084972586AFE12A399DD5AB /* Nunito-Bold.ttf in Resources */,
@@ -326,6 +474,15 @@
 /* End PBXResourcesBuildPhase section */
 
 /* Begin PBXSourcesBuildPhase section */
+		0A1B2C3D4E5F60718293A4B6 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				1A2B3C4D5E6F708192A3B4C5 /* FitMeAppTests.swift in Sources */,
+				WATC00000000000000000003 /* WatchSyncTests.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
 		5EA0CB1018442311A3CB1C75 /* Sources */ = {
 			isa = PBXSourcesBuildPhase;
 			buildActionMask = 2147483647;
@@ -338,6 +495,7 @@
 				19B91512FA2CC559BA053B63 /* AppleHealthView.swift in Sources */,
 				1B2C3D4E5F60718293A4B5C6 /* AppleWatchView.swift in Sources */,
 				F1BB41B4CF50157467C8E91B /* DesignTokens.swift in Sources */,
+				ABCDEF1234567890ABCDEF12 /* MotionModifiers.swift in Sources */,
 				D76F9CC520FB8FB78B8027A7 /* ExerciseDetailView.swift in Sources */,
 				00C5B554210058288BF09D99 /* FitMeApp.swift in Sources */,
 				BF7A31E9B7CCC8BE0364CCF3 /* GetQuestView.swift in Sources */,
@@ -348,11 +506,13 @@
 				9350FC2BA0E53344AC6179A0 /* HomeDashboardView.swift in Sources */,
 				CD7FBB9E4A5EA1EFEE532631 /* LibraryView.swift in Sources */,
 				8A7979EC64B6E7B6E98B2458 /* MaterialSymbol.swift in Sources */,
+				B22B22B22B22B22B22B22B22 /* AvatarImageView.swift in Sources */,
 				9C0D8A6B6DD0E2324B9C683D /* MockDataProvider.swift in Sources */,
 				136C13EF6D5689FD4CC3E0C7 /* MyGoalsView.swift in Sources */,
 				D7FAA9CA89B5B93A5C303697 /* PresetCheckView.swift in Sources */,
 				66D8D8A0E926AD60A23D30B4 /* ProfileView.swift in Sources */,
 				P01NTS001BU1LD000001 /* PointsView.swift in Sources */,
+				B1C2D3E4F5061728394A5B6C /* ReportListView.swift in Sources */,
 				B849555D76CCA642904A1A1B /* ReportView.swift in Sources */,
 				F6E7E6C4D38DB2AEC0AA3517 /* RestView.swift in Sources */,
 				03FE9040C762BC318316D0AF /* SummaryView.swift in Sources */,
@@ -363,10 +523,36 @@
 				2550F47B543CE71F5A8D87B4 /* WorkoutSessionView.swift in Sources */,
 				4817470F0143C0108FFD20BB /* APIModels.swift in Sources */,
 				5C78FA7AD630E0ACB3086FDC /* APIClient.swift in Sources */,
+				WATC00000000000000000001 /* FitMeWatchModels.swift in Sources */,
+				WATC00000000000000000002 /* WatchWorkoutSync.swift in Sources */,
+			);
+			runOnlyForDeploymentPostprocessing = 0;
+		};
+		WATCSOURCES0000000000000 /* Sources */ = {
+			isa = PBXSourcesBuildPhase;
+			buildActionMask = 2147483647;
+			files = (
+				WATCAAAABBBBCCCCDDDDEEEE /* FitMeWatchApp.swift in Sources */,
+				WATCAAAABBBBCCCCDDDDEEEF /* WatchMainView.swift in Sources */,
+				WATCAAAABBBBCCCCDDDDEEF0 /* WatchWorkoutController.swift in Sources */,
+				WATCAAAABBBBCCCCDDDDEEF1 /* FitMeWatchModels.swift in Sources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
 /* End PBXSourcesBuildPhase section */
+
+/* Begin PBXTargetDependency section */
+		112233445566778899AABBCC /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = WATCTARGET00000000000000 /* FitMeWatchApp */;
+			targetProxy = 2233445566778899AABBCCDD /* PBXContainerItemProxy */;
+		};
+		E2F3A4B5C6D708192A3B4C5D /* PBXTargetDependency */ = {
+			isa = PBXTargetDependency;
+			target = 3C9465E311D3F197A215F14F /* FitMeApp */;
+			targetProxy = D1E2F3A4B5C60718293A4B5C /* PBXContainerItemProxy */;
+		};
+/* End PBXTargetDependency section */
 
 /* Begin XCBuildConfiguration section */
 		31C8EB01B7A19DAEB0FAF0D5 /* Release */ = {
@@ -428,7 +614,9 @@
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = FitMeApp/FitMeApp.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = 2RU89PQK7N;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FitMeApp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -436,7 +624,7 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.fitme.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jcstudio.fitme.app;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -505,11 +693,55 @@
 			};
 			name = Debug;
 		};
+		C5D6E7F8091A2B3C4D5E6F70 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.fitme.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FitMeApp.app/FitMeApp";
+			};
+			name = Debug;
+		};
+		D6E7F8091A2B3C4D5E6F7081 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				BUNDLE_LOADER = "$(TEST_HOST)";
+				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = "";
+				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
+				LD_RUNPATH_SEARCH_PATHS = (
+					"$(inherited)",
+					"@executable_path/Frameworks",
+					"@loader_path/Frameworks",
+				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.fitme.app.tests;
+				PRODUCT_NAME = "$(TARGET_NAME)";
+				SDKROOT = iphoneos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = "1,2";
+				TEST_HOST = "$(BUILT_PRODUCTS_DIR)/FitMeApp.app/FitMeApp";
+			};
+			name = Release;
+		};
 		EB8DE74AD8EBBC5761F6DEEB /* Debug */ = {
 			isa = XCBuildConfiguration;
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
+				CODE_SIGN_ENTITLEMENTS = FitMeApp/FitMeApp.entitlements;
 				CODE_SIGN_IDENTITY = "iPhone Developer";
+				DEVELOPMENT_TEAM = 2RU89PQK7N;
 				GENERATE_INFOPLIST_FILE = NO;
 				INFOPLIST_FILE = FitMeApp/Info.plist;
 				IPHONEOS_DEPLOYMENT_TARGET = 17.0;
@@ -517,12 +749,40 @@
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
-				PRODUCT_BUNDLE_IDENTIFIER = com.fitme.app;
+				PRODUCT_BUNDLE_IDENTIFIER = com.jcstudio.fitme.app;
 				SDKROOT = iphoneos;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
 			};
 			name = Debug;
+		};
+		WATCDEBUG000000000000000 /* Debug */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEVELOPMENT_TEAM = 2RU89PQK7N;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = FitMeWatchApp/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fitme.app.watchkitapp;
+				SDKROOT = watchos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Debug;
+		};
+		WATCRELEASE0000000000000 /* Release */ = {
+			isa = XCBuildConfiguration;
+			buildSettings = {
+				DEVELOPMENT_TEAM = 2RU89PQK7N;
+				GENERATE_INFOPLIST_FILE = NO;
+				INFOPLIST_FILE = FitMeWatchApp/Info.plist;
+				PRODUCT_BUNDLE_IDENTIFIER = com.fitme.app.watchkitapp;
+				SDKROOT = watchos;
+				SWIFT_VERSION = 5.0;
+				TARGETED_DEVICE_FAMILY = 4;
+				WATCHOS_DEPLOYMENT_TARGET = 10.0;
+			};
+			name = Release;
 		};
 /* End XCBuildConfiguration section */
 
@@ -541,6 +801,24 @@
 			buildConfigurations = (
 				A4269DF8E53E032B99C28D11 /* Debug */,
 				31C8EB01B7A19DAEB0FAF0D5 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		C1D2E3F405162738495A6B7C /* Build configuration list for PBXNativeTarget "FitMeAppTests" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				C5D6E7F8091A2B3C4D5E6F70 /* Debug */,
+				D6E7F8091A2B3C4D5E6F7081 /* Release */,
+			);
+			defaultConfigurationIsVisible = 0;
+			defaultConfigurationName = Debug;
+		};
+		WATCCONFIG00000000000000 /* Build configuration list for PBXNativeTarget "FitMeWatchApp" */ = {
+			isa = XCConfigurationList;
+			buildConfigurations = (
+				WATCDEBUG000000000000000 /* Debug */,
+				WATCRELEASE0000000000000 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
 			defaultConfigurationName = Debug;

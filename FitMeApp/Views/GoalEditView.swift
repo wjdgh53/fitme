@@ -39,12 +39,7 @@ struct GoalEditView: View {
                 .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
 
                 Button {
-                    Task {
-                        isLoading = true
-                        // For simplicity, just save calories mission for now
-                        await viewModel.onSave(.calories, .medium, calories)
-                        isLoading = false
-                    }
+                    viewModel.onBack()
                 } label: {
                     if isLoading {
                         ProgressView()

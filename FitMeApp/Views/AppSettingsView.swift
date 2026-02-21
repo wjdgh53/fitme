@@ -4,6 +4,8 @@ struct AppSettingsView: View {
     let viewModel: AppSettingsViewModel
     @State private var workoutReminder: Bool = true
     @State private var weeklySummary: Bool = true
+    @StateObject private var connectivity = ConnectivityStatus()
+    @State private var showsWatchGuide = false
 
     var body: some View {
         ZStack {
@@ -24,36 +26,15 @@ struct AppSettingsView: View {
                 }
 
                 sectionCard(title: "Apple Health") {
-                    Button(action: viewModel.onAppleHealth) {
-                        HStack {
-                            Text("Status")
-                                .font(AppFonts.nunito(14, weight: .bold))
-                                .foregroundColor(Color(hex: "#3D3D3D"))
-                            Spacer()
-                            Text("Connected")
-                                .font(AppFonts.nunito(14, weight: .bold))
-                                .foregroundColor(Color(hex: "#78716C"))
-                            MaterialSymbol(name: "chevron_right", size: 18)
-                                .foregroundColor(Color(hex: "#A8A29E"))
-                        }
-                        .padding(.vertical, 6)
+                    statusRow(isConnected: connectivity.isAppleHealthConnected) {
+                        connectivity.requestAppleHealthAuthorization()
                     }
                 }
 
                 sectionCard(title: "Apple Watch") {
-                    Button(action: viewModel.onAppleWatch) {
-                        HStack {
-                            Text("Status")
-                                .font(AppFonts.nunito(14, weight: .bold))
-                                .foregroundColor(Color(hex: "#3D3D3D"))
-                            Spacer()
-                            Text("Not Connected")
-                                .font(AppFonts.nunito(14, weight: .bold))
-                                .foregroundColor(Color(hex: "#78716C"))
-                            MaterialSymbol(name: "chevron_right", size: 18)
-                                .foregroundColor(Color(hex: "#A8A29E"))
-                        }
-                        .padding(.vertical, 6)
+                    statusRow(isConnected: connectivity.isAppleWatchConnected) {
+                        showsWatchGuide = true
+                        connectivity.refresh()
                     }
                 }
 
@@ -61,6 +42,12 @@ struct AppSettingsView: View {
             }
             .padding(.horizontal, 24)
             .padding(.top, 12)
+        }
+        .onAppear { connectivity.refresh() }
+        .alert("Connect Apple Watch", isPresented: $showsWatchGuide) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text("Open the Watch app and complete pairing to enable sync.")
         }
     }
 
@@ -122,5 +109,33 @@ struct AppSettingsView: View {
                 .tint(Color(hex: "#FF8577"))
         }
         .padding(.vertical, 6)
+    }
+
+    private func statusRow(isConnected: Bool, action: @escaping () -> Void) -> some View {
+        let statusText = isConnected ? "Connected" : "Not Connected"
+        let statusColor = isConnected ? Color(hex: "#16A34A") : Color(hex: "#FF8577")
+        let statusBackground = isConnected ? Color(hex: "#DCFCE7") : Color(hex: "#FFE6E3")
+
+        return Button(action: action) {
+            HStack {
+                Text("Status")
+                    .font(AppFonts.nunito(14, weight: .bold))
+                    .foregroundColor(Color(hex: "#3D3D3D"))
+                Spacer()
+                Text(statusText)
+                    .font(AppFonts.nunito(12, weight: .black))
+                    .foregroundColor(statusColor)
+                    .padding(.horizontal, 10)
+                    .padding(.vertical, 6)
+                    .background(statusBackground)
+                    .clipShape(Capsule())
+                if !isConnected {
+                    MaterialSymbol(name: "chevron_right", size: 18)
+                        .foregroundColor(Color(hex: "#A8A29E"))
+                }
+            }
+            .padding(.vertical, 6)
+        }
+        .disabled(isConnected)
     }
 }

@@ -235,24 +235,11 @@ struct GetQuestView: View {
         Button {
             Task {
                 isLoading = true
-                if useAI {
-                    await viewModel.onConfirmAI()
-                } else {
-                    // Create custom missions for enabled goals
-                    if showCalories {
-                        await viewModel.onConfirmCustom(.calories, .medium, calories)
-                    }
-                    if showMinutes {
-                        await viewModel.onConfirmCustom(.minutes, .medium, minutes)
-                    }
-                    if showSessions {
-                        await viewModel.onConfirmCustom(.sessions, .medium, sessions)
-                    }
-                }
+                await viewModel.onConfirmAI()
                 isLoading = false
             }
         } label: {
-            Text(useAI ? "AI 미션 받기" : "목표 저장하기")
+            Text("AI 미션 받기")
                 .font(AppFonts.nunito(16, weight: .bold))
                 .foregroundColor(.white)
                 .frame(maxWidth: .infinity)
