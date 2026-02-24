@@ -1,5 +1,13 @@
 import SwiftUI
 
+#if canImport(AuthenticationServices)
+import AuthenticationServices
+#endif
+
+#if canImport(CryptoKit)
+import CryptoKit
+#endif
+
 #if canImport(FirebaseCore)
 import FirebaseCore
 #endif
@@ -137,7 +145,37 @@ final class AuthManager: ObservableObject {
     }
 
     func signInWithApple() async {
-        await signInWithOAuth(providerID: "apple.com")
+        errorMessage = nil
+
+        #if canImport(FirebaseAuth) && canImport(AuthenticationServices) && canImport(CryptoKit) && canImport(UIKit)
+        guard configureFirebaseIfNeeded() else { return }
+
+        do {
+            let rawNonce = Self.randomNonceString()
+            let appleCredential = try await Self.requestAppleCredential(rawNonce: rawNonce)
+
+            guard let identityToken = appleCredential.identityToken,
+                  let idTokenString = String(data: identityToken, encoding: .utf8)
+            else {
+                throw NSError(
+                    domain: "fitme.auth",
+                    code: -23,
+                    userInfo: [NSLocalizedDescriptionKey: "Apple identity token is missing."]
+                )
+            }
+
+            let credential = OAuthProvider.appleCredential(
+                withIDToken: idTokenString,
+                rawNonce: rawNonce,
+                fullName: appleCredential.fullName
+            )
+            try await authenticate(with: credential)
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+        #else
+        errorMessage = "Sign in with Apple requires AuthenticationServices, CryptoKit and FirebaseAuth."
+        #endif
     }
 
     func signInWithGoogle() async {
@@ -289,10 +327,6 @@ final class AuthManager: ObservableObject {
     private func fetchOAuthCredential(providerID: String) async throws -> AuthCredential {
         let provider = OAuthProvider(providerID: providerID)
 
-        if providerID == "apple.com" {
-            provider.scopes = ["email", "name"]
-        }
-
         return try await withCheckedThrowingContinuation { continuation in
             provider.getCredentialWith(nil) { credential, error in
                 if let error {
@@ -336,6 +370,120 @@ final class AuthManager: ObservableObject {
             }
         }
         return nil
+    }
+    #endif
+
+    #if canImport(AuthenticationServices) && canImport(CryptoKit) && canImport(UIKit)
+    private static var appleSignInCoordinators: [ObjectIdentifier: AppleSignInCoordinator] = [:]
+
+    private static func requestAppleCredential(rawNonce: String) async throws -> ASAuthorizationAppleIDCredential {
+        guard let anchor = resolvePresentationAnchor() else {
+            throw NSError(
+                domain: "fitme.auth",
+                code: -24,
+                userInfo: [NSLocalizedDescriptionKey: "Cannot find a window to present Apple sign-in."]
+            )
+        }
+
+        return try await withCheckedThrowingContinuation { continuation in
+            let provider = ASAuthorizationAppleIDProvider()
+            let request = provider.createRequest()
+            request.requestedScopes = [.fullName, .email]
+            request.nonce = sha256(rawNonce)
+
+            let controller = ASAuthorizationController(authorizationRequests: [request])
+            let coordinator = AppleSignInCoordinator(anchor: anchor, continuation: continuation)
+            let id = ObjectIdentifier(controller)
+            appleSignInCoordinators[id] = coordinator
+            coordinator.onFinish = {
+                appleSignInCoordinators.removeValue(forKey: id)
+            }
+
+            controller.delegate = coordinator
+            controller.presentationContextProvider = coordinator
+            controller.performRequests()
+        }
+    }
+
+    private static func resolvePresentationAnchor() -> ASPresentationAnchor? {
+        let scenes = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }
+        for scene in scenes {
+            if let key = scene.windows.first(where: { $0.isKeyWindow }) {
+                return key
+            }
+            if let first = scene.windows.first {
+                return first
+            }
+        }
+        return nil
+    }
+
+    private static func sha256(_ input: String) -> String {
+        let digest = SHA256.hash(data: Data(input.utf8))
+        return digest.map { String(format: "%02x", $0) }.joined()
+    }
+
+    private static func randomNonceString(length: Int = 32) -> String {
+        precondition(length > 0)
+        let charset = Array("0123456789ABCDEFGHIJKLMNOPQRSTUVXYZabcdefghijklmnopqrstuvwxyz-._")
+        var result = ""
+        var remaining = length
+
+        while remaining > 0 {
+            var randoms = [UInt8](repeating: 0, count: 16)
+            let status = SecRandomCopyBytes(kSecRandomDefault, randoms.count, &randoms)
+            if status != errSecSuccess {
+                fatalError("Unable to generate nonce. SecRandomCopyBytes failed with OSStatus \(status)")
+            }
+
+            randoms.forEach { random in
+                if remaining == 0 {
+                    return
+                }
+
+                if random < charset.count {
+                    result.append(charset[Int(random)])
+                    remaining -= 1
+                }
+            }
+        }
+
+        return result
+    }
+
+    private final class AppleSignInCoordinator: NSObject, ASAuthorizationControllerDelegate, ASAuthorizationControllerPresentationContextProviding {
+        let anchor: ASPresentationAnchor
+        let continuation: CheckedContinuation<ASAuthorizationAppleIDCredential, Error>
+        var onFinish: (() -> Void)?
+
+        init(anchor: ASPresentationAnchor, continuation: CheckedContinuation<ASAuthorizationAppleIDCredential, Error>) {
+            self.anchor = anchor
+            self.continuation = continuation
+        }
+
+        func presentationAnchor(for controller: ASAuthorizationController) -> ASPresentationAnchor {
+            anchor
+        }
+
+        func authorizationController(controller: ASAuthorizationController, didCompleteWithAuthorization authorization: ASAuthorization) {
+            defer { onFinish?() }
+            guard let credential = authorization.credential as? ASAuthorizationAppleIDCredential else {
+                continuation.resume(
+                    throwing: NSError(
+                        domain: "fitme.auth",
+                        code: -25,
+                        userInfo: [NSLocalizedDescriptionKey: "Unexpected Apple credential type."]
+                    )
+                )
+                return
+            }
+            continuation.resume(returning: credential)
+        }
+
+        func authorizationController(controller: ASAuthorizationController, didCompleteWithError error: Error) {
+            defer { onFinish?() }
+            continuation.resume(throwing: error)
+        }
     }
     #endif
 
