@@ -320,6 +320,7 @@ final class AuthManager: ObservableObject {
                 }
             } catch {
                 // Keep Firebase-derived profile when backend profile is not available yet.
+                print("Me profile bootstrap error: \(error)")
             }
         }
     }

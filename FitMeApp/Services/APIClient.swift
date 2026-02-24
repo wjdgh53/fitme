@@ -5,7 +5,7 @@ enum APIError: Error, LocalizedError {
     case networkError(Error)
     case decodingError(Error)
     case serverError(String)
-    case unauthorized
+    case unauthorized(String?)
     case unknown
     
     var errorDescription: String? {
@@ -30,7 +30,11 @@ enum APIError: Error, LocalizedError {
             return "Network error: \(error.localizedDescription)"
         case .decodingError(let error): return "Decoding error: \(error.localizedDescription)"
         case .serverError(let message): return message
-        case .unauthorized: return "Unauthorized"
+        case .unauthorized(let message):
+            if let message, !message.isEmpty {
+                return "Unauthorized: \(message)"
+            }
+            return "Unauthorized"
         case .unknown: return "Unknown error"
         }
     }
@@ -242,6 +246,8 @@ actor APIClient {
         }
 
         if httpResponse.statusCode == 401, tokenProvider != nil {
+            // Login state may have flipped just before this request; wait briefly and retry with a fresh token.
+            try? await Task.sleep(nanoseconds: 350_000_000)
             request = try await makeRequest(url: url, method: method, body: requestBody)
             let retryData: Data
             let retryResponse: URLResponse
@@ -261,6 +267,12 @@ actor APIClient {
 
     private func currentAuthorizationToken() async -> String? {
         if let tokenProvider {
+            let first = await tokenProvider()
+            if let first, !first.isEmpty {
+                return first
+            }
+            // Token can be briefly unavailable right after Firebase auth state changes.
+            try? await Task.sleep(nanoseconds: 250_000_000)
             return await tokenProvider()
         }
         return authToken
@@ -296,7 +308,10 @@ actor APIClient {
                 throw APIError.decodingError(error)
             }
         case 401:
-            throw APIError.unauthorized
+            if let errorResponse = try? decoder.decode(APIErrorResponse.self, from: data) {
+                throw APIError.unauthorized(errorResponse.error.message)
+            }
+            throw APIError.unauthorized(nil)
         case 400...499, 500...599:
             if let errorResponse = try? decoder.decode(APIErrorResponse.self, from: data) {
                 throw APIError.serverError(errorResponse.error.message)
