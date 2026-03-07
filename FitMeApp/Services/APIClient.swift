@@ -155,11 +155,12 @@ actor APIClient {
     
     // MARK: - Workout Plan
     
-    func generateWorkoutPlan(condition: String, targetMinutes: Int, equipment: [String]) async throws -> WorkoutPlan {
+    func generateWorkoutPlan(condition: String, targetMinutes: Int, equipment: [String], location: String) async throws -> WorkoutPlan {
         let body = GenerateWorkoutPlanRequest(
             condition: condition,
             targetMinutes: targetMinutes,
-            equipment: equipment
+            equipment: equipment,
+            location: location
         )
         return try await request(endpoint: "/workout-plan", method: "POST", body: body)
     }
@@ -214,6 +215,15 @@ actor APIClient {
 
     func getSettings() async throws -> MeSettings {
         return try await request(endpoint: "/me/settings", method: "GET")
+    }
+
+    func getPersonalInfo() async throws -> PersonalInfoResponse {
+        return try await request(endpoint: "/me/personal-info", method: "GET")
+    }
+
+    func patchPersonalInfo(age: Int?, heightCm: Double?, weightKg: Double?) async throws -> PersonalInfoResponse {
+        let body = PersonalInfoPatchRequest(age: age, heightCm: heightCm, weightKg: weightKg)
+        return try await request(endpoint: "/me/settings/personal-info", method: "PATCH", body: body)
     }
 
     func updateWorkoutPreferences(_ data: [String: JSONValue]) async throws -> MeSettings {

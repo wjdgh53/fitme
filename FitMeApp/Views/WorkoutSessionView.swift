@@ -72,13 +72,6 @@ struct WorkoutSessionView: View {
 
     private var header: some View {
         HStack {
-            Button(action: viewModel.onBack) {
-                Circle()
-                    .fill(AppTheme.elevatedSurface)
-                    .frame(width: 40, height: 40)
-                    .overlay(MaterialSymbol(name: "arrow_back", size: 20).foregroundColor(AppTheme.title))
-                    .overlay(Circle().stroke(AppTheme.border, lineWidth: 1))
-            }
             Spacer()
             Button(action: handlePause) {
                 Circle()
@@ -153,9 +146,13 @@ struct WorkoutSessionView: View {
     private var metricsSection: some View {
         Group {
             if runtime.phase == .lifting {
-                HStack(spacing: 24) {
-                    inputColumn(title: "WEIGHT", value: runtime.weightValue, unit: "lb", onIncrease: { runtime.updateWeight(runtime.weightValue + 5) }, onDecrease: { runtime.updateWeight(max(0, runtime.weightValue - 5)) })
+                if runtime.isCurrentExerciseBodyweight {
                     inputColumn(title: "REPS", value: runtime.repsValue, unit: "", onIncrease: { runtime.updateReps(runtime.repsValue + 1) }, onDecrease: { runtime.updateReps(max(0, runtime.repsValue - 1)) })
+                } else {
+                    HStack(spacing: 24) {
+                        inputColumn(title: "WEIGHT", value: runtime.weightValue, unit: "lb", onIncrease: { runtime.updateWeight(runtime.weightValue + 5) }, onDecrease: { runtime.updateWeight(max(0, runtime.weightValue - 5)) })
+                        inputColumn(title: "REPS", value: runtime.repsValue, unit: "", onIncrease: { runtime.updateReps(runtime.repsValue + 1) }, onDecrease: { runtime.updateReps(max(0, runtime.repsValue - 1)) })
+                    }
                 }
             } else {
                 VStack(spacing: 8) {
@@ -184,7 +181,7 @@ struct WorkoutSessionView: View {
                             }
                             .frame(width: 44, alignment: .leading)
 
-                            Text("\(entry.weight) lb")
+                            Text(entry.weight == "0" ? "BW" : "\(entry.weight) lb")
                                 .font(AppFonts.nunito(16, weight: .black))
                                 .foregroundColor(AppTheme.title)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -208,11 +205,14 @@ struct WorkoutSessionView: View {
 
     private var bottomControls: some View {
         HStack(spacing: 16) {
-            Circle()
-                .fill(AppTheme.subtleSurface.opacity(0.95))
-                .frame(width: 56, height: 56)
-                .overlay(MaterialSymbol(name: "arrow_back", size: 26).foregroundColor(AppTheme.iconMuted))
-                .overlay(Circle().stroke(AppTheme.border.opacity(0.6), lineWidth: 1))
+            Button(action: { runtime.goToPreviousExercise() }) {
+                Circle()
+                    .fill(AppTheme.subtleSurface.opacity(0.95))
+                    .frame(width: 56, height: 56)
+                    .overlay(MaterialSymbol(name: "arrow_back", size: 26).foregroundColor(AppTheme.iconMuted))
+                    .overlay(Circle().stroke(AppTheme.border.opacity(0.6), lineWidth: 1))
+            }
+            .disabled(runtime.currentExerciseIndex == 0)
 
             Button(action: handlePrimaryAction) {
                 Text(runtime.phase == .resting ? "Complete Rest" : "Complete Set")
@@ -227,11 +227,14 @@ struct WorkoutSessionView: View {
             .disabled(isCompleteSetDisabled)
             .motionPressable(haptic: true)
 
-            Circle()
-                .fill(AppTheme.subtleSurface.opacity(0.95))
-                .frame(width: 56, height: 56)
-                .overlay(MaterialSymbol(name: "arrow_forward", size: 26).foregroundColor(AppTheme.iconMuted))
-                .overlay(Circle().stroke(AppTheme.border.opacity(0.6), lineWidth: 1))
+            Button(action: { runtime.skipToNextExercise() }) {
+                Circle()
+                    .fill(AppTheme.subtleSurface.opacity(0.95))
+                    .frame(width: 56, height: 56)
+                    .overlay(MaterialSymbol(name: "arrow_forward", size: 26).foregroundColor(AppTheme.iconMuted))
+                    .overlay(Circle().stroke(AppTheme.border.opacity(0.6), lineWidth: 1))
+            }
+            .disabled(runtime.currentExerciseIndex + 1 >= runtime.totalExercises)
         }
         .padding(.horizontal, 24)
         .padding(.vertical, 10)
@@ -331,7 +334,11 @@ struct WorkoutSessionView: View {
     }
 
     private var isCompleteSetDisabled: Bool {
-        runtime.phase == .lifting && (runtime.weightValue <= 0 || runtime.repsValue <= 0)
+        if runtime.phase == .resting { return false }
+        if runtime.isCurrentExerciseBodyweight {
+            return runtime.repsValue <= 0
+        }
+        return runtime.weightValue <= 0 || runtime.repsValue <= 0
     }
 
     private func inputColumn(title: String, value: Int, unit: String, onIncrease: @escaping () -> Void, onDecrease: @escaping () -> Void) -> some View {

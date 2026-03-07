@@ -283,7 +283,7 @@ struct ExerciseDetailView: View {
 
     private var startButton: some View {
         VStack(spacing: 0) {
-            Button(action: {}) {
+            Button(action: viewModel.onStart) {
                 HStack(spacing: 8) {
                     MaterialSymbol(name: "play_circle", size: 22)
                     Text("Start Workout!")

@@ -31,4 +31,5 @@ enum AppScreen: Equatable {
     case appleHealth
     case appleWatch
     case points
+    case personalInfo
 }

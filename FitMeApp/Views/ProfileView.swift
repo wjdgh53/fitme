@@ -169,6 +169,7 @@ struct ProfileView: View {
             }
 
             VStack(spacing: 6) {
+                settingsRow(title: "개인 정보", icon: "person", action: viewModel.onPersonalInfo)
                 settingsRow(title: "My Goals", icon: "flag", action: viewModel.onMyGoals)
                 pointsRow
                 settingsRow(title: "App Settings", icon: "tune", action: viewModel.onAppSettings)

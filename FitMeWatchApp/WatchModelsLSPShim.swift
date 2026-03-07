@@ -37,6 +37,7 @@ struct FitMeWorkoutStateSnapshot: Codable, Equatable {
     let currentReps: Int?
     let weightUnit: String?
     let restRemainingSeconds: Int
+    let isBodyweight: Bool?
     let updatedAt: Date
 }
 

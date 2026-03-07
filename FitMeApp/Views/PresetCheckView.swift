@@ -29,11 +29,12 @@ struct PresetCheckView: View {
         }
     }
     
+    private var locationString: String {
+        locationSelection == 0 ? "home" : "gym"
+    }
+
     private var equipmentList: [String] {
-        switch locationSelection {
-        case 0: return ["dumbbell", "bodyweight"]
-        default: return ["barbell", "dumbbell", "cable", "machine"]
-        }
+        locationSelection == 0 ? viewModel.data.homeEquipment : []
     }
 
     var body: some View {
@@ -306,7 +307,7 @@ struct PresetCheckView: View {
             Button {
                 Task {
                     isLoading = true
-                    if let error = await viewModel.onStart(conditionString, targetMinutes, equipmentList) {
+                    if let error = await viewModel.onStart(conditionString, targetMinutes, equipmentList, locationString) {
                         errorMessage = error
                         showError = true
                     }

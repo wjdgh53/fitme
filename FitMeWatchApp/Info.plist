@@ -14,6 +14,10 @@
 	<string>1.0</string>
 	<key>CFBundleVersion</key>
 	<string>1</string>
+	<key>NSHealthShareUsageDescription</key>
+	<string>FitMe reads your heart rate during workouts to track exercise intensity.</string>
+	<key>NSHealthUpdateUsageDescription</key>
+	<string>FitMe saves your workout data to Apple Health so you can track your fitness progress.</string>
 	<key>WKApplication</key>
 	<true/>
 	<key>WKCompanionAppBundleIdentifier</key>

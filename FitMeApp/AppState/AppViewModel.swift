@@ -1,5 +1,6 @@
 import Foundation
 import SwiftUI
+import Combine
 
 enum WorkoutSource {
     case phone
@@ -46,67 +47,23 @@ enum WorkoutSaveState: Equatable {
 
 @MainActor
 final class AppViewModel: ObservableObject {
-    private static let legacyProfileImageDataKey = "fitme.profileImageData"
-    private static let profileImageDirectoryName = "fitme"
-    private static let profileImageFileName = "profile-avatar.jpg"
+    // MARK: - Sub-modules
+    let navigation = NavigationCoordinator()
+    let missionRepo = MissionRepository()
+    let sessionRepo = SessionRepository()
+    let profile = UserProfileStore()
+
     private static let presetConditionKey = "fitme.preset.condition"
     private static let presetTargetMinutesKey = "fitme.preset.targetMinutes"
     private static let presetEquipmentKey = "fitme.preset.equipment"
+    private static let presetLocationKey = "fitme.preset.defaultLocation"
 
-    private static func profileImageDirectoryURL() -> URL {
-        let base = FileManager.default.urls(for: .applicationSupportDirectory, in: .userDomainMask).first!
-        return base.appendingPathComponent(profileImageDirectoryName, isDirectory: true)
-    }
-
-    private static func profileImageFileURL() -> URL {
-        profileImageDirectoryURL().appendingPathComponent(profileImageFileName, isDirectory: false)
-    }
-
-    private static func ensureProfileImageDirectoryExists() throws {
-        let dir = profileImageDirectoryURL()
-        try FileManager.default.createDirectory(at: dir, withIntermediateDirectories: true)
-    }
-
-    // MARK: - Navigation State
-    @Published private(set) var screenStack: [AppScreen] = [.home]
-    @Published var selectedTab: AppTab = .home
-    
-    // MARK: - Dashboard State
-    @Published private(set) var isLoading = false
-    @Published private(set) var errorMessage: String?
-    @Published private(set) var missions: [Mission] = []
-    @Published private(set) var totalPoints: Int = 0
-    @Published private(set) var rank: String = "Bronze"
-    
-    // MARK: - Mission Computed Properties
-    var activeMissions: [Mission] {
-        missions.filter { $0.status == .active }
-    }
-    
-    var completedMissions: [Mission] {
-        missions.filter { $0.status == .complete }
-    }
-    
-    var suspendedMissions: [Mission] {
-        missions.filter { $0.status == .suspended }
-    }
-    
-    var canAddMission: Bool {
-        activeMissions.count < 3
-    }
-    
     // MARK: - Workout Plan State
     @Published private(set) var currentWorkoutPlan: WorkoutPlan?
     @Published private(set) var isGeneratingPlan = false
-    @Published private(set) var completedWorkoutPlan: WorkoutPlan?  // 운동 완료 시 저장
+    @Published private(set) var completedWorkoutPlan: WorkoutPlan?
     @Published private(set) var workoutRuntime: WorkoutRuntime?
-    
-    // MARK: - Session State
-    @Published private(set) var sessions: [SessionSummary] = []
-    @Published private(set) var currentSessionDetail: SessionDetail?
-    @Published private(set) var weeklyReports: [WeeklyReport] = []
-    @Published private(set) var currentWeeklyReport: WeeklyReport?
-    
+
     // MARK: - Workout Flow State
     @Published var workoutCondition: String = "normal" {
         didSet {
@@ -125,6 +82,11 @@ final class AppViewModel: ObservableObject {
             }
         }
     }
+    @Published var workoutLocation: String = "gym" {
+        didSet {
+            UserDefaults.standard.set(workoutLocation, forKey: Self.presetLocationKey)
+        }
+    }
 
     // MARK: - Watch Sync
     let watchWorkoutSync = WatchWorkoutSync()
@@ -138,7 +100,363 @@ final class AppViewModel: ObservableObject {
     private var pendingWatchSaveRetryTask: Task<Void, Never>? = nil
     private var stagedNextWatchSessionId: String? = nil
 
+    private var childCancellables = Set<AnyCancellable>()
+
+    // MARK: - Forwarding Properties (backward compatibility)
+
+    var screenStack: [AppScreen] { navigation.screenStack }
+    var selectedTab: AppTab {
+        get { navigation.selectedTab }
+        set { navigation.selectedTab = newValue }
+    }
+    var currentScreen: AppScreen { navigation.currentScreen }
+    var isTabBarDisabled: Bool { navigation.isTabBarDisabled }
+
+    var missions: [Mission] { missionRepo.missions }
+    var activeMissions: [Mission] { missionRepo.activeMissions }
+    var completedMissions: [Mission] { missionRepo.completedMissions }
+    var suspendedMissions: [Mission] { missionRepo.suspendedMissions }
+    var canAddMission: Bool { missionRepo.canAddMission }
+    var hasMissions: Bool { missionRepo.hasMissions }
+    var caloriesMission: Mission? { missionRepo.caloriesMission }
+    var minutesMission: Mission? { missionRepo.minutesMission }
+    var sessionsMission: Mission? { missionRepo.sessionsMission }
+
+    var sessions: [SessionSummary] { sessionRepo.sessions }
+    var currentSessionDetail: SessionDetail? { sessionRepo.currentSessionDetail }
+    var weeklyReports: [WeeklyReport] { sessionRepo.weeklyReports }
+    var currentWeeklyReport: WeeklyReport? { sessionRepo.currentWeeklyReport }
+
+    var userName: String {
+        get { profile.userName }
+        set { profile.userName = newValue }
+    }
+    var profileImageURL: URL? {
+        get { profile.profileImageURL }
+        set { profile.profileImageURL = newValue }
+    }
+    var profileImageData: Data? { profile.profileImageData }
+
+    var isLoading: Bool { missionRepo.isLoading }
+    @Published var errorMessage: String? = nil
+
+    var completedWorkoutsCount: Int { sessionRepo.completedWorkoutsCount }
+    var completedMissionsCount: Int { missionRepo.completedMissionsCount }
+
+    var calculatedPoints: Int {
+        let workoutPoints = completedWorkoutsCount * 5
+        let missionPoints = completedMissionsCount * 10
+        return workoutPoints + missionPoints
+    }
+
+    @Published private(set) var totalPoints: Int = 0
+    @Published private(set) var rank: String = "Bronze"
+
+    // MARK: - Init
+
+    init() {
+        let defaults = UserDefaults.standard
+
+        if let value = defaults.string(forKey: Self.presetConditionKey) {
+            workoutCondition = value
+        }
+        let minutes = defaults.integer(forKey: Self.presetTargetMinutesKey)
+        if minutes > 0 {
+            workoutTargetMinutes = minutes
+        }
+        if let data = defaults.data(forKey: Self.presetEquipmentKey),
+           let equipment = try? JSONDecoder().decode([String].self, from: data),
+           !equipment.isEmpty {
+            workoutEquipment = equipment
+        }
+        if let loc = defaults.string(forKey: Self.presetLocationKey) {
+            workoutLocation = loc
+        }
+
+        // Forward child objectWillChange to self so SwiftUI picks up changes
+        navigation.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }.store(in: &childCancellables)
+
+        missionRepo.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }.store(in: &childCancellables)
+
+        missionRepo.$errorMessage.sink { [weak self] message in
+            self?.errorMessage = message
+        }.store(in: &childCancellables)
+
+        sessionRepo.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }.store(in: &childCancellables)
+
+        profile.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }.store(in: &childCancellables)
+
+        retryPendingWatchSavesOnLaunch()
+    }
+
+    func applyOnboardingDefaults(equipment: [String], targetMinutes: Int, location: String) {
+        if !equipment.isEmpty { workoutEquipment = equipment }
+        if targetMinutes > 0 { workoutTargetMinutes = targetMinutes }
+        workoutLocation = location
+    }
+
+    // MARK: - Forwarding Methods (backward compatibility)
+
+    func setProfileImageData(_ data: Data?) throws {
+        try profile.setProfileImageData(data)
+    }
+
+    func setTab(_ tab: AppTab) {
+        navigation.setTab(tab)
+    }
+
+    func push(_ screen: AppScreen) {
+        navigation.push(screen)
+    }
+
+    func pop() {
+        navigation.pop()
+    }
+
+    func goHomeFromFlow() {
+        navigation.goHomeFromFlow()
+    }
+
+    // MARK: - Mission Forwarding
+
+    func loadMissions() async {
+        await missionRepo.loadMissions()
+    }
+
+    func completeMission(id: String) async {
+        await missionRepo.completeMission(id: id)
+    }
+
+    func suspendMission(id: String) async {
+        await missionRepo.suspendMission(id: id)
+    }
+
+    func reactivateMission(id: String) async {
+        await missionRepo.reactivateMission(id: id)
+    }
+
+    func createAIMissions() async {
+        await missionRepo.createAIMissions()
+    }
+
+    func createAISingleMission(type: MissionType) async -> String? {
+        await missionRepo.createAISingleMission(type: type)
+    }
+
+    func createCustomMission(type: MissionType, difficulty: MissionDifficulty, targetValue: Int) async -> String? {
+        await missionRepo.createCustomMission(type: type, difficulty: difficulty, targetValue: targetValue)
+    }
+
+    func deleteMission(id: String) async {
+        await missionRepo.deleteMission(id: id)
+    }
+
+    // MARK: - Session Forwarding
+
+    func loadSessions(period: String? = nil) async {
+        await sessionRepo.loadSessions(period: period)
+        missionRepo.recalculateMissionProgress()
+    }
+
+    func loadSessionDetail(id: String) async {
+        await sessionRepo.loadSessionDetail(id: id)
+    }
+
+    func loadWeeklyReports() async {
+        await sessionRepo.loadWeeklyReports()
+    }
+
+    func loadWeeklyReportDetail(startAt: String) async {
+        await sessionRepo.loadWeeklyReportDetail(startAt: startAt)
+    }
+
+    // MARK: - Dashboard (cross-cutting)
+
+    func loadDashboard() async {
+        do {
+            let response = try await APIClient.shared.getDashboard()
+            missionRepo.applyDashboardMissions(response.missions)
+            totalPoints = response.totalPoints
+            rank = response.rank
+        } catch {
+            #if DEBUG
+            print("Dashboard load error: \(error)")
+            #endif
+        }
+    }
+
+    // MARK: - Workout Plan
+
+    func generateWorkoutPlan() async {
+        let sourceAtStart = activeWorkoutSource
+        isGeneratingPlan = true
+        currentWorkoutPlan = nil
+
+        do {
+            currentWorkoutPlan = try await APIClient.shared.generateWorkoutPlan(
+                condition: workoutCondition,
+                targetMinutes: workoutTargetMinutes,
+                equipment: workoutEquipment,
+                location: workoutLocation
+            )
+            if sourceAtStart == .phone, let plan = currentWorkoutPlan, !plan.exercises.isEmpty {
+                stagePlanForWatchStartIfNeeded(plan: plan)
+            }
+        } catch {
+            #if DEBUG
+            print("Workout plan generation error: \(error)")
+            #endif
+        }
+
+        isGeneratingPlan = false
+    }
+
+    // MARK: - Save Session (cross-cutting: watch + session repo)
+
+    func saveWorkoutSession(durationMinutes: Int, exercises: [SessionExercise]) async {
+        if activeWorkoutSource == .watch, let sessionId = activeWorkoutSessionId {
+            switch activeWorkoutSaveState {
+            case .saving(let sid) where sid == sessionId:
+                return
+            case .saved(let sid, _) where sid == sessionId:
+                return
+            default:
+                break
+            }
+
+            let plan = completedWorkoutPlan ?? currentWorkoutPlan ?? watchPlanStore.load(sessionId: sessionId)
+            activeWorkoutSaveState = .saving(sessionId: sessionId)
+            sendWatchWorkoutSummaryIfPossible(sessionId: sessionId, plan: plan, saveState: activeWorkoutSaveState)
+
+            let result = await sessionRepo.saveWorkoutSessionInternal(durationMinutes: durationMinutes, exercises: exercises)
+            switch result {
+            case .success(let record):
+                activeWorkoutSaveState = .saved(sessionId: sessionId, record: record)
+                pendingWatchSaveStore.remove(sessionId: sessionId)
+                watchPlanStore.remove(sessionId: sessionId)
+                watchEventBufferStore.clear(sessionId: sessionId)
+            case .failure(let error):
+                activeWorkoutSaveState = .failed(sessionId: sessionId, message: error.localizedDescription)
+                pendingWatchSaveStore.upsert(sessionId: sessionId,
+                                             durationMinutes: durationMinutes,
+                                             exercises: exercises,
+                                             plan: plan,
+                                             errorMessage: error.localizedDescription)
+            }
+            sendWatchWorkoutSummaryIfPossible(sessionId: sessionId, plan: plan, saveState: activeWorkoutSaveState)
+            await missionRepo.loadMissions()
+            return
+        }
+
+        let result = await sessionRepo.saveWorkoutSessionInternal(durationMinutes: durationMinutes, exercises: exercises)
+        if case .success = result {
+            missionRepo.recalculateMissionProgress()
+            await missionRepo.loadMissions()
+        }
+    }
+
+    // MARK: - Navigation (workout flow)
+
+    func startWorkoutFlow() {
+        activeWorkoutSource = .phone
+        activeWorkoutSaveState = .idle
+        activeWorkoutSessionId = nil
+        stagedNextWatchSessionId = nil
+        currentWorkoutPlan = nil
+        workoutRuntime?.stop()
+        workoutRuntime = nil
+        navigation.goToPresetCheck()
+    }
+
+    func startQuickWorkoutFlow() {
+        activeWorkoutSource = .phone
+        activeWorkoutSaveState = .idle
+        navigation.goToWorkoutPreview1()
+        applyQuickStartPresetDefaults()
+        Task { await generateWorkoutPlan() }
+    }
+
+    func goToWorkoutPreview1() {
+        navigation.goToWorkoutPreview1()
+    }
+
+    func goToWorkoutPreview2() {
+        navigation.goToWorkoutPreview2()
+    }
+
+    func startWorkoutSession() {
+        if activeWorkoutSessionId == nil {
+            activeWorkoutSessionId = UUID().uuidString
+        }
+        guard let plan = currentWorkoutPlan, !plan.exercises.isEmpty else {
+            return
+        }
+        if let sessionId = activeWorkoutSessionId {
+            ensureWorkoutRuntime(plan: plan, sessionId: sessionId)
+        }
+        navigation.goToWorkoutSession()
+    }
+
+    func goToRest() {
+        navigation.goToRest()
+    }
+
+    func goToSummary() {
+        #if DEBUG
+        print("[AppViewModel] goToSummary - currentWorkoutPlan: \(currentWorkoutPlan?.title ?? "nil")")
+        #endif
+        completedWorkoutPlan = currentWorkoutPlan
+        #if DEBUG
+        print("[AppViewModel] completedWorkoutPlan set: \(completedWorkoutPlan?.exercises.count ?? 0) exercises")
+        #endif
+        navigation.goToSummary()
+    }
+
+    func completeWorkoutFlow() {
+        currentWorkoutPlan = nil
+        completedWorkoutPlan = nil
+        activeWorkoutSessionId = nil
+        activeWorkoutSource = .phone
+        activeWorkoutSaveState = .idle
+        workoutRuntime?.stop()
+        workoutRuntime = nil
+        navigation.setTab(.home)
+    }
+
+    func openLibrary() { navigation.openLibrary() }
+    func openExerciseDetail() { navigation.openExerciseDetail() }
+    func openHistoryDetail() { navigation.openHistoryDetail() }
+
+    func openWeeklyReportDetail(startAt: String) {
+        Task {
+            await sessionRepo.loadWeeklyReportDetail(startAt: startAt)
+            if sessionRepo.currentWeeklyReport?.periodStart == startAt {
+                navigation.openReportDetail()
+            }
+        }
+    }
+
+    func openMyGoals() { navigation.openMyGoals() }
+    func openPoints() { navigation.openPoints() }
+    func openGoalEdit() { navigation.openGoalEdit() }
+    func openWeeklyMission() { navigation.openWeeklyMission() }
+    func openGetQuest() { navigation.openGetQuest() }
+    func openAppSettings() { navigation.openAppSettings() }
+    func openHelpCenter() { navigation.openHelpCenter() }
+    func openAppleHealth() { navigation.openAppleHealth() }
+    func openAppleWatch() { navigation.openAppleWatch() }
+    func openPersonalInfo() { navigation.openPersonalInfo() }
+
     // MARK: - Watch Events
+
     internal func processWatchEvents(_ events: [FitMeWatchEvent]) {
         let sorted = events.sorted { $0.timestamp < $1.timestamp }
         for event in sorted {
@@ -169,7 +487,6 @@ final class AppViewModel: ObservableObject {
                 } else {
                     watchEventBufferStore.append(event)
                     if event.type == .end {
-                        // End should reliably advance to summary even if runtime isn't ready.
                         activeWorkoutSource = .watch
                         handleWorkoutCompleted(sessionId: event.sessionId)
                     }
@@ -177,6 +494,8 @@ final class AppViewModel: ObservableObject {
             }
         }
     }
+
+    // MARK: - Private Watch Helpers
 
     private var watchStartTask: Task<Void, Never>? = nil
 
@@ -188,11 +507,9 @@ final class AppViewModel: ObservableObject {
 
             guard let sessionId = activeWorkoutSessionId else { return }
 
-            // Bring iPhone into a workout UI state immediately.
-            screenStack = [.workoutPreview1]
+            navigation.goToWorkoutPreview1()
 
             if let stored = watchPlanStore.load(sessionId: sessionId), !stored.exercises.isEmpty {
-                // Plan already staged (e.g., generated on iPhone). Skip the generating step.
                 currentWorkoutPlan = stored
                 ensureWorkoutRuntime(plan: stored, sessionId: sessionId)
                 sendWorkoutSnapshotIfReady(sessionId: sessionId)
@@ -205,7 +522,6 @@ final class AppViewModel: ObservableObject {
             await generateWorkoutPlan()
             guard !Task.isCancelled else { return }
 
-            // Only start if a new plan was created and is valid.
             if let plan = currentWorkoutPlan, !plan.exercises.isEmpty {
                 watchPlanStore.save(plan: plan, sessionId: sessionId)
                 ensureWorkoutRuntime(plan: plan, sessionId: sessionId)
@@ -369,7 +685,7 @@ final class AppViewModel: ObservableObject {
                                        savedSessionRecordId: nil,
                                        saveErrorMessage: nil)
 
-                let result = await saveWorkoutSessionInternal(durationMinutes: item.durationMinutes, exercises: item.exercises)
+                let result = await sessionRepo.saveWorkoutSessionInternal(durationMinutes: item.durationMinutes, exercises: item.exercises)
                 switch result {
                 case .success(let record):
                     pendingWatchSaveStore.remove(sessionId: item.sessionId)
@@ -428,7 +744,7 @@ final class AppViewModel: ObservableObject {
             let exercises = plan.exercises.map { SessionExercise(exerciseId: $0.exerciseId, sets: $0.sets) }
             let durationMinutes = plan.estimatedMinutes
 
-            let result = await saveWorkoutSessionInternal(durationMinutes: durationMinutes, exercises: exercises)
+            let result = await sessionRepo.saveWorkoutSessionInternal(durationMinutes: durationMinutes, exercises: exercises)
             switch result {
             case .success(let record):
                 activeWorkoutSaveState = .saved(sessionId: sessionId, record: record)
@@ -446,254 +762,17 @@ final class AppViewModel: ObservableObject {
             sendWatchWorkoutSummaryIfPossible(sessionId: sessionId, plan: plan, saveState: activeWorkoutSaveState)
         }
     }
-    
-    // MARK: - User Profile (TODO: Auth)
-    @Published var userName: String = "User"
-    var profileImageURL: URL? = nil
-    @Published var profileImageData: Data? = nil
 
-    init() {
-        let defaults = UserDefaults.standard
-
-        if let value = defaults.string(forKey: Self.presetConditionKey) {
-            workoutCondition = value
-        }
-        let minutes = defaults.integer(forKey: Self.presetTargetMinutesKey)
-        if minutes > 0 {
-            workoutTargetMinutes = minutes
-        }
-        if let data = defaults.data(forKey: Self.presetEquipmentKey),
-           let equipment = try? JSONDecoder().decode([String].self, from: data),
-           !equipment.isEmpty {
-            workoutEquipment = equipment
-        }
-
-        let url = Self.profileImageFileURL()
-        if let data = try? Data(contentsOf: url) {
-            profileImageData = data
-        }
-
-        // Legacy migration from UserDefaults -> file
-        if let legacyData = defaults.data(forKey: Self.legacyProfileImageDataKey) {
-            do {
-                try Self.ensureProfileImageDirectoryExists()
-                try legacyData.write(to: url, options: [.atomic])
-                profileImageData = legacyData
-                defaults.removeObject(forKey: Self.legacyProfileImageDataKey)
-            } catch {
-                profileImageData = legacyData
-            }
-        }
-
-        retryPendingWatchSavesOnLaunch()
-    }
-    
-    // MARK: - Points System
-    var completedWorkoutsCount: Int {
-        sessions.count
-    }
-    
-    var completedMissionsCount: Int {
-        missions.filter { $0.status == .complete }.count
-    }
-    
-    var calculatedPoints: Int {
-        let workoutPoints = completedWorkoutsCount * 5  // 운동 1회 = 5점
-        let missionPoints = completedMissionsCount * 10  // 미션 달성 = 10점
-        return workoutPoints + missionPoints
-    }
-    
-    var currentScreen: AppScreen {
-        screenStack.last ?? .home
-    }
-    
-    var isTabBarDisabled: Bool {
-        switch currentScreen {
-        case .presetCheck, .workoutPreview1, .workoutPreview2, .workoutSession, .rest:
-            return true
-        default:
-            return false
-        }
-    }
-    
-    // MARK: - Computed Properties
-    
-    var hasMissions: Bool {
-        !missions.isEmpty
-    }
-    
-    var caloriesMission: Mission? {
-        missions.first { $0.type == .calories }
-    }
-    
-    var minutesMission: Mission? {
-        missions.first { $0.type == .minutes }
-    }
-    
-    var sessionsMission: Mission? {
-        missions.first { $0.type == .sessions }
-    }
-    
-    // MARK: - API Calls
-    
-    func loadDashboard() async {
-        isLoading = true
-        errorMessage = nil
-        
-        do {
-            let response = try await APIClient.shared.getDashboard()
-            missions = response.missions
-            recalculateMissionProgress()
-            totalPoints = response.totalPoints
-            rank = response.rank
-        } catch {
-            errorMessage = error.localizedDescription
-            print("Dashboard load error: \(error)")
-        }
-        
-        isLoading = false
-    }
-    
-    func loadMissions() async {
-        do {
-            let response = try await APIClient.shared.getMissions()
-            missions = response.missions
-            // 자동으로 완료된 미션 체크 및 status 업데이트
-            recalculateMissionProgress()
-        } catch {
-            print("Missions load error: \(error)")
-        }
-    }
-    
-    private func checkAndCompleteMissions() {
-        for i in missions.indices where missions[i].status == .active {
-            if missions[i].isComplete {
-                let missionId = missions[i].id
-                missions[i].status = .complete
-                Task {
-                    try? await APIClient.shared.updateMissionStatus(id: missionId, status: .complete)
-                }
-            }
-        }
-    }
-
-    private func recalculateMissionProgress() {
-        checkAndCompleteMissions()
-    }
-
-    private func parseDate(_ value: String) -> Date? {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        return formatter.date(from: value)
-    }
-    
-    func completeMission(id: String) async {
-        if let index = missions.firstIndex(where: { $0.id == id }) {
-            missions[index].status = .complete
-            try? await APIClient.shared.updateMissionStatus(id: id, status: .complete)
-        }
-    }
-    
-    func suspendMission(id: String) async {
-        if let index = missions.firstIndex(where: { $0.id == id }) {
-            missions[index].status = .suspended
-            try? await APIClient.shared.updateMissionStatus(id: id, status: .suspended)
-        }
-    }
-    
-    func reactivateMission(id: String) async {
-        guard canAddMission else { return }
-        if let index = missions.firstIndex(where: { $0.id == id }) {
-            missions[index].status = .active
-            try? await APIClient.shared.updateMissionStatus(id: id, status: .active)
-        }
-    }
-    
-    func createAIMissions() async {
-        isLoading = true
-        do {
-            let response = try await APIClient.shared.createWeeklyMissions(startAt: todayString())
-            missions = response.missions
-            recalculateMissionProgress()
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-        isLoading = false
-    }
-
-    func createAISingleMission(type: MissionType) async -> String? {
-        isLoading = true
-        defer { isLoading = false }
-        do {
-            let response = try await APIClient.shared.createAISingleMission(type: type, startAt: todayString())
-            missions = response.missions
-            recalculateMissionProgress()
-            await loadMissions()
-            return nil
-        } catch {
-            errorMessage = error.localizedDescription
-            return errorMessage
-        }
-    }
-
-    func createCustomMission(type: MissionType, difficulty: MissionDifficulty, targetValue: Int) async -> String? {
-        isLoading = true
-        defer { isLoading = false }
-        do {
-            let response = try await APIClient.shared.createCustomMission(
-                type: type,
-                difficulty: difficulty,
-                targetValue: targetValue,
-                startAt: todayString()
-            )
-            missions = response.missions
-            recalculateMissionProgress()
-            await loadMissions()
-            return nil
-        } catch {
-            errorMessage = error.localizedDescription
-            return errorMessage
-        }
-    }
-    
-    func deleteMission(id: String) async {
-        do {
-            try await APIClient.shared.deleteMission(id: id)
-            missions.removeAll { $0.id == id }
-        } catch {
-            errorMessage = error.localizedDescription
-        }
-    }
-    
-    func generateWorkoutPlan() async {
-        let sourceAtStart = activeWorkoutSource
-        isGeneratingPlan = true
-        errorMessage = nil
-        currentWorkoutPlan = nil
-        
-        do {
-            currentWorkoutPlan = try await APIClient.shared.generateWorkoutPlan(
-                condition: workoutCondition,
-                targetMinutes: workoutTargetMinutes,
-                equipment: workoutEquipment
-            )
-            if sourceAtStart == .phone, let plan = currentWorkoutPlan, !plan.exercises.isEmpty {
-                stagePlanForWatchStartIfNeeded(plan: plan)
-            }
-        } catch {
-            errorMessage = error.localizedDescription
-            print("Workout plan generation error: \(error)")
-        }
-        
-        isGeneratingPlan = false
+    private func applyQuickStartPresetDefaults() {
+        workoutCondition = "normal"
+        workoutEquipment = ["barbell", "dumbbell", "cable", "machine"]
     }
 
     private func stagePlanForWatchStartIfNeeded(plan: WorkoutPlan) {
         guard activeWorkoutSource == .phone else { return }
         guard activeWorkoutSessionId == nil else { return }
         guard workoutRuntime == nil else { return }
-        guard currentScreen == .workoutPreview1 || currentScreen == .workoutPreview2 else { return }
+        guard navigation.currentScreen == .workoutPreview1 || navigation.currentScreen == .workoutPreview2 else { return }
 
         let sessionId = stagedNextWatchSessionId ?? UUID().uuidString
         stagedNextWatchSessionId = sessionId
@@ -718,289 +797,6 @@ final class AppViewModel: ObservableObject {
         )
         watchWorkoutSync.sendWorkoutState(snapshot)
     }
-    
-    func loadSessions(period: String? = nil) async {
-        do {
-            sessions = try await APIClient.shared.getSessions(period: period)
-            recalculateMissionProgress()
-        } catch {
-            print("Sessions load error: \(error)")
-        }
-    }
-    
-    func loadSessionDetail(id: String) async {
-        do {
-            currentSessionDetail = try await APIClient.shared.getSession(id: id)
-        } catch {
-            print("Session detail load error: \(error)")
-        }
-    }
-
-    func loadWeeklyReports() async {
-        do {
-            weeklyReports = try await APIClient.shared.getWeeklyReports()
-        } catch {
-            print("Weekly reports load error: \(error)")
-        }
-    }
-
-    func loadWeeklyReportDetail(startAt: String) async {
-        do {
-            currentWeeklyReport = try await APIClient.shared.getWeeklyReport(startAt: startAt)
-        } catch {
-            print("Weekly report detail load error: \(error)")
-        }
-    }
-    
-    func saveWorkoutSession(durationMinutes: Int, exercises: [SessionExercise]) async {
-        if activeWorkoutSource == .watch, let sessionId = activeWorkoutSessionId {
-            switch activeWorkoutSaveState {
-            case .saving(let sid) where sid == sessionId:
-                return
-            case .saved(let sid, _) where sid == sessionId:
-                return
-            default:
-                break
-            }
-
-            let plan = completedWorkoutPlan ?? currentWorkoutPlan ?? watchPlanStore.load(sessionId: sessionId)
-            activeWorkoutSaveState = .saving(sessionId: sessionId)
-            sendWatchWorkoutSummaryIfPossible(sessionId: sessionId, plan: plan, saveState: activeWorkoutSaveState)
-
-            let result = await saveWorkoutSessionInternal(durationMinutes: durationMinutes, exercises: exercises)
-            switch result {
-            case .success(let record):
-                activeWorkoutSaveState = .saved(sessionId: sessionId, record: record)
-                pendingWatchSaveStore.remove(sessionId: sessionId)
-                watchPlanStore.remove(sessionId: sessionId)
-                watchEventBufferStore.clear(sessionId: sessionId)
-            case .failure(let error):
-                activeWorkoutSaveState = .failed(sessionId: sessionId, message: error.localizedDescription)
-                pendingWatchSaveStore.upsert(sessionId: sessionId,
-                                             durationMinutes: durationMinutes,
-                                             exercises: exercises,
-                                             plan: plan,
-                                             errorMessage: error.localizedDescription)
-            }
-            sendWatchWorkoutSummaryIfPossible(sessionId: sessionId, plan: plan, saveState: activeWorkoutSaveState)
-            return
-        }
-
-        _ = await saveWorkoutSessionInternal(durationMinutes: durationMinutes, exercises: exercises)
-    }
-
-    private func saveWorkoutSessionInternal(durationMinutes: Int, exercises: [SessionExercise]) async -> Result<SessionSummary, Error> {
-        print("📥 [AppViewModel] saveWorkoutSession: \(durationMinutes)min, \(exercises.count) exercises")
-        do {
-            let session = try await APIClient.shared.saveSession(
-                source: .fitme,
-                durationMinutes: durationMinutes,
-                exercises: exercises
-            )
-            print("✅ [AppViewModel] Session saved: id=\(session.id), calories=\(session.calories)")
-            sessions.insert(session, at: 0)
-            recalculateMissionProgress()
-            await loadMissions()
-            return .success(session)
-        } catch {
-            print("❌ [AppViewModel] Save failed: \(error)")
-            errorMessage = error.localizedDescription
-            return .failure(error)
-        }
-    }
-
-    private func todayString() -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        formatter.locale = Locale(identifier: "en_US_POSIX")
-        return formatter.string(from: Date())
-    }
-    
-    // MARK: - Navigation
-    
-    func setTab(_ tab: AppTab) {
-        guard !isTabBarDisabled else { return }
-        selectedTab = tab
-        switch tab {
-        case .home:
-            screenStack = [.home]
-        case .report:
-            screenStack = [.report]
-        case .history:
-            screenStack = [.historyList]
-        case .profile:
-            screenStack = [.profile]
-        }
-    }
-
-    func setProfileImageData(_ data: Data?) throws {
-        profileImageData = data
-
-        let url = Self.profileImageFileURL()
-        if let data {
-            try Self.ensureProfileImageDirectoryExists()
-            try data.write(to: url, options: [.atomic])
-        } else {
-            try? FileManager.default.removeItem(at: url)
-        }
-    }
-    
-    func push(_ screen: AppScreen) {
-        screenStack.append(screen)
-    }
-    
-    func pop() {
-        guard screenStack.count > 1 else { return }
-        screenStack.removeLast()
-        syncSelectedTabWithRoot()
-    }
-    
-    func startWorkoutFlow() {
-        activeWorkoutSource = .phone
-        activeWorkoutSaveState = .idle
-        activeWorkoutSessionId = nil
-        stagedNextWatchSessionId = nil
-        errorMessage = nil
-        currentWorkoutPlan = nil
-        workoutRuntime?.stop()
-        workoutRuntime = nil
-        screenStack = [.presetCheck]
-    }
-
-    func startQuickWorkoutFlow() {
-        activeWorkoutSource = .phone
-        activeWorkoutSaveState = .idle
-        screenStack = [.workoutPreview1]
-        applyQuickStartPresetDefaults()
-        Task { await generateWorkoutPlan() }
-    }
-
-    private func applyQuickStartPresetDefaults() {
-        // Match the defaults shown in PresetCheckView.
-        workoutCondition = "normal"
-        workoutEquipment = ["barbell", "dumbbell", "cable", "machine"]
-    }
-    
-    func goToWorkoutPreview1() {
-        screenStack = [.workoutPreview1]
-    }
-    
-    func goToWorkoutPreview2() {
-        screenStack = [.workoutPreview2]
-    }
-    
-    func startWorkoutSession() {
-        if activeWorkoutSessionId == nil {
-            activeWorkoutSessionId = UUID().uuidString
-        }
-        guard let plan = currentWorkoutPlan, !plan.exercises.isEmpty else {
-            return
-        }
-        if let sessionId = activeWorkoutSessionId {
-            ensureWorkoutRuntime(plan: plan, sessionId: sessionId)
-        }
-        screenStack = [.workoutSession]
-    }
-    
-    func goToRest() {
-        screenStack = [.rest]
-    }
-    
-    func goToSummary() {
-        // 운동 완료 시점에 plan 데이터 저장
-        print("🏁 [AppViewModel] goToSummary - currentWorkoutPlan: \(currentWorkoutPlan?.title ?? "nil")")
-        completedWorkoutPlan = currentWorkoutPlan
-        print("🏁 [AppViewModel] completedWorkoutPlan set: \(completedWorkoutPlan?.exercises.count ?? 0) exercises")
-        screenStack = [.summary]
-    }
-    
-    func completeWorkoutFlow() {
-        currentWorkoutPlan = nil
-        completedWorkoutPlan = nil
-        activeWorkoutSessionId = nil
-        activeWorkoutSource = .phone
-        activeWorkoutSaveState = .idle
-        workoutRuntime?.stop()
-        workoutRuntime = nil
-        setTab(.home)
-    }
-    
-    func openLibrary() {
-        push(.library)
-    }
-    
-    func openExerciseDetail() {
-        push(.exerciseDetail)
-    }
-    
-    func openHistoryDetail() {
-        push(.historyDetail)
-    }
-
-    func openWeeklyReportDetail(startAt: String) {
-        Task {
-            await loadWeeklyReportDetail(startAt: startAt)
-            if currentWeeklyReport?.periodStart == startAt {
-                push(.reportDetail)
-            }
-        }
-    }
-    
-    func openMyGoals() {
-        push(.myGoals)
-    }
-    
-    func openPoints() {
-        push(.points)
-    }
-    
-    func openGoalEdit() {
-        push(.goalEdit)
-    }
-    
-    func openWeeklyMission() {
-        push(.weeklyMission)
-    }
-    
-    func openGetQuest() {
-        push(.getQuest)
-    }
-    
-    func openAppSettings() {
-        push(.appSettings)
-    }
-    
-    func openHelpCenter() {
-        push(.helpCenter)
-    }
-    
-    func openAppleHealth() {
-        push(.appleHealth)
-    }
-    
-    func openAppleWatch() {
-        push(.appleWatch)
-    }
-    
-    func goHomeFromFlow() {
-        selectedTab = .home
-        screenStack = [.home]
-    }
-    
-    private func syncSelectedTabWithRoot() {
-        switch screenStack.first ?? .home {
-        case .home:
-            selectedTab = .home
-        case .report, .reportDetail:
-            selectedTab = .report
-        case .historyList, .historyDetail:
-            selectedTab = .history
-        case .profile:
-            selectedTab = .profile
-        default:
-            break
-        }
-    }
 
     private func ensureWorkoutRuntime(plan: WorkoutPlan, sessionId: String) {
         if let runtime = workoutRuntime, runtime.sessionId == sessionId {
@@ -1024,6 +820,8 @@ final class AppViewModel: ObservableObject {
         runtime.sendSnapshotIfNeeded()
     }
 }
+
+// MARK: - WorkoutRuntime
 
 @MainActor
 final class WorkoutRuntime: ObservableObject {
@@ -1050,6 +848,10 @@ final class WorkoutRuntime: ObservableObject {
     var currentExercise: WorkoutPlanExercise? {
         guard currentExerciseIndex < plan.exercises.count else { return nil }
         return plan.exercises[currentExerciseIndex]
+    }
+
+    var isCurrentExerciseBodyweight: Bool {
+        currentExercise?.isBodyweight ?? false
     }
 
     var totalExercises: Int {
@@ -1135,14 +937,14 @@ final class WorkoutRuntime: ObservableObject {
                 sendSnapshotIfNeeded()
             }
         case .lifting:
-            guard weightValue > 0, repsValue > 0 else { return }
+            let weightOk = isCurrentExerciseBodyweight || weightValue > 0
+            guard weightOk, repsValue > 0 else { return }
             setHistory.append(WorkoutSetEntry(weight: String(weightValue), reps: String(repsValue)))
 
             if currentSetIndex >= totalSets {
                 if currentExerciseIndex + 1 >= totalExercises {
                     endWorkout()
                 } else {
-                    // Keep a full 60s rest between exercises as well.
                     startRest()
                 }
             } else {
@@ -1210,7 +1012,6 @@ final class WorkoutRuntime: ObservableObject {
                 restRemaining -= 1
             }
 
-            // Auto-advance as soon as rest reaches 00:00.
             if restRemaining <= 0 {
                 completeSet()
             } else {
@@ -1219,6 +1020,20 @@ final class WorkoutRuntime: ObservableObject {
         } else {
             workoutElapsedSeconds += 1
         }
+    }
+
+    func skipToNextExercise() {
+        guard currentExerciseIndex + 1 < totalExercises else { return }
+        currentExerciseIndex += 1
+        configureForCurrentExercise(resetIndices: true)
+        sendSnapshotIfNeeded()
+    }
+
+    func goToPreviousExercise() {
+        guard currentExerciseIndex > 0 else { return }
+        currentExerciseIndex -= 1
+        configureForCurrentExercise(resetIndices: true)
+        sendSnapshotIfNeeded()
     }
 
     private func moveToNextExercise() {
@@ -1274,6 +1089,7 @@ final class WorkoutRuntime: ObservableObject {
             currentReps: repsValue,
             weightUnit: "kg",
             restRemainingSeconds: phase == .resting ? restRemaining : 0,
+            isBodyweight: isCurrentExerciseBodyweight,
             updatedAt: Date()
         )
         watchWorkoutSync.sendWorkoutState(snapshot)

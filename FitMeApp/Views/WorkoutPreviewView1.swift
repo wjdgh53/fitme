@@ -89,7 +89,7 @@ struct WorkoutPreviewStyledScreen: View {
     }
 
     private var contentBody: some View {
-        ScrollView(showsIndicators: false) {
+        ScrollView(.vertical, showsIndicators: false) {
             VStack(spacing: s(16)) {
                 Text(formattedTitle(data.title))
                     .font(AppFonts.quicksand(s(30), weight: .bold))
@@ -110,7 +110,9 @@ struct WorkoutPreviewStyledScreen: View {
             }
             .padding(.horizontal, s(24))
             .padding(.bottom, s(26))
+            .frame(maxWidth: .infinity)
         }
+        .scrollBounceBehavior(.basedOnSize, axes: .horizontal)
     }
 
     private var chips: some View {

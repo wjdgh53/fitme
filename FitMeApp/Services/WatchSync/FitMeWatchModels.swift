@@ -36,6 +36,7 @@ struct FitMeWorkoutStateSnapshot: Codable, Equatable {
     let currentReps: Int?
     let weightUnit: String?
     let restRemainingSeconds: Int
+    let isBodyweight: Bool
     let updatedAt: Date
 
     init(
@@ -50,6 +51,7 @@ struct FitMeWorkoutStateSnapshot: Codable, Equatable {
         currentReps: Int? = nil,
         weightUnit: String? = nil,
         restRemainingSeconds: Int,
+        isBodyweight: Bool = false,
         updatedAt: Date
     ) {
         self.sessionId = sessionId
@@ -63,7 +65,25 @@ struct FitMeWorkoutStateSnapshot: Codable, Equatable {
         self.currentReps = currentReps
         self.weightUnit = weightUnit
         self.restRemainingSeconds = restRemainingSeconds
+        self.isBodyweight = isBodyweight
         self.updatedAt = updatedAt
+    }
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        sessionId = try container.decode(String.self, forKey: .sessionId)
+        status = try container.decode(FitMeWatchWorkoutStatus.self, forKey: .status)
+        exerciseName = try container.decode(String.self, forKey: .exerciseName)
+        currentExerciseIndex = try container.decode(Int.self, forKey: .currentExerciseIndex)
+        totalExercises = try container.decode(Int.self, forKey: .totalExercises)
+        currentSetIndex = try container.decode(Int.self, forKey: .currentSetIndex)
+        totalSets = try container.decode(Int.self, forKey: .totalSets)
+        currentWeight = try container.decodeIfPresent(Int.self, forKey: .currentWeight)
+        currentReps = try container.decodeIfPresent(Int.self, forKey: .currentReps)
+        weightUnit = try container.decodeIfPresent(String.self, forKey: .weightUnit)
+        restRemainingSeconds = try container.decode(Int.self, forKey: .restRemainingSeconds)
+        isBodyweight = try container.decodeIfPresent(Bool.self, forKey: .isBodyweight) ?? false
+        updatedAt = try container.decode(Date.self, forKey: .updatedAt)
     }
 }
 

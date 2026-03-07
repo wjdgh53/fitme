@@ -1,5 +1,9 @@
 import SwiftUI
 
+#if canImport(AVFoundation)
+import AVFoundation
+#endif
+
 #if canImport(AuthenticationServices)
 import AuthenticationServices
 #endif
@@ -29,6 +33,13 @@ struct FitMeApp: App {
     @StateObject private var appViewModel = AppViewModel()
     @StateObject private var authManager = AuthManager()
 
+    init() {
+        #if canImport(AVFoundation)
+        try? AVAudioSession.sharedInstance().setCategory(.ambient, options: .mixWithOthers)
+        try? AVAudioSession.sharedInstance().setActive(true)
+        #endif
+    }
+
     var body: some Scene {
         WindowGroup {
             RootGateView()
@@ -48,13 +59,39 @@ struct FitMeApp: App {
 
 private struct RootGateView: View {
     @EnvironmentObject private var authManager: AuthManager
+    @EnvironmentObject private var appViewModel: AppViewModel
 
     var body: some View {
         Group {
-            if authManager.isAuthenticated {
-                AppRootView()
-            } else {
+            if !authManager.isAuthenticated {
                 LoginView()
+            } else if authManager.isCheckingOnboarding {
+                ZStack {
+                    AppTheme.appBackground.ignoresSafeArea()
+                    VStack(spacing: 20) {
+                        if let image = UIImage(named: "bear-hero") {
+                            Image(uiImage: image)
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 100, height: 100)
+                        } else {
+                            Image(systemName: "figure.run")
+                                .resizable()
+                                .scaledToFit()
+                                .frame(width: 60, height: 60)
+                                .foregroundColor(AppTheme.primaryButton)
+                        }
+                        ProgressView()
+                            .tint(AppTheme.primaryButton)
+                    }
+                }
+            } else if authManager.needsOnboarding {
+                OnboardingView(onComplete: {
+                    authManager.markOnboardingComplete()
+                })
+                .environmentObject(appViewModel)
+            } else {
+                AppRootView()
             }
         }
     }
@@ -63,6 +100,9 @@ private struct RootGateView: View {
 @MainActor
 final class AuthManager: ObservableObject {
     @Published private(set) var isAuthenticated = false
+    @Published private(set) var needsOnboarding: Bool = false
+    @Published private(set) var isCheckingOnboarding: Bool = false
+    private static let onboardingKey = "fitme.onboarding.completed"
     @Published private(set) var isGuest = false
     @Published private(set) var displayName = "User"
     @Published private(set) var email: String?
@@ -225,6 +265,11 @@ final class AuthManager: ObservableObject {
         #endif
     }
 
+    func markOnboardingComplete() {
+        UserDefaults.standard.set(true, forKey: Self.onboardingKey)
+        needsOnboarding = false
+    }
+
     func signOut() async {
         errorMessage = nil
 
@@ -303,10 +348,20 @@ final class AuthManager: ObservableObject {
 
         isAuthenticated = true
         isGuest = user.isAnonymous
-        displayName = user.displayName?.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty == false
-            ? user.displayName!
-            : (user.isAnonymous ? "Guest" : "Member")
+        let trimmed = user.displayName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        displayName = trimmed.isEmpty ? (user.isAnonymous ? "Guest" : "Member") : trimmed
         email = user.email
+
+        // 게스트는 온보딩 불필요
+        if user.isAnonymous {
+            needsOnboarding = false
+            isCheckingOnboarding = false
+        } else if UserDefaults.standard.bool(forKey: Self.onboardingKey) {
+            needsOnboarding = false
+            isCheckingOnboarding = false
+        } else {
+            isCheckingOnboarding = true
+        }
 
         Task { [weak self] in
             guard let self else { return }
@@ -317,9 +372,22 @@ final class AuthManager: ObservableObject {
                         self.displayName = backendName
                     }
                     self.email = me.profile.email ?? self.email
+                    // 온보딩 완료 여부 서버에서 확인
+                    let hasOnboarding = me.settings.workoutPreferences["onboarding_completed_at"] != nil
+                    if hasOnboarding {
+                        UserDefaults.standard.set(true, forKey: Self.onboardingKey)
+                        self.needsOnboarding = false
+                    } else {
+                        self.needsOnboarding = true
+                    }
+                    self.isCheckingOnboarding = false
                 }
             } catch {
-                // Keep Firebase-derived profile when backend profile is not available yet.
+                await MainActor.run {
+                    self.isCheckingOnboarding = false
+                    // 오프라인 시 온보딩 표시하지 않음 (UX 개선)
+                    self.needsOnboarding = false
+                }
                 print("Me profile bootstrap error: \(error)")
             }
         }

@@ -50,6 +50,7 @@ struct PresetCheckData {
     let energySelection: Int
     let locationSelection: Int
     let targetMinutes: Int
+    let homeEquipment: [String]
 }
 
 @MainActor
@@ -57,27 +58,29 @@ struct PresetCheckViewModel {
     let data: PresetCheckData
     let onBack: () -> Void
     let onClose: () -> Void
-    let onStart: (String, Int, [String]) async -> String?  // 에러 메시지 반환
+    let onStart: (String, Int, [String], String) async -> String?  // 에러 메시지 반환
     
     init(appViewModel: AppViewModel) {
         self.data = PresetCheckData(
             energySelection: 1,
-            locationSelection: 1,
-            targetMinutes: appViewModel.workoutTargetMinutes
+            locationSelection: appViewModel.workoutLocation == "home" ? 0 : 1,
+            targetMinutes: appViewModel.workoutTargetMinutes,
+            homeEquipment: appViewModel.workoutEquipment
         )
         self.onBack = { appViewModel.goHomeFromFlow() }
         self.onClose = { appViewModel.goHomeFromFlow() }
-        self.onStart = { condition, minutes, equipment in
+        self.onStart = { condition, minutes, equipment, location in
+            // 선택한 location으로 업데이트 (UserDefaults 자동 저장)
+            appViewModel.workoutLocation = location
+            let effectiveEquipment: [String] = location == "gym" ? [] : equipment
             appViewModel.workoutCondition = condition
             appViewModel.workoutTargetMinutes = minutes
-            appViewModel.workoutEquipment = equipment
+            appViewModel.workoutEquipment = effectiveEquipment
             await appViewModel.generateWorkoutPlan()
-            // plan 생성 성공했을 때만 Preview로 이동
             if appViewModel.currentWorkoutPlan != nil {
                 appViewModel.goToWorkoutPreview1()
                 return nil
             }
-            // 실패 시 에러 메시지 반환
             return appViewModel.errorMessage ?? "Failed to generate workout plan"
         }
     }
@@ -395,7 +398,8 @@ struct ExerciseDetailData {
 struct ExerciseDetailViewModel {
     let data: ExerciseDetailData
     let onBack: () -> Void
-    
+    let onStart: () -> Void
+
     init(appViewModel: AppViewModel) {
         self.data = ExerciseDetailData(
             title: "Barbell Bench Press",
@@ -403,6 +407,7 @@ struct ExerciseDetailViewModel {
             heroURL: URL(string: "https://lh3.googleusercontent.com/aida-public/AB6AXuCUyk_A0ZAvBPbzKmC9ddJh6KwAfF5fHPOsqWS_cA4AcKWybACPncj6MQUvSMjQA4pr25S3lu6hrnJkd8_821ir86JS3ej4BHqiyl9BW2vmcKA8Kr9g82zzH249sz6TkmVCHprArcj_IZnJGbRm_8pjlTDXCiXq59yUVJYeNQZA5syBhp1UxXS00G0xn_qEBz28RhyXuYp43EWvXgQPiYHNH0Z4dI-h3HkF8_YujVi1Zkd-9iS-WHgkw6GD7E2mzHxBrDAqDXBa5W0")
         )
         self.onBack = { appViewModel.pop() }
+        self.onStart = { appViewModel.startWorkoutFlow() }
     }
 }
 
@@ -418,7 +423,8 @@ struct ProfileViewModel {
     let onPoints: () -> Void
     let onAppSettings: () -> Void
     let onHelpCenter: () -> Void
-    
+    let onPersonalInfo: () -> Void
+
     init(appViewModel: AppViewModel) {
         self.appViewModel = appViewModel
         self.userName = appViewModel.userName
@@ -428,10 +434,72 @@ struct ProfileViewModel {
         self.onPoints = { appViewModel.openPoints() }
         self.onAppSettings = { appViewModel.openAppSettings() }
         self.onHelpCenter = { appViewModel.openHelpCenter() }
+        self.onPersonalInfo = { appViewModel.openPersonalInfo() }
     }
 
     func setProfileImageData(_ data: Data?) throws {
         try appViewModel.setProfileImageData(data)
+    }
+}
+
+// MARK: - Personal Info
+
+@MainActor
+final class PersonalInfoViewModel: ObservableObject {
+    @Published var info: PersonalInfoResponse? = nil
+    @Published var isLoading: Bool = false
+    @Published var error: String? = nil
+
+    // Edit state
+    @Published var isEditing: Bool = false
+    @Published var editAge: Int = 25
+    @Published var editHeightCm: Double = 170
+    @Published var editWeightKg: Double = 70
+    @Published var isSaving: Bool = false
+
+    let onBack: () -> Void
+
+    init(appViewModel: AppViewModel) {
+        self.onBack = { appViewModel.pop() }
+    }
+
+    func loadData() {
+        isLoading = true
+        error = nil
+        Task {
+            do {
+                let data = try await APIClient.shared.getPersonalInfo()
+                self.info = data
+            } catch {
+                self.error = error.localizedDescription
+            }
+            self.isLoading = false
+        }
+    }
+
+    func startEditing() {
+        editAge = info?.age ?? 25
+        editHeightCm = info?.heightCm ?? 170.0
+        editWeightKg = info?.weightKg ?? 70.0
+        isEditing = true
+    }
+
+    func saveEdits() {
+        isSaving = true
+        Task {
+            do {
+                let updated = try await APIClient.shared.patchPersonalInfo(
+                    age: editAge,
+                    heightCm: editHeightCm,
+                    weightKg: editWeightKg
+                )
+                self.info = updated
+                self.isEditing = false
+            } catch {
+                self.error = error.localizedDescription
+            }
+            self.isSaving = false
+        }
     }
 }
 
@@ -450,12 +518,14 @@ final class MyGoalsViewModel: ObservableObject {
     var data: MyGoalsData {
         let calendar = Calendar.current
         let today = Date()
-        let weekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today))!
-        let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart)!
+        guard let weekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)),
+              let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart) else {
+            return MyGoalsData(hasMissions: appViewModel.hasMissions, missions: appViewModel.missions, dateRange: "")
+        }
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d"
         let dateRange = "\(formatter.string(from: weekStart)) – \(formatter.string(from: weekEnd))"
-        
+
         return MyGoalsData(
             hasMissions: appViewModel.hasMissions,
             missions: appViewModel.missions,
@@ -520,12 +590,16 @@ struct WeeklyMissionViewModel {
     init(appViewModel: AppViewModel) {
         let calendar = Calendar.current
         let today = Date()
-        let weekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today))!
-        let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart)!
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        let dateRange = "\(formatter.string(from: weekStart)) – \(formatter.string(from: weekEnd))"
-        
+        let dateRange: String
+        if let weekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)),
+           let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart) {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MMM d"
+            dateRange = "\(formatter.string(from: weekStart)) – \(formatter.string(from: weekEnd))"
+        } else {
+            dateRange = ""
+        }
+
         self.data = WeeklyMissionData(
             missions: appViewModel.missions,
             dateRange: dateRange

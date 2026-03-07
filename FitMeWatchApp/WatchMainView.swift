@@ -1,6 +1,5 @@
 import SwiftUI
 import Foundation
-import SwiftUI
 
 #if canImport(WatchKit)
 struct WatchMainView: View {
@@ -133,24 +132,37 @@ struct WatchMainView: View {
             activeHeader(density: density)
                 .padding(.bottom, headerBottomPadding)
 
-            HStack(spacing: stepperSpacing) {
-                metricStepperCard(
-                    label: controller.weightUnit.uppercased(),
-                    value: weightValueText,
-                    valueFontSize: stepperValueFont,
-                    cardVerticalPadding: stepperCardPaddingV,
-                    onIncrement: { controller.changeWeight(by: 5) },
-                    onDecrement: { controller.changeWeight(by: -5) }
-                )
+            Group {
+                if controller.isBodyweight {
+                    metricStepperCard(
+                        label: "REPS",
+                        value: repsValueText,
+                        valueFontSize: stepperValueFont,
+                        cardVerticalPadding: stepperCardPaddingV,
+                        onIncrement: { controller.changeReps(by: 1) },
+                        onDecrement: { controller.changeReps(by: -1) }
+                    )
+                } else {
+                    HStack(spacing: stepperSpacing) {
+                        metricStepperCard(
+                            label: controller.weightUnit.uppercased(),
+                            value: weightValueText,
+                            valueFontSize: stepperValueFont,
+                            cardVerticalPadding: stepperCardPaddingV,
+                            onIncrement: { controller.changeWeight(by: 5) },
+                            onDecrement: { controller.changeWeight(by: -5) }
+                        )
 
-                metricStepperCard(
-                    label: "REPS",
-                    value: repsValueText,
-                    valueFontSize: stepperValueFont,
-                    cardVerticalPadding: stepperCardPaddingV,
-                    onIncrement: { controller.changeReps(by: 1) },
-                    onDecrement: { controller.changeReps(by: -1) }
-                )
+                        metricStepperCard(
+                            label: "REPS",
+                            value: repsValueText,
+                            valueFontSize: stepperValueFont,
+                            cardVerticalPadding: stepperCardPaddingV,
+                            onIncrement: { controller.changeReps(by: 1) },
+                            onDecrement: { controller.changeReps(by: -1) }
+                        )
+                    }
+                }
             }
             .padding(.vertical, stepperBlockPaddingV)
 
@@ -345,22 +357,6 @@ struct WatchMainView: View {
         )
     }
 
-    private func metricValue(value: String, unit: String, alignment: Alignment) -> some View {
-        HStack(alignment: .firstTextBaseline, spacing: 4) {
-            Text(value)
-                .font(.system(size: 44, weight: .bold, design: .rounded))
-                .foregroundStyle(.white)
-                .monospacedDigit()
-                .lineLimit(1)
-                .minimumScaleFactor(0.60)
-
-            Text(unit)
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(.white.opacity(0.70))
-        }
-        .frame(maxWidth: .infinity, alignment: alignment)
-    }
-
     private func circleIconButton(
         systemImage: String,
         background: Color,
@@ -379,16 +375,8 @@ struct WatchMainView: View {
         .accessibilityLabel(accessibilityLabel)
     }
 
-    private var weightText: String {
-        let weight = controller.currentWeight ?? 65
-        return String(format: "%.1f", Double(weight))
-    }
-
-    private var repsText: String {
-        controller.currentReps.map(String.init) ?? "8"
-    }
-
     private var weightValueText: String {
+        if controller.isBodyweight { return "BW" }
         guard let weight = controller.currentWeight else { return "--" }
         return String(weight)
     }
@@ -398,7 +386,7 @@ struct WatchMainView: View {
     }
 
     private var bpmText: String {
-        "—"
+        controller.heartRate.map { "\(Int($0))" } ?? "—"
     }
 
     private var previousLine: String? {

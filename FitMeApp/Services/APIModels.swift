@@ -103,10 +103,7 @@ struct Mission: Codable, Identifiable, Equatable {
     }
     
     var displayValue: String {
-        switch type {
-        case .sessions: return "\(progressValue)"
-        default: return "\(progressValue)"
-        }
+        String(progressValue)
     }
 }
 
@@ -147,6 +144,7 @@ struct WorkoutPlanExercise: Codable, Identifiable, Equatable {
     var id: String { exerciseId }
     let exerciseId: String
     let sets: [ExerciseSet]
+    let isBodyweight: Bool
 }
 
 struct WorkoutPlan: Codable, Equatable {
@@ -221,9 +219,10 @@ struct GenerateWorkoutPlanRequest: Encodable {
     let condition: String
     let targetMinutes: Int
     let equipment: [String]
-    
+    let location: String
+
     enum CodingKeys: String, CodingKey {
-        case condition, equipment
+        case condition, equipment, location
         case targetMinutes = "target_minutes"
     }
 }
@@ -294,6 +293,27 @@ struct MeSettings: Codable {
     let notification: [String: JSONValue]
     let privacy: [String: JSONValue]
     let updatedAt: String
+}
+
+struct PersonalInfoResponse: Codable {
+    let birthSex: String?
+    let age: Int?
+    let heightCm: Double?
+    let weightKg: Double?
+    let experienceLevel: String?
+    let experienceDuration: String?
+    let goal: String?
+    let preferredLocation: String?
+    let equipment: [String]?
+    let weeklyTrainingDays: Int?
+    let preferredSessionMinutes: Int?
+    let onboardingCompletedAt: String?
+}
+
+struct PersonalInfoPatchRequest: Encodable {
+    let age: Int?
+    let heightCm: Double?
+    let weightKg: Double?
 }
 
 struct UpdateProfileRequest: Encodable {

@@ -56,6 +56,8 @@ struct AppRootView: View {
                 AppleWatchView(viewModel: AppleWatchViewModel(appViewModel: appViewModel))
             case .points:
                 PointsView(viewModel: PointsViewModel(appViewModel: appViewModel))
+            case .personalInfo:
+                PersonalInfoView(viewModel: PersonalInfoViewModel(appViewModel: appViewModel))
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)

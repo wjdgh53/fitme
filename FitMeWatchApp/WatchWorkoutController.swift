@@ -9,10 +9,14 @@ import WatchConnectivity
 import WatchKit
 #endif
 
+#if canImport(HealthKit)
+import HealthKit
+#endif
+
 #if canImport(WatchKit)
 
 @MainActor
-final class WatchWorkoutController: ObservableObject {
+final class WatchWorkoutController: NSObject, ObservableObject {
     @Published var status: FitMeWatchWorkoutStatus = .idle
     @Published var sessionId: String? = nil
     @Published var exerciseName: String = "Loading Plan..."
@@ -27,14 +31,25 @@ final class WatchWorkoutController: ObservableObject {
     @Published var weightUnit: String = "kg"
     @Published var restRemainingSeconds: Int = 60
     @Published var elapsedSeconds: Int = 0
+    @Published var isBodyweight: Bool = false
     @Published var workoutSummary: FitMeWatchWorkoutSummary? = nil
+    @Published var heartRate: Double? = nil
 
     private let link = WatchPhoneLink()
     private let store = WatchEventQueueStore()
     private var lastAppliedStateUpdatedAt: Date? = nil
     private var pollingTask: Task<Void, Never>? = nil
 
-    init() {
+    #if canImport(HealthKit)
+    private let healthStore = HKHealthStore()
+    private var hkWorkoutSession: HKWorkoutSession?
+    private var hkWorkoutBuilder: HKLiveWorkoutBuilder?
+    #endif
+
+    private var extendedSession: WKExtendedRuntimeSession?
+
+    override init() {
+        super.init()
         link.onStateUpdate = { [weak self] state in
             Task { @MainActor in
                 self?.applyPhoneState(state)
@@ -87,6 +102,9 @@ final class WatchWorkoutController: ObservableObject {
         restRemainingSeconds = 0
         elapsedSeconds = 0
 
+        startExtendedRuntimeSession()
+        startHealthKitWorkout()
+
         if hasPreparedPlan {
             // Phone already staged a plan for this sessionId.
             // Start immediately without showing the "Generating plan..." step.
@@ -115,6 +133,8 @@ final class WatchWorkoutController: ObservableObject {
     func resetToIdle() {
         pollingTask?.cancel()
         pollingTask = nil
+        endHealthKitWorkout()
+        endExtendedRuntimeSession()
         lastAppliedStateUpdatedAt = nil
         status = .idle
         sessionId = nil
@@ -130,6 +150,8 @@ final class WatchWorkoutController: ObservableObject {
         previousReps = nil
         restRemainingSeconds = 0
         elapsedSeconds = 0
+        isBodyweight = false
+        heartRate = nil
     }
 
     func tickElapsed() {
@@ -162,6 +184,8 @@ final class WatchWorkoutController: ObservableObject {
         let isLastExercise = hasTotalExercises && currentExerciseIndex >= totalExercises
 
         if isLastSet && isLastExercise {
+            endHealthKitWorkout()
+            endExtendedRuntimeSession()
             enqueueEvent(type: .end)
             status = .ended
             playHaptic(.success)
@@ -199,9 +223,11 @@ final class WatchWorkoutController: ObservableObject {
     func onEnd() {
         pollingTask?.cancel()
         pollingTask = nil
+        endHealthKitWorkout()
+        endExtendedRuntimeSession()
         enqueueEvent(type: .end)
         status = .ended
-        playHaptic(.failure)
+        playHaptic(.stop)
     }
 
     func onChangeExercise() {
@@ -274,6 +300,7 @@ final class WatchWorkoutController: ObservableObject {
             weightUnit = unit
         }
         restRemainingSeconds = max(0, state.restRemainingSeconds)
+        isBodyweight = state.isBodyweight ?? false
         status = state.status
         
         if status != .generating {
@@ -314,11 +341,95 @@ final class WatchWorkoutController: ObservableObject {
         workoutSummary = summary
     }
 
+    // MARK: - HealthKit Workout
+
+    private func startHealthKitWorkout() {
+        #if canImport(HealthKit)
+        guard HKHealthStore.isHealthDataAvailable() else { return }
+
+        let typesToShare: Set<HKSampleType> = [
+            HKQuantityType.workoutType()
+        ]
+        let typesToRead: Set<HKObjectType> = [
+            HKQuantityType(.heartRate)
+        ]
+
+        Task { [weak self] in
+            guard let self else { return }
+            do {
+                try await self.healthStore.requestAuthorization(toShare: typesToShare, read: typesToRead)
+
+                let configuration = HKWorkoutConfiguration()
+                configuration.activityType = .traditionalStrengthTraining
+                configuration.locationType = .unknown
+
+                let session = try HKWorkoutSession(healthStore: self.healthStore, configuration: configuration)
+                let builder = session.associatedWorkoutBuilder()
+                builder.dataSource = HKLiveWorkoutDataSource(healthStore: self.healthStore, workoutConfiguration: configuration)
+
+                session.delegate = self
+                builder.delegate = self
+
+                self.hkWorkoutSession = session
+                self.hkWorkoutBuilder = builder
+
+                session.startActivity(with: Date())
+                try await builder.beginCollection(at: Date())
+            } catch {
+                #if DEBUG
+                print("[WatchWorkoutController] HealthKit start error: \(error)")
+                #endif
+            }
+        }
+        #endif
+    }
+
+    private func endHealthKitWorkout() {
+        #if canImport(HealthKit)
+        guard let session = hkWorkoutSession, let builder = hkWorkoutBuilder else { return }
+
+        session.end()
+
+        Task { [weak self] in
+            do {
+                try await builder.endCollection(at: Date())
+                try await builder.finishWorkout()
+            } catch {
+                #if DEBUG
+                print("[WatchWorkoutController] HealthKit end error: \(error)")
+                #endif
+            }
+            await MainActor.run {
+                self?.hkWorkoutSession = nil
+                self?.hkWorkoutBuilder = nil
+            }
+        }
+        #endif
+    }
+
+    // MARK: - Extended Runtime Session
+
+    private func startExtendedRuntimeSession() {
+        guard extendedSession == nil else { return }
+        let session = WKExtendedRuntimeSession()
+        session.delegate = self
+        session.start()
+        extendedSession = session
+    }
+
+    private func endExtendedRuntimeSession() {
+        extendedSession?.invalidate()
+        extendedSession = nil
+    }
+
+    // MARK: - Haptics
+
     private enum Haptic {
         case start
         case click
         case success
         case failure
+        case stop
         case notification
     }
 
@@ -333,12 +444,91 @@ final class WatchWorkoutController: ObservableObject {
             WKInterfaceDevice.current().play(.success)
         case .failure:
             WKInterfaceDevice.current().play(.failure)
+        case .stop:
+            WKInterfaceDevice.current().play(.stop)
         case .notification:
             WKInterfaceDevice.current().play(.notification)
         }
         #else
         _ = haptic
         #endif
+    }
+}
+
+// MARK: - HKWorkoutSessionDelegate & HKLiveWorkoutBuilderDelegate
+
+#if canImport(HealthKit)
+extension WatchWorkoutController: HKWorkoutSessionDelegate {
+    nonisolated func workoutSession(_ workoutSession: HKWorkoutSession,
+                                     didChangeTo toState: HKWorkoutSessionState,
+                                     from fromState: HKWorkoutSessionState,
+                                     date: Date) {
+        #if DEBUG
+        Task { @MainActor in
+            print("[WatchWorkoutController] HKWorkoutSession state: \(fromState.rawValue) -> \(toState.rawValue)")
+        }
+        #endif
+    }
+
+    nonisolated func workoutSession(_ workoutSession: HKWorkoutSession,
+                                     didFailWithError error: Error) {
+        #if DEBUG
+        Task { @MainActor in
+            print("[WatchWorkoutController] HKWorkoutSession error: \(error)")
+        }
+        #endif
+    }
+}
+
+extension WatchWorkoutController: HKLiveWorkoutBuilderDelegate {
+    nonisolated func workoutBuilderDidCollectEvent(_ workoutBuilder: HKLiveWorkoutBuilder) {
+        // No-op for strength training events.
+    }
+
+    nonisolated func workoutBuilder(_ workoutBuilder: HKLiveWorkoutBuilder,
+                                     didCollectDataOf collectedTypes: Set<HKSampleType>) {
+        let hrType = HKQuantityType(.heartRate)
+        guard collectedTypes.contains(hrType) else { return }
+
+        let bpm = workoutBuilder.statistics(for: hrType)?
+            .mostRecentQuantity()?
+            .doubleValue(for: HKUnit.count().unitDivided(by: .minute()))
+
+        Task { @MainActor [weak self] in
+            self?.heartRate = bpm
+        }
+    }
+}
+#endif
+
+// MARK: - WKExtendedRuntimeSessionDelegate
+
+extension WatchWorkoutController: WKExtendedRuntimeSessionDelegate {
+    nonisolated func extendedRuntimeSessionDidStart(_ extendedRuntimeSession: WKExtendedRuntimeSession) {
+        #if DEBUG
+        Task { @MainActor in
+            print("[WatchWorkoutController] ExtendedRuntimeSession started")
+        }
+        #endif
+    }
+
+    nonisolated func extendedRuntimeSessionWillExpire(_ extendedRuntimeSession: WKExtendedRuntimeSession) {
+        #if DEBUG
+        Task { @MainActor in
+            print("[WatchWorkoutController] ExtendedRuntimeSession will expire")
+        }
+        #endif
+    }
+
+    nonisolated func extendedRuntimeSession(_ extendedRuntimeSession: WKExtendedRuntimeSession,
+                                             didInvalidateWith reason: WKExtendedRuntimeSessionInvalidationReason,
+                                             error: Error?) {
+        Task { @MainActor [weak self] in
+            self?.extendedSession = nil
+            #if DEBUG
+            print("[WatchWorkoutController] ExtendedRuntimeSession invalidated: reason=\(reason.rawValue), error=\(String(describing: error))")
+            #endif
+        }
     }
 }
 

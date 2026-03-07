@@ -6,6 +6,7 @@ struct GoalEditView: View {
     @State private var minutes: Int = 150
     @State private var sessions: Int = 3
     @State private var isLoading = false
+    @State private var errorMessage: String? = nil
 
     init(viewModel: GoalEditViewModel) {
         self.viewModel = viewModel
@@ -38,8 +39,29 @@ struct GoalEditView: View {
                 .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
                 .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
 
+                if let error = errorMessage {
+                    Text(error)
+                        .font(AppFonts.nunito(13, weight: .medium))
+                        .foregroundColor(Color(hex: "#EF4444"))
+                        .multilineTextAlignment(.center)
+                }
+
                 Button {
-                    viewModel.onBack()
+                    Task {
+                        isLoading = true
+                        errorMessage = nil
+                        var firstError: String? = nil
+                        let calError = await viewModel.onSave(.calories, .medium, calories)
+                        let minError = await viewModel.onSave(.minutes, .medium, minutes)
+                        let sesError = await viewModel.onSave(.sessions, .medium, sessions)
+                        firstError = calError ?? minError ?? sesError
+                        isLoading = false
+                        if let err = firstError {
+                            errorMessage = err
+                        } else {
+                            viewModel.onBack()
+                        }
+                    }
                 } label: {
                     if isLoading {
                         ProgressView()
