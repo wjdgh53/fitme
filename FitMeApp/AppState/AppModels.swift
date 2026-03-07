@@ -10,6 +10,7 @@ enum AppTab: CaseIterable {
 enum AppScreen: Equatable {
     case home
     case report
+    case reportDetail
     case historyList
     case historyDetail
     case profile
@@ -29,4 +30,6 @@ enum AppScreen: Equatable {
     case helpCenter
     case appleHealth
     case appleWatch
+    case points
+    case personalInfo
 }

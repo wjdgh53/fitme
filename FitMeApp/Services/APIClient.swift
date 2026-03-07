@@ -5,16 +5,36 @@ enum APIError: Error, LocalizedError {
     case networkError(Error)
     case decodingError(Error)
     case serverError(String)
-    case unauthorized
+    case unauthorized(String?)
     case unknown
     
     var errorDescription: String? {
         switch self {
         case .invalidURL: return "Invalid URL"
-        case .networkError(let error): return "Network error: \(error.localizedDescription)"
+        case .networkError(let error):
+            let nsError = error as NSError
+            let code = nsError.code
+            let failingURLString = nsError.userInfo[NSURLErrorFailingURLStringErrorKey] as? String ?? ""
+
+            if code == NSURLErrorCannotConnectToHost {
+                if failingURLString.contains("127.0.0.1:3000") || failingURLString.contains("localhost:3000") {
+                    return "Cannot connect to local API server (127.0.0.1:3000). Start the backend server and try again."
+                }
+                return "Could not connect to the API server."
+            }
+
+            if code == NSURLErrorCannotFindHost {
+                return "API hostname could not be resolved. Check the API base URL and network DNS."
+            }
+
+            return "Network error: \(error.localizedDescription)"
         case .decodingError(let error): return "Decoding error: \(error.localizedDescription)"
         case .serverError(let message): return message
-        case .unauthorized: return "Unauthorized"
+        case .unauthorized(let message):
+            if let message, !message.isEmpty {
+                return "Unauthorized: \(message)"
+            }
+            return "Unauthorized"
         case .unknown: return "Unknown error"
         }
     }
@@ -22,24 +42,60 @@ enum APIError: Error, LocalizedError {
 
 actor APIClient {
     static let shared = APIClient()
-    
-    #if DEBUG
-    private let baseURL = "http://localhost:3000"
-    #else
-    private let baseURL = "https://api.fitme.app/v1"
-    #endif
+
+    private let baseURL: String
+    private static let debugFallbackBaseURL = "http://127.0.0.1:3000"
+    private static let releaseFallbackBaseURL = "https://api.fitme.app/v1"
     
     private var authToken: String?
+    private var tokenProvider: (() async -> String?)?
     private let decoder: JSONDecoder
     private let encoder: JSONEncoder
     
     private init() {
+        baseURL = Self.resolveBaseURL()
+
         decoder = JSONDecoder()
         encoder = JSONEncoder()
+
+        // Backend follows api_spec.yaml (snake_case).
+        decoder.keyDecodingStrategy = .convertFromSnakeCase
+        encoder.keyEncodingStrategy = .convertToSnakeCase
+    }
+
+    private static func resolveBaseURL() -> String {
+        if let configured = configuredBaseURLFromInfoPlist() {
+            return configured
+        }
+        #if DEBUG
+        return debugFallbackBaseURL
+        #else
+        return releaseFallbackBaseURL
+        #endif
+    }
+
+    private static func configuredBaseURLFromInfoPlist() -> String? {
+        guard let value = Bundle.main.object(forInfoDictionaryKey: "API_BASE_URL") as? String else {
+            return nil
+        }
+        return normalizedBaseURL(value)
+    }
+
+    private static func normalizedBaseURL(_ value: String) -> String? {
+        let trimmed = value.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return nil }
+        // Ignore unresolved build-setting placeholders.
+        guard !trimmed.contains("$(") else { return nil }
+        guard trimmed.hasPrefix("http://") || trimmed.hasPrefix("https://") else { return nil }
+        return trimmed.hasSuffix("/") ? String(trimmed.dropLast()) : trimmed
     }
     
     func setAuthToken(_ token: String?) {
         self.authToken = token
+    }
+
+    func setTokenProvider(_ provider: (() async -> String?)?) {
+        self.tokenProvider = provider
     }
     
     // MARK: - Dashboard
@@ -54,14 +110,35 @@ actor APIClient {
         return try await request(endpoint: "/missions", method: "GET")
     }
     
-    func createMissions(mode: String, type: MissionType? = nil, difficulty: MissionDifficulty? = nil, targetValue: Int? = nil, startAt: String? = nil, aiSingle: Bool = false) async throws -> MissionsResponse {
+    func createWeeklyMissions(startAt: String? = nil) async throws -> MissionsResponse {
         let body = CreateMissionRequest(
-            mode: mode,
-            type: type?.rawValue,
-            difficulty: difficulty?.rawValue,
+            mode: "ai",
+            type: nil,
+            difficulty: nil,
+            targetValue: nil,
+            startAt: startAt
+        )
+        return try await request(endpoint: "/missions", method: "POST", body: body)
+    }
+
+    func createAISingleMission(type: MissionType, startAt: String? = nil) async throws -> MissionsResponse {
+        let body = CreateMissionRequest(
+            mode: "ai",
+            type: type.rawValue,
+            difficulty: nil,
+            targetValue: nil,
+            startAt: startAt
+        )
+        return try await request(endpoint: "/missions", method: "POST", body: body)
+    }
+
+    func createCustomMission(type: MissionType, difficulty: MissionDifficulty, targetValue: Int, startAt: String? = nil) async throws -> MissionsResponse {
+        let body = CreateMissionRequest(
+            mode: "custom",
+            type: type.rawValue,
+            difficulty: difficulty.rawValue,
             targetValue: targetValue,
-            startAt: startAt,
-            aiSingle: aiSingle
+            startAt: startAt
         )
         return try await request(endpoint: "/missions", method: "POST", body: body)
     }
@@ -70,13 +147,20 @@ actor APIClient {
         let _: DeleteMissionResponse = try await request(endpoint: "/missions/\(id)", method: "DELETE")
     }
     
+    func updateMissionStatus(id: String, status: MissionStatus) async throws -> Mission {
+        let body = UpdateMissionStatusRequest(status: status.rawValue)
+        let response: UpdateMissionStatusResponse = try await request(endpoint: "/missions/\(id)", method: "PATCH", body: body)
+        return response.mission
+    }
+    
     // MARK: - Workout Plan
     
-    func generateWorkoutPlan(condition: String, targetMinutes: Int, equipment: [String]) async throws -> WorkoutPlan {
+    func generateWorkoutPlan(condition: String, targetMinutes: Int, equipment: [String], location: String) async throws -> WorkoutPlan {
         let body = GenerateWorkoutPlanRequest(
             condition: condition,
             targetMinutes: targetMinutes,
-            equipment: equipment
+            equipment: equipment,
+            location: location
         )
         return try await request(endpoint: "/workout-plan", method: "POST", body: body)
     }
@@ -103,6 +187,48 @@ actor APIClient {
         )
         return try await request(endpoint: "/sessions", method: "POST", body: body)
     }
+
+    // MARK: - Reports
+
+    func getWeeklyReports(limit: Int? = nil) async throws -> [WeeklyReport] {
+        var endpoint = "/reports/weekly"
+        if let limit {
+            endpoint += "?limit=\(limit)"
+        }
+        let response: WeeklyReportsResponse = try await request(endpoint: endpoint, method: "GET")
+        return response.reports
+    }
+
+    func getWeeklyReport(startAt: String) async throws -> WeeklyReport {
+        return try await request(endpoint: "/reports/weekly/\(startAt)", method: "GET")
+    }
+
+    // MARK: - Me
+
+    func getMe() async throws -> MeResponse {
+        return try await request(endpoint: "/me", method: "GET")
+    }
+
+    func updateProfile(_ input: UpdateProfileRequest) async throws -> MeProfile {
+        return try await request(endpoint: "/me/profile", method: "PATCH", body: input)
+    }
+
+    func getSettings() async throws -> MeSettings {
+        return try await request(endpoint: "/me/settings", method: "GET")
+    }
+
+    func getPersonalInfo() async throws -> PersonalInfoResponse {
+        return try await request(endpoint: "/me/personal-info", method: "GET")
+    }
+
+    func patchPersonalInfo(age: Int?, heightCm: Double?, weightKg: Double?) async throws -> PersonalInfoResponse {
+        let body = PersonalInfoPatchRequest(age: age, heightCm: heightCm, weightKg: weightKg)
+        return try await request(endpoint: "/me/settings/personal-info", method: "PATCH", body: body)
+    }
+
+    func updateWorkoutPreferences(_ data: [String: JSONValue]) async throws -> MeSettings {
+        return try await request(endpoint: "/me/settings/workout-plan", method: "PUT", body: data)
+    }
     
     // MARK: - Private
     
@@ -115,33 +241,87 @@ actor APIClient {
             throw APIError.invalidURL
         }
         
-        var request = URLRequest(url: url)
-        request.httpMethod = method
-        
-        if let token = authToken {
-            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        let requestBody = try body.map { try encoder.encode($0) }
+        var request = try await makeRequest(url: url, method: method, body: requestBody)
+        let data: Data
+        let response: URLResponse
+        do {
+            (data, response) = try await URLSession.shared.data(for: request)
+        } catch {
+            throw APIError.networkError(error)
         }
-        
-        if let body = body {
-            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-            request.httpBody = try encoder.encode(body)
-        }
-        
-        let (data, response) = try await URLSession.shared.data(for: request)
         
         guard let httpResponse = response as? HTTPURLResponse else {
             throw APIError.unknown
         }
+
+        if httpResponse.statusCode == 401, tokenProvider != nil {
+            // Login state may have flipped just before this request; wait briefly and retry with a fresh token.
+            try? await Task.sleep(nanoseconds: 350_000_000)
+            request = try await makeRequest(url: url, method: method, body: requestBody)
+            let retryData: Data
+            let retryResponse: URLResponse
+            do {
+                (retryData, retryResponse) = try await URLSession.shared.data(for: request)
+            } catch {
+                throw APIError.networkError(error)
+            }
+            guard let retryHTTP = retryResponse as? HTTPURLResponse else {
+                throw APIError.unknown
+            }
+            return try decodeResponse(data: retryData, httpResponse: retryHTTP, endpoint: endpoint)
+        }
+
+        return try decodeResponse(data: data, httpResponse: httpResponse, endpoint: endpoint)
+    }
+
+    private func currentAuthorizationToken() async -> String? {
+        if let tokenProvider {
+            let first = await tokenProvider()
+            if let first, !first.isEmpty {
+                return first
+            }
+            // Token can be briefly unavailable right after Firebase auth state changes.
+            try? await Task.sleep(nanoseconds: 250_000_000)
+            return await tokenProvider()
+        }
+        return authToken
+    }
+
+    private func makeRequest(url: URL, method: String, body: Data?) async throws -> URLRequest {
+        var request = URLRequest(url: url)
+        request.httpMethod = method
+
+        if let token = await currentAuthorizationToken() {
+            request.setValue("Bearer \(token)", forHTTPHeaderField: "Authorization")
+        }
+
+        if let body {
+            request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+            request.httpBody = body
+        }
+        return request
+    }
+
+    private func decodeResponse<T: Decodable>(data: Data, httpResponse: HTTPURLResponse, endpoint: String) throws -> T {
         
         switch httpResponse.statusCode {
         case 200...299:
             do {
                 return try decoder.decode(T.self, from: data)
             } catch {
+                if let bodyString = String(data: data, encoding: .utf8) {
+                    print("Decoding failed for \(endpoint). Status: \(httpResponse.statusCode). Body: \(bodyString)")
+                } else {
+                    print("Decoding failed for \(endpoint). Status: \(httpResponse.statusCode). Body: <non-utf8>")
+                }
                 throw APIError.decodingError(error)
             }
         case 401:
-            throw APIError.unauthorized
+            if let errorResponse = try? decoder.decode(APIErrorResponse.self, from: data) {
+                throw APIError.unauthorized(errorResponse.error.message)
+            }
+            throw APIError.unauthorized(nil)
         case 400...499, 500...599:
             if let errorResponse = try? decoder.decode(APIErrorResponse.self, from: data) {
                 throw APIError.serverError(errorResponse.error.message)

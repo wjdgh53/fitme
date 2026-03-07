@@ -9,14 +9,60 @@ struct Mission: Codable, Identifiable, Equatable {
     let difficulty: MissionDifficulty
     let startAt: String
     let endAt: String
-    let progressValue: Int
+    var progressValue: Int
+    var status: MissionStatus
     
     enum CodingKeys: String, CodingKey {
-        case id, type, difficulty
+        case id, type, difficulty, status
         case targetValue = "target_value"
         case startAt = "start_at"
         case endAt = "end_at"
         case progressValue = "progress_value"
+    }
+
+    private struct AnyCodingKey: CodingKey {
+        let stringValue: String
+        let intValue: Int? = nil
+
+        init(_ string: String) { self.stringValue = string }
+        init?(stringValue: String) { self.stringValue = stringValue }
+        init?(intValue: Int) { return nil }
+    }
+    
+    init(from decoder: Decoder) throws {
+        let container = try decoder.container(keyedBy: CodingKeys.self)
+        let any = try decoder.container(keyedBy: AnyCodingKey.self)
+        id = try container.decode(String.self, forKey: .id)
+        type = try container.decode(MissionType.self, forKey: .type)
+        targetValue =
+            (try? container.decodeIfPresent(Int.self, forKey: .targetValue))
+            ?? (try? any.decodeIfPresent(Int.self, forKey: AnyCodingKey("targetValue")))
+            ?? 0
+        difficulty =
+            (try? container.decodeIfPresent(MissionDifficulty.self, forKey: .difficulty))
+            ?? (try? any.decodeIfPresent(MissionDifficulty.self, forKey: AnyCodingKey("difficulty")))
+            ?? .easy
+        startAt =
+            (try? container.decodeIfPresent(String.self, forKey: .startAt))
+            ?? (try? any.decodeIfPresent(String.self, forKey: AnyCodingKey("startAt")))
+            ?? ""
+        endAt =
+            (try? container.decodeIfPresent(String.self, forKey: .endAt))
+            ?? (try? any.decodeIfPresent(String.self, forKey: AnyCodingKey("endAt")))
+            ?? ""
+        progressValue =
+            (try? container.decodeIfPresent(Int.self, forKey: .progressValue))
+            ?? (try? any.decodeIfPresent(Int.self, forKey: AnyCodingKey("progressValue")))
+            ?? 0
+        // status 없으면 기본값 active
+        status =
+            (try? container.decodeIfPresent(MissionStatus.self, forKey: .status))
+            ?? (try? any.decodeIfPresent(MissionStatus.self, forKey: AnyCodingKey("status")))
+            ?? .active
+    }
+    
+    var isComplete: Bool {
+        progress >= 1.0
     }
     
     var progress: Double {
@@ -57,10 +103,7 @@ struct Mission: Codable, Identifiable, Equatable {
     }
     
     var displayValue: String {
-        switch type {
-        case .sessions: return "\(progressValue)"
-        default: return "\(progressValue)"
-        }
+        String(progressValue)
     }
 }
 
@@ -76,16 +119,16 @@ enum MissionDifficulty: String, Codable {
     case hard
 }
 
+enum MissionStatus: String, Codable {
+    case active
+    case suspended
+    case complete
+}
+
 struct DashboardResponse: Codable {
     let missions: [Mission]
     let totalPoints: Int
     let rank: String
-    
-    enum CodingKeys: String, CodingKey {
-        case missions
-        case totalPoints = "total_points"
-        case rank
-    }
 }
 
 struct MissionsResponse: Codable {
@@ -101,11 +144,7 @@ struct WorkoutPlanExercise: Codable, Identifiable, Equatable {
     var id: String { exerciseId }
     let exerciseId: String
     let sets: [ExerciseSet]
-    
-    enum CodingKeys: String, CodingKey {
-        case exerciseId = "exercise_id"
-        case sets
-    }
+    let isBodyweight: Bool
 }
 
 struct WorkoutPlan: Codable, Equatable {
@@ -114,24 +153,11 @@ struct WorkoutPlan: Codable, Equatable {
     let estimatedCalories: Int
     let coachMessage: String
     let exercises: [WorkoutPlanExercise]
-    
-    enum CodingKeys: String, CodingKey {
-        case title
-        case estimatedMinutes = "estimated_minutes"
-        case estimatedCalories = "estimated_calories"
-        case coachMessage = "coach_message"
-        case exercises
-    }
 }
 
 struct SessionExercise: Codable, Equatable {
     let exerciseId: String
     let sets: [ExerciseSet]
-    
-    enum CodingKeys: String, CodingKey {
-        case exerciseId = "exercise_id"
-        case sets
-    }
 }
 
 struct SessionSummary: Codable, Identifiable, Equatable {
@@ -141,12 +167,6 @@ struct SessionSummary: Codable, Identifiable, Equatable {
     let durationMinutes: Int
     let calories: Int
     let totalExercises: Int
-    
-    enum CodingKeys: String, CodingKey {
-        case id, date, source, calories
-        case durationMinutes = "duration_minutes"
-        case totalExercises = "total_exercises"
-    }
 }
 
 struct SessionDetail: Codable, Identifiable, Equatable {
@@ -156,11 +176,21 @@ struct SessionDetail: Codable, Identifiable, Equatable {
     let durationMinutes: Int
     let calories: Int
     let exercises: [SessionExercise]
-    
-    enum CodingKeys: String, CodingKey {
-        case id, date, source, calories, exercises
-        case durationMinutes = "duration_minutes"
-    }
+}
+
+struct WeeklyReport: Codable, Identifiable, Equatable {
+    let periodStart: String
+    let periodEnd: String
+    let totalWorkouts: Int
+    let totalMinutes: Int
+    let totalCalories: Int
+    let averageMinutes: Int
+
+    var id: String { periodStart }
+}
+
+struct WeeklyReportsResponse: Codable {
+    let reports: [WeeklyReport]
 }
 
 enum SessionSource: String, Codable {
@@ -177,13 +207,11 @@ struct CreateMissionRequest: Encodable {
     let difficulty: String?
     let targetValue: Int?
     let startAt: String?
-    let aiSingle: Bool?
     
     enum CodingKeys: String, CodingKey {
         case mode, type, difficulty
         case targetValue = "target_value"
         case startAt = "start_at"
-        case aiSingle = "ai_single"
     }
 }
 
@@ -191,9 +219,10 @@ struct GenerateWorkoutPlanRequest: Encodable {
     let condition: String
     let targetMinutes: Int
     let equipment: [String]
-    
+    let location: String
+
     enum CodingKeys: String, CodingKey {
-        case condition, equipment
+        case condition, equipment, location
         case targetMinutes = "target_minutes"
     }
 }
@@ -222,4 +251,118 @@ struct APIErrorDetail: Codable {
 
 struct DeleteMissionResponse: Codable {
     let success: Bool
+}
+
+struct UpdateMissionStatusRequest: Encodable {
+    let status: String
+}
+
+struct UpdateMissionStatusResponse: Codable {
+    let mission: Mission
+}
+
+// MARK: - User / Settings
+
+struct MeResponse: Codable {
+    let user: MeUser
+    let profile: MeProfile
+    let settings: MeSettings
+}
+
+struct MeUser: Codable {
+    let id: String
+    let firebaseUid: String
+    let accountType: String
+    let status: String
+    let createdAt: String
+    let updatedAt: String
+}
+
+struct MeProfile: Codable {
+    let displayName: String?
+    let email: String?
+    let photoUrl: String?
+    let timezone: String
+    let locale: String
+    let updatedAt: String
+}
+
+struct MeSettings: Codable {
+    let workoutPreferences: [String: JSONValue]
+    let units: [String: JSONValue]
+    let notification: [String: JSONValue]
+    let privacy: [String: JSONValue]
+    let updatedAt: String
+}
+
+struct PersonalInfoResponse: Codable {
+    let birthSex: String?
+    let age: Int?
+    let heightCm: Double?
+    let weightKg: Double?
+    let experienceLevel: String?
+    let experienceDuration: String?
+    let goal: String?
+    let preferredLocation: String?
+    let equipment: [String]?
+    let weeklyTrainingDays: Int?
+    let preferredSessionMinutes: Int?
+    let onboardingCompletedAt: String?
+}
+
+struct PersonalInfoPatchRequest: Encodable {
+    let age: Int?
+    let heightCm: Double?
+    let weightKg: Double?
+}
+
+struct UpdateProfileRequest: Encodable {
+    let displayName: String?
+    let timezone: String?
+    let locale: String?
+    let photoURL: String?
+}
+
+enum JSONValue: Codable, Equatable {
+    case string(String)
+    case int(Int)
+    case double(Double)
+    case bool(Bool)
+    case object([String: JSONValue])
+    case array([JSONValue])
+    case null
+
+    init(from decoder: Decoder) throws {
+        let container = try decoder.singleValueContainer()
+        if container.decodeNil() {
+            self = .null
+        } else if let value = try? container.decode(Bool.self) {
+            self = .bool(value)
+        } else if let value = try? container.decode(Int.self) {
+            self = .int(value)
+        } else if let value = try? container.decode(Double.self) {
+            self = .double(value)
+        } else if let value = try? container.decode(String.self) {
+            self = .string(value)
+        } else if let value = try? container.decode([String: JSONValue].self) {
+            self = .object(value)
+        } else if let value = try? container.decode([JSONValue].self) {
+            self = .array(value)
+        } else {
+            throw DecodingError.dataCorruptedError(in: container, debugDescription: "Unsupported JSON value")
+        }
+    }
+
+    func encode(to encoder: Encoder) throws {
+        var container = encoder.singleValueContainer()
+        switch self {
+        case .string(let value): try container.encode(value)
+        case .int(let value): try container.encode(value)
+        case .double(let value): try container.encode(value)
+        case .bool(let value): try container.encode(value)
+        case .object(let value): try container.encode(value)
+        case .array(let value): try container.encode(value)
+        case .null: try container.encodeNil()
+        }
+    }
 }

@@ -1,4 +1,4 @@
-# fitme Apple Watch 앱 상세 개발 문서 (v1)
+ # fitme Apple Watch 앱 상세 개발 문서 (v1)
 
 > 목적: **iPhone 보조가 아닌, 실제 운동 중 주 컨트롤러**로 사용 가능한 Watch 앱을 구현한다.
 > 원칙: 입력 최소화 / 오프라인 우선 / 실수 방지 / 한 손 조작

@@ -1,22 +1,30 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 struct ReportView: View {
-    let viewModel: ReportViewModel
+    let viewModel: WeeklyReportDetailViewModel
 
     var body: some View {
         ZStack(alignment: .bottom) {
-            Color(hex: "#FFF8F0")
+            LinearGradient(
+                colors: [Color.white.opacity(0.62), AppTheme.appBackground],
+                startPoint: .top,
+                endPoint: .bottom
+            )
                 .ignoresSafeArea()
 
             ScrollView(showsIndicators: false) {
-                VStack(alignment: .leading, spacing: 20) {
-                    header
+                VStack(spacing: 8) {
+                    mascot
+                    titleSection
                     statGrid
-                    balanceSection
-                    topExercisesSection
+                    Spacer(minLength: 4)
                 }
-                .padding(.horizontal, 24)
+                .padding(.horizontal, 20)
                 .padding(.bottom, 140)
+                .padding(.top, 2)
             }
             .refreshable {
                 await viewModel.onRefresh()
@@ -27,50 +35,82 @@ struct ReportView: View {
         }
     }
 
-    private var header: some View {
-        HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Hi, Runner!")
-                    .font(AppFonts.nunito(12, weight: .heavy))
-                    .foregroundColor(Color(hex: "#FF8577"))
-                    .textCase(.uppercase)
-                    .tracking(1)
-                Text(currentMonthTitle)
-                    .font(AppFonts.nunito(30, weight: .black))
-                    .foregroundColor(Color(hex: "#3D3D3D"))
-            }
-            Spacer()
-            Circle()
-                .fill(AppColors.peach.opacity(0.3))
-                .frame(width: 48, height: 48)
-                .overlay(
-                    MaterialSymbol(name: "person", size: 24)
-                        .foregroundColor(AppColors.peach)
-                )
-                .overlay(Circle().stroke(Color.white, lineWidth: 3))
-                .shadow(color: Color.black.opacity(0.12), radius: 6, x: 0, y: 3)
+    @ViewBuilder
+    private var mascot: some View {
+#if canImport(UIKit)
+        if let uiImage = UIImage(named: "hooray_bear") ?? UIImage(named: "bear-hero") {
+            Image(uiImage: uiImage)
+                .resizable()
+                .renderingMode(.original)
+                .scaledToFit()
+                .frame(width: 224, height: 166)
+        } else {
+            MaterialSymbol(name: "pets", size: 88, style: .rounded)
+                .foregroundColor(AppTheme.accentGold)
+                .frame(height: 166)
         }
-        .padding(.top, 6)
+#else
+        Image("hooray_bear")
+            .resizable()
+            .renderingMode(.original)
+            .scaledToFit()
+            .frame(width: 224, height: 166)
+#endif
+    }
+
+    private var titleSection: some View {
+        VStack(spacing: 0) {
+            Text(currentWeekTitle)
+                .font(AppFonts.quicksand(70, weight: .black))
+                .foregroundColor(Color(hex: "#000000"))
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+            Text("HI, RUNNER!")
+                .font(AppFonts.quicksand(52, weight: .black))
+                .foregroundColor(Color(hex: "#F2977A"))
+                .lineLimit(1)
+                .minimumScaleFactor(0.6)
+                .offset(y: -8)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, -4)
+        .padding(.bottom, -2)
     }
     
-    private var currentMonthTitle: String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "M월 리포트"
-        return formatter.string(from: Date())
+    private var currentWeekTitle: String {
+        weekLabel(for: viewModel.data.report.periodStart)
     }
 
     private var statGrid: some View {
-        LazyVGrid(columns: [GridItem(.flexible()), GridItem(.flexible())], spacing: 16) {
-            statCard(title: "총 운동", value: "\(viewModel.data.totalWorkouts)", unit: "회", icon: "fitness_center", color: "#FF8577")
-            statCard(title: "총 칼로리", value: formatNumber(viewModel.data.totalCalories), unit: "kcal", icon: "local_fire_department", color: "#FCD34D")
-            statCard(title: "총 시간", value: "\(viewModel.data.totalMinutes)", unit: "분", icon: "timer", color: "#A78BFA")
-            statCard(title: "평균 시간", value: averageMinutes, unit: "분", icon: "avg_time", color: "#6EE7B7")
+        LazyVGrid(
+            columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)],
+            spacing: 14
+        ) {
+            statCard(
+                title: "총 운동 (회)",
+                value: "\(viewModel.data.report.totalWorkouts)",
+                icon: "fitness_center",
+                iconColor: Color(hex: "#111111")
+            )
+            statCard(
+                title: "총 칼로리 (kcal)",
+                value: formatNumber(viewModel.data.report.totalCalories),
+                icon: "local_fire_department",
+                iconColor: Color(hex: "#F08B74")
+            )
+            statCard(
+                title: "총 시간 (분)",
+                value: "\(viewModel.data.report.totalMinutes)",
+                icon: "timer",
+                iconColor: Color(hex: "#111111")
+            )
+            statCard(
+                title: "평균 시간 (분)",
+                value: "\(viewModel.data.report.averageMinutes)",
+                icon: "monitoring",
+                iconColor: Color(hex: "#111111")
+            )
         }
-    }
-    
-    private var averageMinutes: String {
-        guard viewModel.data.totalWorkouts > 0 else { return "0" }
-        return "\(viewModel.data.totalMinutes / viewModel.data.totalWorkouts)"
     }
     
     private func formatNumber(_ number: Int) -> String {
@@ -79,161 +119,55 @@ struct ReportView: View {
         return formatter.string(from: NSNumber(value: number)) ?? "\(number)"
     }
 
-    private func statCard(title: String, value: String, unit: String, icon: String, color: String) -> some View {
-        AnyView(
-            VStack(alignment: .leading, spacing: 16) {
-                HStack {
-                    Spacer()
-                    Circle()
-                        .fill(Color(hex: color).opacity(0.1))
-                        .frame(width: 40, height: 40)
-                        .overlay(MaterialSymbol(name: icon, size: 20).foregroundColor(Color(hex: color)))
-                }
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(AppFonts.nunito(12, weight: .bold))
-                        .foregroundColor(Color(hex: "#78716C"))
-                    HStack(alignment: .lastTextBaseline, spacing: 4) {
-                        Text(value)
-                            .font(AppFonts.nunito(26, weight: .black))
-                            .foregroundColor(Color(hex: "#3D3D3D"))
-                        Text(unit)
-                            .font(AppFonts.nunito(12, weight: .bold))
-                            .foregroundColor(Color(hex: "#78716C"))
-                    }
-                }
-            }
-            .padding(18)
-            .frame(minHeight: 150)
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 28, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 28, style: .continuous).stroke(Color(hex: color), lineWidth: 4).opacity(0.2))
-            .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 3)
+    private func statCard(title: String, value: String, icon: String, iconColor: Color) -> some View {
+        VStack(spacing: 8) {
+            Text(value)
+                .font(.system(size: 44, weight: .black, design: .rounded))
+                .foregroundColor(Color(hex: "#000000"))
+                .lineLimit(1)
+                .minimumScaleFactor(0.7)
+
+            Text(title)
+                .font(AppFonts.nunito(15, weight: .black))
+                .foregroundColor(Color(hex: "#000000"))
+                .multilineTextAlignment(.center)
+                .lineLimit(1)
+                .minimumScaleFactor(0.75)
+
+            Spacer(minLength: 0)
+
+            MaterialSymbol(name: icon, size: 52, style: .rounded)
+                .foregroundColor(iconColor)
+                .frame(height: 50)
+        }
+        .padding(.horizontal, 10)
+        .padding(.top, 12)
+        .padding(.bottom, 8)
+        .frame(maxWidth: .infinity, minHeight: 156)
+        .background(
+            RoundedRectangle(cornerRadius: 34, style: .continuous)
+                .fill(AppTheme.cardGold.opacity(0.65))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 34, style: .continuous)
+                        .stroke(AppTheme.cardBorderGold.opacity(0.25), lineWidth: 1)
+                )
+                .shadow(color: AppTheme.accentGold.opacity(0.14), radius: 10, x: 0, y: 4)
         )
     }
 
-    private var balanceSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            HStack {
-                Text("근력 밸런스")
-                    .font(AppFonts.nunito(20, weight: .heavy))
-                Spacer()
-                Text("Keep it up! ✨")
-                    .font(AppFonts.nunito(11, weight: .bold))
-                    .foregroundColor(Color(hex: "#059669"))
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Color(hex: "#6EE7B7").opacity(0.2))
-                    .clipShape(Capsule())
-            }
-
-            VStack(spacing: 12) {
-                ZStack(alignment: .topLeading) {
-                    RoundedRectangle(cornerRadius: 32, style: .continuous)
-                        .fill(Color.white)
-                        .overlay(RoundedRectangle(cornerRadius: 32, style: .continuous).stroke(Color(hex: "#FFF1F2"), lineWidth: 2))
-                        .shadow(color: Color.black.opacity(0.04), radius: 8, x: 0, y: 4)
-
-                    Text("균형잡힌 운동을 해봐요! 💪")
-                        .font(AppFonts.nunito(12, weight: .bold))
-                        .foregroundColor(.white)
-                        .padding(.horizontal, 12)
-                        .padding(.vertical, 8)
-                        .background(Color(hex: "#3D3D3D"))
-                        .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-                        .padding(.top, 16)
-                        .padding(.leading, 16)
-
-                    RadarChartView()
-                        .padding(.top, 36)
-                        .padding(.horizontal, 18)
-                        .padding(.bottom, 18)
-                }
-
-                VStack(spacing: 4) {
-                    Text("균형잡힌 몸이에요!")
-                        .font(AppFonts.nunito(14, weight: .heavy))
-                        .foregroundColor(Color(hex: "#3D3D3D"))
-                    Text("다양한 운동을 시도해보세요!")
-                        .font(AppFonts.nunito(12, weight: .semibold))
-                        .foregroundColor(Color(hex: "#78716C"))
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background(Color(hex: "#FFF8F0"))
-                .clipShape(RoundedRectangle(cornerRadius: 20, style: .continuous))
-            }
-        }
+    private func weekLabel(for startDate: String) -> String {
+        guard let date = dateFromString(startDate) else { return "주간 리포트" }
+        let calendar = Calendar.current
+        let month = calendar.component(.month, from: date)
+        let weekOfMonth = calendar.component(.weekOfMonth, from: date)
+        return "\(month)월 \(weekOfMonth)주차"
     }
 
-    private var topExercisesSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("상위 운동 Top 3")
-                .font(AppFonts.nunito(20, weight: .heavy))
-                .foregroundColor(Color(hex: "#3D3D3D"))
-
-            if viewModel.data.sessions.isEmpty {
-                VStack(spacing: 12) {
-                    Text("📋")
-                        .font(.system(size: 32))
-                    Text("운동 기록이 없어요")
-                        .font(AppFonts.nunito(14, weight: .bold))
-                        .foregroundColor(Color(hex: "#78716C"))
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 24)
-                .background(Color.white)
-                .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-            } else {
-                VStack(spacing: 10) {
-                    topExerciseRow(rank: "1", title: "스쿼트", tags: ["Legs", "Barbell"], value: "3,200kg", color: "#FCD34D")
-                    topExerciseRow(rank: "2", title: "데드리프트", tags: ["Back"], value: "2,800kg", color: "#E5E7EB")
-                    topExerciseRow(rank: "3", title: "벤치프레스", tags: ["Chest"], value: "1,500kg", color: "#FFEDD5")
-                }
-            }
-        }
-    }
-
-    private func topExerciseRow(rank: String, title: String, tags: [String], value: String, color: String) -> some View {
-        AnyView(
-            HStack(spacing: 12) {
-                Circle()
-                    .fill(Color(hex: color))
-                    .frame(width: 40, height: 40)
-                    .overlay(Text(rank).font(AppFonts.nunito(18, weight: .black)).foregroundColor(Color(hex: "#3D3D3D")))
-                    .overlay(Circle().stroke(Color.white, lineWidth: 2))
-
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(title)
-                        .font(AppFonts.nunito(18, weight: .bold))
-                        .foregroundColor(Color(hex: "#3D3D3D"))
-                    HStack(spacing: 6) {
-                        ForEach(tags, id: \.self) { tag in
-                            Text(tag)
-                                .font(AppFonts.nunito(10, weight: .bold))
-                                .foregroundColor(Color(hex: "#78716C"))
-                                .padding(.horizontal, 8)
-                                .padding(.vertical, 4)
-                                .background(Color(hex: "#FFF8F0"))
-                                .clipShape(RoundedRectangle(cornerRadius: 6, style: .continuous))
-                        }
-                    }
-                }
-                Spacer()
-                Text(value)
-                    .font(AppFonts.nunito(14, weight: .black))
-                    .foregroundColor(Color(hex: "#D97706"))
-                    .padding(.horizontal, 10)
-                    .padding(.vertical, 6)
-                    .background(Color(hex: color).opacity(0.2))
-                    .clipShape(RoundedRectangle(cornerRadius: 10, style: .continuous))
-            }
-            .padding(12)
-            .background(Color.white)
-            .clipShape(RoundedRectangle(cornerRadius: 24, style: .continuous))
-            .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).stroke(Color(hex: "#FCD34D").opacity(rank == "1" ? 0.3 : 0.1), lineWidth: rank == "1" ? 2 : 1))
-            .shadow(color: Color.black.opacity(0.03), radius: 6, x: 0, y: 3)
-        )
+    private func dateFromString(_ value: String) -> Date? {
+        let formatter = DateFormatter()
+        formatter.dateFormat = "yyyy-MM-dd"
+        formatter.locale = Locale(identifier: "en_US_POSIX")
+        return formatter.date(from: value)
     }
 }
 

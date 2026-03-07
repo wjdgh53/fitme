@@ -2,6 +2,17 @@ import SwiftUI
 
 struct LibraryView: View {
     let viewModel: LibraryViewModel
+    @State private var searchText = ""
+
+    private var filteredItems: [LibraryItemData] {
+        if searchText.isEmpty {
+            return viewModel.data.items
+        }
+        return viewModel.data.items.filter {
+            $0.title.localizedCaseInsensitiveContains(searchText) ||
+            $0.subtitle.localizedCaseInsensitiveContains(searchText)
+        }
+    }
 
     var body: some View {
         ZStack(alignment: .bottom) {
@@ -46,10 +57,10 @@ struct LibraryView: View {
         HStack(spacing: 10) {
             MaterialSymbol(name: "search", size: 24)
                 .foregroundColor(Color(hex: "#FF8577"))
-            Text(viewModel.data.searchPlaceholder)
+            TextField(viewModel.data.searchPlaceholder, text: $searchText)
                 .font(AppFonts.nunito(18, weight: .bold))
-                .foregroundColor(Color(hex: "#9CA3AF"))
-            Spacer()
+                .foregroundColor(Color(hex: "#3D3D3D"))
+                .tint(Color(hex: "#FF8577"))
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 16)
@@ -104,8 +115,8 @@ struct LibraryView: View {
 
     private var listItems: some View {
         VStack(spacing: 16) {
-            ForEach(viewModel.data.items.indices, id: \.self) { index in
-                let item = viewModel.data.items[index]
+            ForEach(filteredItems.indices, id: \.self) { index in
+                let item = filteredItems[index]
                 HStack(spacing: 14) {
                     AsyncImage(url: item.imageURL) { image in
                         image.resizable().scaledToFill()

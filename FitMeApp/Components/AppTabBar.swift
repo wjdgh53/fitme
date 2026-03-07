@@ -25,7 +25,8 @@ struct AppTabBar: View {
             .shadow(color: Color.black.opacity(0.06), radius: 18, x: 0, y: -6)
         }
         .padding(.horizontal, 16)
-        .padding(.bottom, 6)
+        .padding(.bottom, 0)
+        .background(AppColors.white)
         .opacity(isDisabled ? 0.4 : 1)
         .grayscale(isDisabled ? 1 : 0)
         .allowsHitTesting(!isDisabled)
@@ -43,5 +44,6 @@ struct AppTabBar: View {
             }
             .frame(maxWidth: .infinity)
         }
+        .motionPressable(haptic: false)
     }
 }

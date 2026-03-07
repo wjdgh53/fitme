@@ -1,4 +1,9 @@
 import Foundation
+import Combine
+import HealthKit
+#if canImport(WatchConnectivity)
+import WatchConnectivity
+#endif
 
 // MARK: - Home Dashboard
 
@@ -26,7 +31,7 @@ struct HomeDashboardViewModel {
             userName: appViewModel.userName,
             greeting: "Ready to move?",
             profileImageURL: appViewModel.profileImageURL,
-            missions: appViewModel.missions,
+            missions: appViewModel.activeMissions,
             totalPoints: appViewModel.totalPoints,
             rank: appViewModel.rank,
             isLoading: appViewModel.isLoading
@@ -45,6 +50,7 @@ struct PresetCheckData {
     let energySelection: Int
     let locationSelection: Int
     let targetMinutes: Int
+    let homeEquipment: [String]
 }
 
 @MainActor
@@ -52,22 +58,30 @@ struct PresetCheckViewModel {
     let data: PresetCheckData
     let onBack: () -> Void
     let onClose: () -> Void
-    let onStart: (String, Int, [String]) async -> Void
+    let onStart: (String, Int, [String], String) async -> String?  // 에러 메시지 반환
     
     init(appViewModel: AppViewModel) {
         self.data = PresetCheckData(
             energySelection: 1,
-            locationSelection: 1,
-            targetMinutes: appViewModel.workoutTargetMinutes
+            locationSelection: appViewModel.workoutLocation == "home" ? 0 : 1,
+            targetMinutes: appViewModel.workoutTargetMinutes,
+            homeEquipment: appViewModel.workoutEquipment
         )
         self.onBack = { appViewModel.goHomeFromFlow() }
         self.onClose = { appViewModel.goHomeFromFlow() }
-        self.onStart = { condition, minutes, equipment in
+        self.onStart = { condition, minutes, equipment, location in
+            // 선택한 location으로 업데이트 (UserDefaults 자동 저장)
+            appViewModel.workoutLocation = location
+            let effectiveEquipment: [String] = location == "gym" ? [] : equipment
             appViewModel.workoutCondition = condition
             appViewModel.workoutTargetMinutes = minutes
-            appViewModel.workoutEquipment = equipment
+            appViewModel.workoutEquipment = effectiveEquipment
             await appViewModel.generateWorkoutPlan()
-            appViewModel.goToWorkoutPreview1()
+            if appViewModel.currentWorkoutPlan != nil {
+                appViewModel.goToWorkoutPreview1()
+                return nil
+            }
+            return appViewModel.errorMessage ?? "Failed to generate workout plan"
         }
     }
 }
@@ -85,15 +99,14 @@ struct WorkoutPreviewData {
 }
 
 @MainActor
-struct WorkoutPreviewViewModel {
-    let data: WorkoutPreviewData
-    let onBack: () -> Void
-    let onMore: () -> Void
-    let onStart: () -> Void
+class WorkoutPreviewViewModel: ObservableObject {
+    private let appViewModel: AppViewModel
+    private var cancellables = Set<AnyCancellable>()
+    @Published var alertMessage: String?
     
-    init(appViewModel: AppViewModel) {
+    var data: WorkoutPreviewData {
         let plan = appViewModel.currentWorkoutPlan
-        self.data = WorkoutPreviewData(
+        return WorkoutPreviewData(
             title: plan?.title ?? "Workout",
             duration: "\(plan?.estimatedMinutes ?? 0)m",
             energy: appViewModel.workoutCondition.capitalized + " Energy",
@@ -102,17 +115,35 @@ struct WorkoutPreviewViewModel {
             exercises: plan?.exercises ?? [],
             isLoading: appViewModel.isGeneratingPlan
         )
-        self.onBack = { appViewModel.startWorkoutFlow() }
-        self.onMore = { appViewModel.goToWorkoutPreview2() }
-        self.onStart = { appViewModel.startWorkoutSession() }
+    }
+    
+    var onBack: () -> Void { { [weak self] in self?.appViewModel.goHomeFromFlow() } }
+    var onMore: () -> Void { { [weak self] in self?.appViewModel.goToWorkoutPreview2() } }
+    var onStart: () -> Void { { [weak self] in self?.appViewModel.startWorkoutSession() } }
+    var onRetry: () -> Void {
+        { [weak self] in
+            self?.alertMessage = nil
+            Task { await self?.appViewModel.generateWorkoutPlan() }
+        }
+    }
+    
+    init(appViewModel: AppViewModel) {
+        self.appViewModel = appViewModel
+        appViewModel.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
+        .store(in: &cancellables)
+        appViewModel.$errorMessage.sink { [weak self] message in
+            self?.alertMessage = message
+        }
+        .store(in: &cancellables)
     }
 }
 
 // MARK: - Workout Session
 
 struct WorkoutSessionData {
-    let plan: WorkoutPlan?
-    let currentExerciseIndex: Int
+    let runtime: WorkoutRuntime?
 }
 
 @MainActor
@@ -124,8 +155,7 @@ struct WorkoutSessionViewModel {
     
     init(appViewModel: AppViewModel) {
         self.data = WorkoutSessionData(
-            plan: appViewModel.currentWorkoutPlan,
-            currentExerciseIndex: 0
+            runtime: appViewModel.workoutRuntime
         )
         self.onBack = { appViewModel.goToWorkoutPreview1() }
         self.onComplete = { appViewModel.goToSummary() }
@@ -152,19 +182,38 @@ struct RestViewModel {
 
 struct SummaryData {
     let plan: WorkoutPlan?
+    let isWatchDriven: Bool
+    let saveState: WorkoutSaveState
 }
 
 @MainActor
-struct SummaryViewModel {
-    let data: SummaryData
-    let onFinish: () -> Void
-    let onSave: (Int, [SessionExercise]) async -> Void
+class SummaryViewModel: ObservableObject {
+    private let appViewModel: AppViewModel
+    private var cancellable: AnyCancellable?
+    
+    var data: SummaryData {
+        // 완료된 운동 데이터 사용 (현재 plan보다 우선)
+        SummaryData(
+            plan: appViewModel.completedWorkoutPlan ?? appViewModel.currentWorkoutPlan,
+            isWatchDriven: appViewModel.activeWorkoutSource == .watch,
+            saveState: appViewModel.activeWorkoutSaveState
+        )
+    }
+    
+    var onFinish: () -> Void {
+        { [weak self] in self?.appViewModel.completeWorkoutFlow() }
+    }
+    
+    var onSave: (Int, [SessionExercise]) async -> Void {
+        { [weak self] duration, exercises in
+            await self?.appViewModel.saveWorkoutSession(durationMinutes: duration, exercises: exercises)
+        }
+    }
     
     init(appViewModel: AppViewModel) {
-        self.data = SummaryData(plan: appViewModel.currentWorkoutPlan)
-        self.onFinish = { appViewModel.completeWorkoutFlow() }
-        self.onSave = { duration, exercises in
-            await appViewModel.saveWorkoutSession(durationMinutes: duration, exercises: exercises)
+        self.appViewModel = appViewModel
+        self.cancellable = appViewModel.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
         }
     }
 }
@@ -195,12 +244,55 @@ struct ReportViewModel {
     }
 }
 
+// MARK: - Report List
+
+struct ReportListData {
+    let reports: [WeeklyReport]
+}
+
+@MainActor
+struct ReportListViewModel {
+    let data: ReportListData
+    let onSelectReport: (WeeklyReport) -> Void
+    let onRefresh: () async -> Void
+    
+    init(appViewModel: AppViewModel) {
+        self.data = ReportListData(reports: appViewModel.weeklyReports)
+        self.onSelectReport = { report in
+            appViewModel.openWeeklyReportDetail(startAt: report.periodStart)
+        }
+        self.onRefresh = { await appViewModel.loadWeeklyReports() }
+    }
+}
+
+// MARK: - Weekly Report Detail
+
+struct WeeklyReportDetailData {
+    let report: WeeklyReport
+}
+
+@MainActor
+struct WeeklyReportDetailViewModel {
+    let data: WeeklyReportDetailData
+    let onRefresh: () async -> Void
+    
+    init(appViewModel: AppViewModel) {
+        self.data = WeeklyReportDetailData(report: appViewModel.currentWeeklyReport ?? WeeklyReport(periodStart: "", periodEnd: "", totalWorkouts: 0, totalMinutes: 0, totalCalories: 0, averageMinutes: 0))
+        self.onRefresh = { 
+            if let startAt = appViewModel.currentWeeklyReport?.periodStart {
+                await appViewModel.loadWeeklyReportDetail(startAt: startAt)
+            }
+        }
+    }
+}
+
 // MARK: - History List
 
 struct HistoryListData {
     let title: String
     let subtitle: String
     let sessions: [SessionSummary]
+    let completedMissions: [Mission]
 }
 
 @MainActor
@@ -213,9 +305,15 @@ struct HistoryListViewModel {
         self.data = HistoryListData(
             title: "운동 기록",
             subtitle: "Logbook",
-            sessions: appViewModel.sessions
+            sessions: appViewModel.sessions,
+            completedMissions: appViewModel.completedMissions
         )
-        self.onSelectDetail = { _ in appViewModel.openHistoryDetail() }
+        self.onSelectDetail = { id in
+            Task {
+                await appViewModel.loadSessionDetail(id: id)
+                appViewModel.openHistoryDetail()
+            }
+        }
         self.onRefresh = { await appViewModel.loadSessions() }
     }
 }
@@ -227,19 +325,24 @@ struct HistoryDetailData {
 }
 
 @MainActor
-struct HistoryDetailViewModel {
-    let data: HistoryDetailData
-    let onBack: () -> Void
-    let onHome: () -> Void
-    let onShare: () -> Void
-    let onDelete: () -> Void
+class HistoryDetailViewModel: ObservableObject {
+    private let appViewModel: AppViewModel
+    private var cancellable: AnyCancellable?
+    
+    var data: HistoryDetailData {
+        HistoryDetailData(session: appViewModel.currentSessionDetail)
+    }
+    
+    var onBack: () -> Void { { [weak self] in self?.appViewModel.pop() } }
+    var onHome: () -> Void { { [weak self] in self?.appViewModel.goHomeFromFlow() } }
+    var onShare: () -> Void { { } }
+    var onDelete: () -> Void { { [weak self] in self?.appViewModel.pop() } }
     
     init(appViewModel: AppViewModel) {
-        self.data = HistoryDetailData(session: appViewModel.currentSessionDetail)
-        self.onBack = { appViewModel.pop() }
-        self.onHome = { appViewModel.goHomeFromFlow() }
-        self.onShare = {}
-        self.onDelete = { appViewModel.pop() }
+        self.appViewModel = appViewModel
+        self.cancellable = appViewModel.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
     }
 }
 
@@ -295,7 +398,8 @@ struct ExerciseDetailData {
 struct ExerciseDetailViewModel {
     let data: ExerciseDetailData
     let onBack: () -> Void
-    
+    let onStart: () -> Void
+
     init(appViewModel: AppViewModel) {
         self.data = ExerciseDetailData(
             title: "Barbell Bench Press",
@@ -303,6 +407,7 @@ struct ExerciseDetailViewModel {
             heroURL: URL(string: "https://lh3.googleusercontent.com/aida-public/AB6AXuCUyk_A0ZAvBPbzKmC9ddJh6KwAfF5fHPOsqWS_cA4AcKWybACPncj6MQUvSMjQA4pr25S3lu6hrnJkd8_821ir86JS3ej4BHqiyl9BW2vmcKA8Kr9g82zzH249sz6TkmVCHprArcj_IZnJGbRm_8pjlTDXCiXq59yUVJYeNQZA5syBhp1UxXS00G0xn_qEBz28RhyXuYp43EWvXgQPiYHNH0Z4dI-h3HkF8_YujVi1Zkd-9iS-WHgkw6GD7E2mzHxBrDAqDXBa5W0")
         )
         self.onBack = { appViewModel.pop() }
+        self.onStart = { appViewModel.startWorkoutFlow() }
     }
 }
 
@@ -310,16 +415,91 @@ struct ExerciseDetailViewModel {
 
 @MainActor
 struct ProfileViewModel {
+    private let appViewModel: AppViewModel
     let userName: String
+    let totalPoints: Int
+    let profileImageData: Data?
     let onMyGoals: () -> Void
+    let onPoints: () -> Void
     let onAppSettings: () -> Void
     let onHelpCenter: () -> Void
-    
+    let onPersonalInfo: () -> Void
+
     init(appViewModel: AppViewModel) {
+        self.appViewModel = appViewModel
         self.userName = appViewModel.userName
+        self.totalPoints = appViewModel.calculatedPoints
+        self.profileImageData = appViewModel.profileImageData
         self.onMyGoals = { appViewModel.openMyGoals() }
+        self.onPoints = { appViewModel.openPoints() }
         self.onAppSettings = { appViewModel.openAppSettings() }
         self.onHelpCenter = { appViewModel.openHelpCenter() }
+        self.onPersonalInfo = { appViewModel.openPersonalInfo() }
+    }
+
+    func setProfileImageData(_ data: Data?) throws {
+        try appViewModel.setProfileImageData(data)
+    }
+}
+
+// MARK: - Personal Info
+
+@MainActor
+final class PersonalInfoViewModel: ObservableObject {
+    @Published var info: PersonalInfoResponse? = nil
+    @Published var isLoading: Bool = false
+    @Published var error: String? = nil
+
+    // Edit state
+    @Published var isEditing: Bool = false
+    @Published var editAge: Int = 25
+    @Published var editHeightCm: Double = 170
+    @Published var editWeightKg: Double = 70
+    @Published var isSaving: Bool = false
+
+    let onBack: () -> Void
+
+    init(appViewModel: AppViewModel) {
+        self.onBack = { appViewModel.pop() }
+    }
+
+    func loadData() {
+        isLoading = true
+        error = nil
+        Task {
+            do {
+                let data = try await APIClient.shared.getPersonalInfo()
+                self.info = data
+            } catch {
+                self.error = error.localizedDescription
+            }
+            self.isLoading = false
+        }
+    }
+
+    func startEditing() {
+        editAge = info?.age ?? 25
+        editHeightCm = info?.heightCm ?? 170.0
+        editWeightKg = info?.weightKg ?? 70.0
+        isEditing = true
+    }
+
+    func saveEdits() {
+        isSaving = true
+        Task {
+            do {
+                let updated = try await APIClient.shared.patchPersonalInfo(
+                    age: editAge,
+                    heightCm: editHeightCm,
+                    weightKg: editWeightKg
+                )
+                self.info = updated
+                self.isEditing = false
+            } catch {
+                self.error = error.localizedDescription
+            }
+            self.isSaving = false
+        }
     }
 }
 
@@ -338,12 +518,14 @@ final class MyGoalsViewModel: ObservableObject {
     var data: MyGoalsData {
         let calendar = Calendar.current
         let today = Date()
-        let weekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today))!
-        let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart)!
+        guard let weekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)),
+              let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart) else {
+            return MyGoalsData(hasMissions: appViewModel.hasMissions, missions: appViewModel.missions, dateRange: "")
+        }
         let formatter = DateFormatter()
         formatter.dateFormat = "MMM d"
         let dateRange = "\(formatter.string(from: weekStart)) – \(formatter.string(from: weekEnd))"
-        
+
         return MyGoalsData(
             hasMissions: appViewModel.hasMissions,
             missions: appViewModel.missions,
@@ -363,11 +545,11 @@ final class MyGoalsViewModel: ObservableObject {
         await appViewModel.createAIMissions()
     }
     
-    func onCreateAISingleMission(_ type: MissionType) async {
+    func onCreateAISingleMission(_ type: MissionType) async -> String? {
         await appViewModel.createAISingleMission(type: type)
     }
     
-    func onCreateCustomMission(_ type: MissionType, _ difficulty: MissionDifficulty, _ target: Int) async {
+    func onCreateCustomMission(_ type: MissionType, _ difficulty: MissionDifficulty, _ target: Int) async -> String? {
         await appViewModel.createCustomMission(type: type, difficulty: difficulty, targetValue: target)
     }
     
@@ -382,14 +564,13 @@ final class MyGoalsViewModel: ObservableObject {
 struct GoalEditViewModel {
     let missions: [Mission]
     let onBack: () -> Void
-    let onSave: (MissionType, MissionDifficulty, Int) async -> Void
+    let onSave: (MissionType, MissionDifficulty, Int) async -> String?
     
     init(appViewModel: AppViewModel) {
         self.missions = appViewModel.missions
         self.onBack = { appViewModel.pop() }
         self.onSave = { type, difficulty, target in
             await appViewModel.createCustomMission(type: type, difficulty: difficulty, targetValue: target)
-            await MainActor.run { appViewModel.pop() }
         }
     }
 }
@@ -409,12 +590,16 @@ struct WeeklyMissionViewModel {
     init(appViewModel: AppViewModel) {
         let calendar = Calendar.current
         let today = Date()
-        let weekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today))!
-        let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart)!
-        let formatter = DateFormatter()
-        formatter.dateFormat = "MMM d"
-        let dateRange = "\(formatter.string(from: weekStart)) – \(formatter.string(from: weekEnd))"
-        
+        let dateRange: String
+        if let weekStart = calendar.date(from: calendar.dateComponents([.yearForWeekOfYear, .weekOfYear], from: today)),
+           let weekEnd = calendar.date(byAdding: .day, value: 6, to: weekStart) {
+            let formatter = DateFormatter()
+            formatter.dateFormat = "MMM d"
+            dateRange = "\(formatter.string(from: weekStart)) – \(formatter.string(from: weekEnd))"
+        } else {
+            dateRange = ""
+        }
+
         self.data = WeeklyMissionData(
             missions: appViewModel.missions,
             dateRange: dateRange
@@ -429,7 +614,7 @@ struct WeeklyMissionViewModel {
 struct GetQuestViewModel {
     let onBack: () -> Void
     let onConfirmAI: () async -> Void
-    let onConfirmCustom: (MissionType, MissionDifficulty, Int) async -> Void
+    let onConfirmCustom: (MissionType, MissionDifficulty, Int) async -> String?
     
     init(appViewModel: AppViewModel) {
         self.onBack = { appViewModel.pop() }
@@ -439,7 +624,6 @@ struct GetQuestViewModel {
         }
         self.onConfirmCustom = { type, difficulty, target in
             await appViewModel.createCustomMission(type: type, difficulty: difficulty, targetValue: target)
-            await MainActor.run { appViewModel.pop() }
         }
     }
 }
@@ -483,5 +667,110 @@ struct AppleWatchViewModel {
     
     init(appViewModel: AppViewModel) {
         self.onBack = { appViewModel.pop() }
+    }
+}
+
+@MainActor
+final class ConnectivityStatus: ObservableObject {
+    @Published var isAppleHealthConnected = false
+    @Published var isAppleWatchConnected = false
+
+    private let healthStore = HKHealthStore()
+    #if canImport(WatchConnectivity)
+    private var watchSession: WCSession?
+    #endif
+
+    init() {
+        setupWatchSession()
+        refresh()
+    }
+
+    func refresh() {
+        updateAppleHealthStatus()
+        updateAppleWatchStatus()
+    }
+
+    func requestAppleHealthAuthorization() {
+        guard HKHealthStore.isHealthDataAvailable() else { return }
+
+        let workoutType = HKObjectType.workoutType()
+        let readTypes: Set<HKObjectType> = [workoutType]
+        let shareTypes: Set<HKSampleType> = [workoutType]
+
+        healthStore.requestAuthorization(toShare: shareTypes, read: readTypes) { [weak self] _, _ in
+            Task { @MainActor in
+                self?.updateAppleHealthStatus()
+            }
+        }
+    }
+
+    private func updateAppleHealthStatus() {
+        guard HKHealthStore.isHealthDataAvailable() else {
+            isAppleHealthConnected = false
+            return
+        }
+
+        let status = healthStore.authorizationStatus(for: HKObjectType.workoutType())
+        isAppleHealthConnected = (status == .sharingAuthorized)
+    }
+
+    private func setupWatchSession() {
+        #if canImport(WatchConnectivity)
+        guard WCSession.isSupported() else { return }
+        watchSession = WCSession.default
+        #endif
+    }
+
+    private func updateAppleWatchStatus() {
+        #if canImport(WatchConnectivity)
+        guard let session = watchSession else {
+            isAppleWatchConnected = false
+            return
+        }
+
+        isAppleWatchConnected = session.activationState == .activated
+            && session.isPaired
+            && session.isWatchAppInstalled
+        #else
+        isAppleWatchConnected = false
+        #endif
+    }
+}
+
+// MARK: - Points
+
+struct PointsData {
+    let totalPoints: Int
+    let completedWorkouts: Int
+    let completedMissions: Int
+}
+
+@MainActor
+class PointsViewModel: ObservableObject {
+    private let appViewModel: AppViewModel
+    private var cancellable: AnyCancellable?
+    
+    var data: PointsData {
+        PointsData(
+            totalPoints: appViewModel.calculatedPoints,
+            completedWorkouts: appViewModel.completedWorkoutsCount,
+            completedMissions: appViewModel.completedMissionsCount
+        )
+    }
+    
+    var onBack: () -> Void {
+        { [weak self] in self?.appViewModel.pop() }
+    }
+    
+    init(appViewModel: AppViewModel) {
+        self.appViewModel = appViewModel
+        self.cancellable = appViewModel.objectWillChange.sink { [weak self] _ in
+            self?.objectWillChange.send()
+        }
+    }
+    
+    func loadData() async {
+        await appViewModel.loadSessions()
+        await appViewModel.loadMissions()
     }
 }
